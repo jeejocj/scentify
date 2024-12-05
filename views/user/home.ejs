@@ -1,0 +1,254 @@
+
+
+    <%- include("../../views/partials/user/header") %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  .btn {
+      display: inline-block;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #fff;
+      background-color: #ff6b6b;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s, transform 0.3s;
+      cursor: pointer;
+      text-align: center;
+  }
+
+
+  .btn:hover {
+      background-color: #ff4c4c;
+      transform: translateY(-2px);
+  }
+
+
+  .btn:active {
+      transform: translateY(1px);
+  }
+  .wishlist-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 50%;
+      color: #ff6b6b;
+      font-size: 18px;
+      z-index: 10;
+      transition: background-color 0.3s, color 0.3s, transform 0.3s;
+  }
+
+
+  .wishlist-btn:hover {
+      background-color: rgba(255, 255, 255, 1);
+      color: #ff4c4c;
+      transform: translateY(-2px);
+  }
+
+
+  .wishlist-btn:active {
+      transform: translateY(1px);
+  }
+
+
+  .product-img-action-wrap {
+      position: relative;
+  }
+
+
+  .product-img {
+      position: relative;
+      display: block;
+      overflow: hidden;
+  }
+
+
+  .product-cart-wrap {
+      border: 1px solid #eee;
+      padding: 20px;
+      margin-bottom: 30px;
+  }
+
+
+  .product-content-wrap h6 {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 5px;
+  }
+
+
+  .product-content-wrap h5 {
+      font-size: 16px;
+      color: #ff6b6b;
+      margin-bottom: 10px;
+  }
+
+
+  .product-content-wrap a {
+      display: inline-block;
+      padding: 8px 12px;
+      background-color: #ff6b6b;
+      color: white;
+      text-transform: uppercase;
+      font-size: 14px;
+      border-radius: 4px;
+      text-decoration: none;
+  }
+
+
+  .product-content-wrap a:hover {
+      background-color: #ff4c4c;
+  }
+  .card {
+  border: none;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+</style>
+<section class="hero">
+  <div class="hero__slider owl-carousel">
+      <div class="hero__items set-bg" data-setbg="img/hero/hero-1.jpg">
+          <div class="container">
+              <div class="row">
+                  <div class="col-xl-5 col-lg-7 col-md-8">
+                      <div class="hero__text">
+                          <h6>Summer Collection</h6>
+                          <h2>Fall - Winter Collections 2030</h2>
+                          <p>A specialist label creating luxury essentials. Ethically created.</p>
+                          <a href="#" class="primary-btn">Shop now <span class="arrow_right"></span></a>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+      <div class="hero__items set-bg" data-setbg="img/hero/hero-2.jpg">
+          <div class="container">
+              <div class="row">
+                  <div class="col-xl-5 col-lg-7 col-md-8">
+                      <div class="hero__text">
+                          <h6>Summer Collection</h6>
+                          <h2>Fall - Winter Collections 2030</h2>
+                          <p>A specialist label creating luxury essentials.</p>
+                          <a href="#" class="primary-btn">Shop now <span class="arrow_right"></span></a>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</section>
+<section class="banner spad">
+  <div class="container">
+      <div class="row">
+          <div class="col-lg-7 offset-lg-4">
+              <div class="banner__item">
+                  <div class="banner__item__pic">
+                      <img src="img/banner/banner-1.jpg" alt="Clothing Collections 2030">
+                  </div>
+                  <div class="banner__item__text">
+                      <h2>Clothing Collections 2030</h2>
+                      <a href="#">Shop now</a>
+                  </div>
+              </div>
+          </div>
+          <div class="col-lg-5">
+              <div class="banner__item banner__item--middle">
+                  <div class="banner__item__pic">
+                      <img src="img/banner/banner-2.jpg" alt="Accessories">
+                  </div>
+                  <div class="banner__item__text">
+                      <h2>Accessories</h2>
+                      <a href="#">Shop now</a>
+                  </div>
+              </div>
+          </div>
+          <div class="col-lg-7">
+              <div class="banner__item banner__item--last">
+                  <div class="banner__item__pic">
+                      <img src="img/banner/banner-3.jpg" alt="Shoes Spring 2030">
+                  </div>
+                  <div class="banner__item__text">
+                      <h2>Shoes Spring 2030</h2>
+                      <a href="#">Shop now</a>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</section>
+<section class="product spad">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12">
+          <h2 class="text-center mb-4">Our Products</h2>
+        </div>
+      </div>
+      <div class="row">
+        <% for(let i = 0; i < products.length; i++) { %>
+          <div class="col-lg-3 col-md-4 col-sm-6 col-12">
+            <div class="card mb-4 shadow-sm">
+               
+              <!-- Image Section -->
+              <a href="/productDetails?id=<%=products[i]._id%>">
+              <div class="card-img-top" style="height: 200px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                <% if(products[i].productImage && products[i].productImage.length > 0) { %>
+ 
+                  <img src="/uploads/re-image/<%= products[i].productImage[0] %>" alt="<%= products[i].productName %>" class="img-fluid" style="max-height: 100%; max-width: 100%; object-fit: cover;">
+                <% } else { %>
+                  <span class="text-muted">No Image Available</span>
+                <% } %>
+              </div>
+            </a>
+              <!-- Content Section -->
+              <div class="card-body text-center">
+                <h6 class="card-title text-truncate"><%= products[i].productName %></h6>
+                <p class="text-danger mb-2"><strong>₹<%= products[i].salePrice %></strong></p>
+                <div class="d-flex justify-content-between">
+                    <a href="/addToCart?id=<%= products[i]._id %>" 
+                       class="btn btn-sm btn-primary" 
+                       style="width: 48%; font-size: 14px;">
+                      Add to Cart
+                    </a>
+                    <a href="/addToWishlist?id=<%= products[i]._id %>" 
+                       class="btn btn-sm btn-outline-danger" 
+                       style="width: 48%; font-size: 14px;">
+                      Wishlist
+                    </a>
+                  </div>
+                  
+              </div>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </section>
+  
+  
+<%- include("../../views/partials/user/footer") %>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

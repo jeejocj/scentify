@@ -1,0 +1,457 @@
+<%- include("../../views/partials/user/header") %>
+
+<style>
+    .breadcrumb-bar {
+        background-color: #f8f9fa;
+        padding: 30px;
+        margin-bottom: 50px;
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        color: #6c757d;
+    }
+    .breadcrumb-bar a {
+        color: #007bff;
+        text-decoration: none;
+    }
+    .breadcrumb-bar a:hover {
+        text-decoration: underline;
+    }
+    .breadcrumb-bar span {
+        margin: 0 5px;
+    }
+    .ProductContainer {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .product-detail {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+    }
+    .product-images {
+        flex: 1;
+        min-width: 300px;
+    }
+    .main-image-container {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        padding-top: 80%; /* Smaller Aspect Ratio */
+    }
+    .main-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+        transition: transform 0.3s ease;
+    }
+    .thumbnail-strip {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+        overflow-x: auto;
+    }
+    .thumbnail {
+        width: 70px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 4px;
+        cursor: pointer;
+        border: 2px solid transparent;
+    }
+    .thumbnail.active {
+        border-color: #007bff;
+    }
+    .product-info {
+        flex: 1;
+        min-width: 300px;
+    }
+    h1 {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+    .rating {
+        color: #ffc107;
+        font-size: 20px;
+    }
+    .price {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+        margin: 10px 0;
+    }
+    .quantity {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .quantity button {
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+        padding: 5px 10px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    .quantity span {
+        padding: 5px 15px;
+        border-top: 1px solid #ced4da;
+        border-bottom: 1px solid #ced4da;
+    }
+    .add-to-cart {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    .add-to-cart:hover {
+        background-color: #0056b3;
+    }
+    .product-meta {
+        margin-top: 20px;
+        font-size: 14px;
+        color: #6c757d;
+    }
+
+
+    .review-section {
+        margin-top: 40px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .average-rating {
+        display: flex;
+        align-items: center;
+    }
+
+    .average-rating h4 {
+        margin: 0 10px;
+    }
+
+    .rating-bar {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .rating-bar li {
+        display: flex;
+        align-items: center;
+        margin: 5px 0;
+    }
+
+    .rating-bar .progress {
+        width: 60%;
+        margin: 0 10px;
+    }
+
+    .review-card {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        background-color: #fff;
+    }
+
+    .review-card .author {
+        font-weight: bold;
+    }
+
+    .review-card .verified {
+        background: #28a745;
+        color: #fff;
+        border-radius: 4px;
+        font-size: 12px;
+        padding: 2px 6px;
+        margin-left: 5px;
+    }
+
+    .related-products {
+        margin-top: 40px;
+        padding: 20px;
+    }
+
+    .related-products h3 {
+        margin-bottom: 20px;
+    }
+
+    .card img {
+        object-fit: cover;
+        height: 200px;
+    }
+</style>
+
+<div class="breadcrumb-bar">
+    <a href="/">Home</a>
+    <span>></span>
+    <span>Product Details</span>
+</div>
+
+<div class="ProductContainer">
+    <div class="product-detail">
+        <div class="product-images">
+            <div class="main-image-container" onmousemove="zoomImage(event)" >
+                <img id="mainImage" src="/uploads/re-image/<%= product.productImage[0] %>" alt="Product Image" class="main-image" onmouseleave="resetZoom(event)">
+            </div>
+            <div class="thumbnail-strip">
+                <% for (let i = 0; i < product.productImage.length; i++) { %>
+                    <div>
+                        <img src="/uploads/re-image/<%= product.productImage[i] %>" alt="Product Thumbnail <%= i + 1 %>" class="thumbnail" onclick="changeImage(this)">
+                    </div>
+                <% } %>
+            </div>
+        </div>
+        <div class="product-info">
+            <h1><%= product.productName %></h1>
+            <div class="rating">
+                ★★★★☆ <span style="color: #6c757d; font-size: 14px;">(25 reviews)</span>
+            </div>
+            <p><%= product.brand %></p>
+            <p><%= product.description %></p>
+            <div class="price">
+                <%= product.regularPrice %>
+            </div>
+            <div class="quantity">
+                <button onclick="changeQuantity(-1)">-</button>
+                <span id="quantity">1</span>
+                <button onclick="changeQuantity(1)">+</button>
+            </div>
+            <button class="add-to-cart" onclick="addToCart()">Add to Cart</button>
+            <div class="product-meta">
+                <p>Stock Code: FWM15VKT</p>
+                <p>Availability: <span style="color: #28a745;"><%= product.quantity %></span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="container mt-5">
+    <!-- Related Products Section -->
+    <div class="related-products">
+        <h3>Related Products</h3>
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            <!-- Product Card 1 -->
+            <div class="col">
+                <div class="card">
+                    <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="Product 1">
+                    <div class="card-body">
+                        <h5 class="card-title">Product Name 1</h5>
+                        <p class="card-text">An amazing fragrance to uplift your day.</p>
+                        <a href="#" class="btn btn-primary">View Product</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Product Card 2 -->
+            <div class="col">
+                <div class="card">
+                    <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="Product 2">
+                    <div class="card-body">
+                        <h5 class="card-title">Product Name 2</h5>
+                        <p class="card-text">A long-lasting perfume for special occasions.</p>
+                        <a href="#" class="btn btn-primary">View Product</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Product Card 3 -->
+            <div class="col">
+                <div class="card">
+                    <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="Product 3">
+                    <div class="card-body">
+                        <h5 class="card-title">Product Name 3</h5>
+                        <p class="card-text">Fresh and floral scent for everyday wear.</p>
+                        <a href="#" class="btn btn-primary">View Product</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="container mt-5">
+    <!-- Review Section -->
+    <div class="review-section">
+        <div class="review-header">
+            <!-- Average Rating -->
+            <div class="average-rating">
+                <h4>★★★★★</h4>
+                <p>5.0 out of 5 Based on 2 reviews</p>
+            </div>
+
+            <!-- Write Review Button -->
+            <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                Write a Review
+            </button>
+        </div>
+
+        <!-- Rating Distribution -->
+        <div class="row">
+            <div class="col-md-6">
+                <ul class="rating-bar">
+                    <li>
+                        5 ★
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        2
+                    </li>
+                    <li>
+                        4 ★
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        0
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- User Reviews -->
+        <div class="review-card">
+            <p class="author">Shreya Unni <span class="verified">Verified</span></p>
+            <p>★★★★★</p>
+            <p>Nice Aroma</p>
+        </div>
+        <div class="review-card">
+            <p class="author">Tala Basir <span class="verified">Verified</span></p>
+            <p>★★★★★</p>
+            <p>The perfume lasts throughout the whole day.</p>
+        </div>
+    </div>
+</div>
+
+
+
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1"  aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reviewModalLabel">Write a Review</h5>
+                <i type="button" class=" fa fa-close" data-bs-dismiss="modal" aria-label="Close"></i>
+            </div>
+            <div class="modal-body">
+                <form id="reviewForm">
+                    <div class="mb-3">
+                        <label for="reviewName" class="form-label">Your Name</label>
+                        <input type="text" class="form-control" id="reviewName" placeholder="Enter your name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="reviewRating" class="form-label">Rating</label>
+                        <select class="form-select" id="reviewRating">
+                            <option value="5">★★★★★</option>
+                            <option value="4">★★★★☆</option>
+                            <option value="3">★★★☆☆</option>
+                            <option value="2">★★☆☆☆</option>
+                            <option value="1">★☆☆☆☆</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reviewText" class="form-label">Review</label>
+                        <textarea class="form-control" id="reviewText" rows="3" placeholder="Write your review here"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function changeImage(thumbnail) {
+        const mainImage = document.getElementById('mainImage');
+        mainImage.src = thumbnail.src;
+        mainImage.alt = thumbnail.alt;
+
+        document.querySelectorAll('.thumbnail').forEach(thumb => {
+            thumb.classList.remove('active');
+        });
+        thumbnail.classList.add('active');
+    }
+
+    function changeQuantity(change) {
+        const quantityElement = document.getElementById('quantity');
+        let quantity = parseInt(quantityElement.textContent) + change;
+        quantity = Math.max(1, quantity);
+        quantityElement.textContent = quantity;
+    }
+
+    function addToCart() {
+        const quantity = document.getElementById('quantity').textContent;
+        alert(`Added ${quantity} item(s) to cart!`);
+    }
+
+    function zoomImage(e) {
+        const image = e.target;
+        const zoomer = e.currentTarget;
+        const x = e.offsetX / zoomer.offsetWidth;
+        const y = e.offsetY / zoomer.offsetHeight;
+        const zoomLevel = 2;
+        image.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+        image.style.transform = `scale(${zoomLevel})`;
+    }
+
+    function resetZoom(e) {
+        const image = e.target;
+        image.style.transform = 'scale(1)';
+    }
+
+
+
+
+    function submitReview() {
+        const name = document.getElementById('reviewName').value;
+        const rating = document.getElementById('reviewRating').value;
+        const text = document.getElementById('reviewText').value;
+
+        if (!name || !text) {
+            alert('Please fill out all fields.');
+            return;
+        }
+
+        // Append new review dynamically
+        const reviewSection = document.querySelector('.review-section');
+        const newReview = `
+            <div class="review-card">
+                <p class="author">${name} <span class="verified">Verified</span></p>
+                <p>${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}</p>
+                <p>${text}</p>
+            </div>
+        `;
+        reviewSection.insertAdjacentHTML('beforeend', newReview);
+
+        // Close modal
+        const reviewModal = document.getElementById('reviewModal');
+        const modal = bootstrap.Modal.getInstance(reviewModal);
+        modal.hide();
+
+        // Clear form
+        document.getElementById('reviewForm').reset();
+    }
+</script>
+<%- include("../../views/partials/user/footer") %>
