@@ -8,10 +8,9 @@ const db = require("./config/db")
 const nocache = require("nocache")
 const userRoute = require("./routes/userRoute");
 const adminRoute = require("./routes/adminRoute");
-// const fileUpload = require('express-fileupload');
 db()
 
-// app.use(fileUpload());
+
 app.use(nocache())
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
@@ -19,16 +18,12 @@ app.use(sesssion({
     secret:process.env.SESSION_SECRET,
     resave:false,
     saveUninitialized:true,
-    cookie:{
-        secure:false,
-        httpOnly:true,
-        maxAge:72*60*60*1000
-    }
-
 }))
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+
 
 
 app.set("view engine",'ejs');

@@ -8,27 +8,41 @@ const categoryInfo = async (req,res)=>{
         const page = parseInt(req.query.page) || 1;
         const limit = 4;
         const skip = (page-1)*limit;
+        const searchTerm = req.query.search || '';
 
-        const categoryData = await Category.find({})
+
+        // Create search query
+        const searchQuery = searchTerm 
+            ? {
+                $or: [
+                    { name: { $regex: searchTerm, $options: 'i' } },
+                    { description: { $regex: searchTerm, $options: 'i' } }
+                ]
+            } 
+            : {};
+
+        const categoryData = await Category.find(searchQuery)
             .sort({createdAt:-1})
             .skip(skip)
             .limit(limit);
 
-        // console.log(categoryData)
-            const totalCategories = await Category.countDocuments();
-            const totalPages = Math.ceil(totalCategories / limit);
-            res.render("category",{
-                cat:categoryData,
-                currentPage:page,
-                totalPages:totalPages,
-                totalCategories:totalCategories
-            });
+        const totalCategories = await Category.countDocuments(searchQuery);
+        const totalPages = Math.ceil(totalCategories / limit);
+        
+        res.render("category", {
+            cat: categoryData,
+            currentPage: page,
+            totalPages: totalPages,
+            totalCategories: totalCategories,
+            searchTerm: searchTerm
+        });
         
     }catch (error){
         console.error(error);
         res.redirect("/pageerror")
     }
 }
+
 
 
 
@@ -45,7 +59,7 @@ const addCategory = async (req, res) => {
             name,
             description
         });
-        await newCategory.save();
+        await newCategory.save;
 
 
         return res.status(200).json({message:"Category added successfully"})
@@ -60,21 +74,18 @@ const addCategory = async (req, res) => {
 const addCategoryOffer = async (req, res) => {
     try {
         const { percentage, categoryId } = req.body;
-        console.log(percentage, categoryId)
 
-        // Validate percentage
         const parsedPercentage = parseInt(percentage);
         if (isNaN(parsedPercentage) || parsedPercentage <= 0 || parsedPercentage > 100) {
             return res.status(400).json({ status: false, message: "Invalid percentage value" });
         }
 
-        // Check if category exists
+      
         const category = await Category.findById(categoryId);
         if (!category) {
             return res.status(404).json({ status: false, message: "Category not found" });
         }
 
-        // Check if any product in the category has a higher offer
         const products = await Product.find({ Category: category._id });
         const hasHigherOffer = products.some(product => product.productOffer > parsedPercentage);
         if (hasHigherOffer) {
@@ -84,10 +95,9 @@ const addCategoryOffer = async (req, res) => {
             });
         }
 
-        // Update category offer
+      
         await Category.findByIdAndUpdate(categoryId, { $set: { categoryOffer: parsedPercentage } });
 
-        // Adjust product prices and reset product offers
         await Product.updateMany(
             { Category: category._id },
             [
@@ -115,21 +125,21 @@ const removeCategoryOffer = async (req, res) => {
     try {
         const { categoryId } = req.body;
 
-        // Validate category existence
+       
         const category = await Category.findById(categoryId);
         if (!category) {
             return res.status(404).json({ status: false, message: "Category not found" });
         }
 
-        // Check if category offer exists
+       
         if (!category.categoryOffer || category.categoryOffer === 0) {
             return res.status(400).json({ status: false, message: "No active offer for this category" });
         }
 
-        // Remove category offer
+        
         await Category.findByIdAndUpdate(categoryId, { $set: { categoryOffer: 0 } });
 
-        // Reset product prices (optional)
+        
         await Product.updateMany(
             { Category: category._id },
             [
@@ -187,35 +197,39 @@ const getEditCategory = async(req,res)=>{
 
 const editCategory = async (req, res) => {
     try {
-        const id = req.params.id; // Corrected 'req.param.id' to 'req.params.id'
+        const id = req.params.id; 
         const { categoryName, description } = req.body;
 
-        // Check if a category with the same name already exists
+    
         const existingCategory = await Category.findOne({ name: categoryName });
 
-        // Ensure the name isn't being updated to an existing category's name
+        
         if (existingCategory && existingCategory._id.toString() !== id) {
-            return res.status(400).json({ error: "Category exists, please choose another name" });
+            
+            return res.render('edit-category',{category:existingCategory,error: "Category exists, please choose another name" })
         }
-
-        // Update the category by its ID
+        const category = await Category.findById(id);
+        if(category.name === categoryName && category.description === description){
+            return res.render('edit-category',{category:existingCategory,error: "No changes were made. Please update the data before submitting." })
+        }
+        
         const updatedCategory = await Category.findByIdAndUpdate(
             id,
             {
                 name: categoryName,
                 description: description,
             },
-            { new: true } // Return the updated document
+            { new: true }
         );
 
-        // Handle the response based on whether the update was successful
+        
         if (updatedCategory) {
             return res.redirect("/admin/category");
         } else {
             return res.status(404).json({ error: "Category not found" });
         }
     } catch (error) {
-        // Handle unexpected errors
+        
         console.error("Error updating category:", error);
         return res.status(500).json({ error: "Internal Server Error" });
     }

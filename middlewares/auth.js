@@ -1,41 +1,38 @@
-const User = require("../models/userModel")
+const User = require("../models/userModel");
 
-
-const userAuth = (req,res,next)=>{
-    if(req.session?.user || req.session?.passport?.user){
-        console.log("authenticating", req.body)
-        User.findById(req.session.user)
-        .then(data =>{
-            if(data && !data.isBlocked){
-                next();
+// User Authentication Middleware
+const userAuth = async (req, res, next) => {
+    if (req.session?.user) {
+        try {
+            const user = await User.findById(req.session.user);
+            if (user && !user.isBlocked) {
+                next(); // Proceed if the user is not blocked
+            } else {
+                res.render("login", { message: "User is blocked by admin" });
             }
-        })
-        .catch(error=>{
-            console.log("Error in user auth middleware",error)
-            res.status(500).send("Internal Server error")
-        })
-    }else{
-        res.redirect("/login")
+        } catch (error) {
+            console.error("Error in userAuth middleware:", error);
+            res.status(500).send("Internal Server Error");
+        }
+    } else {
+        res.redirect("/login");
     }
-}
+};
 
-const adminAuth = (req,res,next)=>{
-   User.findOne({isAdmin:true})
-   .then(data =>{
-    if(data){
-        next();
-    }else{
-        res.redirect("/admin/login")
+
+
+// Admin Authentication Middleware
+const adminAuth = (req, res, next) => {
+    if (req.session?.admin) {
+        next(); // Proceed if the admin session exists
+    } else {
+        res.redirect("/admin/login");
     }
-   })
-   .catch(error =>{
-    console.log("Error in adminauth middleware:",error);
-    res.status(500).send("Internal server Error")
-   })
+};
 
-}
 
 module.exports = {
     userAuth,
-    adminAuth
-}
+    adminAuth,
+    
+};

@@ -1,14 +1,11 @@
 const User = require("../../models/userModel")
 
-
-
 const customerInfo = async (req, res) => {
     try {
         let search = req.query.search || "";
-        let page = parseInt(req.query.page) || 1; // Default to page 1 if no page is provided
-        if (page < 1) page = 1; // Ensure page is at least 1
-
-        const limit = 3; // Items per page
+        let page = parseInt(req.query.page) || 1; 
+        if (page < 1) page = 1; 
+        const limit = 4; 
         const userData = await User.find({
             isAdmin: false,
             $or: [
@@ -27,19 +24,17 @@ const customerInfo = async (req, res) => {
                 { email: { $regex: ".*" + search + ".*", $options: "i" } },
             ],
         }).countDocuments();
-
         res.render("customers", {
             data: userData,
-            totalpages: Math.ceil(count / limit), // Total pages
-            currentPage: page, // Current page
-            searchTerm: search, // Current search term
+            totalpages: Math.ceil(count / limit), 
+            currentPage: page, 
+            searchTerm: search, 
         });
     } catch (error) {
         console.error("Error in customerInfo:", error);
         res.redirect("/pageerror");
     }
 };
-
 
 
 const customerBlocked = async (req, res) => {
@@ -56,6 +51,7 @@ const customerBlocked = async (req, res) => {
         res.redirect("/pageerror");
     }
 };
+
 
 const customerunBlocked = async (req, res) => {
     try {

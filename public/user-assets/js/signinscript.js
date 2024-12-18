@@ -66,7 +66,7 @@ if(nameval.trim()===""){
 }
 
 function mobvalidateChecking(){
-  console.log("mobile ahdjashda");
+  // console.log("mobile ahdjashda");
   const mobval=mobileid.value
   if(mobval.trim()===""){
     error3.style.display="block"

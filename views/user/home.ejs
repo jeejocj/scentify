@@ -1,5 +1,3 @@
-
-
     <%- include("../../views/partials/user/header") %>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
@@ -113,142 +111,360 @@
   box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
 }
 
+.product__item {
+    margin-bottom: 35px;
+}
+
+.product__item__pic {
+    position: relative;
+    overflow: hidden;
+    border-radius: 3px;
+}
+
+.product__item__pic:hover .product__hover {
+    right: 20px;
+    opacity: 1;
+}
+
+.product__hover {
+    position: absolute;
+    right: -200px;
+    top: 20px;
+    opacity: 0;
+    transition: all 0.5s;
+}
+
+.product__hover li {
+    list-style: none;
+    margin-bottom: 10px;
+}
+
+.product__hover li:last-child {
+    margin-bottom: 0;
+}
+
+.product__hover li a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+
+.product__hover li a:hover {
+    background: #111111;
+}
+
+.product__hover li a:hover img {
+    filter: invert(100%) brightness(200%);
+}
+
+.product__item__text {
+    padding-top: 25px;
+    text-align: center;
+}
+
+.product__item__text h6 {
+    margin-bottom: 12px;
+}
+
+.product__item__text .rating {
+    margin-bottom: 6px;
+}
+
+.product__item__text .rating i {
+    font-size: 15px;
+    color: #e3c01c;
+    margin-right: 3px;
+}
+
+.product__item__text h5 {
+    color: #0d0d0d;
+    font-weight: 700;
+}
+
+.product__item__text .add-cart {
+    font-size: 15px;
+    color: #e53637;
+    font-weight: 700;
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+.product__item__text .add-cart:hover {
+    text-decoration: underline;
+}
 </style>
 <section class="hero">
-  <div class="hero__slider owl-carousel">
-      <div class="hero__items set-bg" data-setbg="img/hero/hero-1.jpg">
-          <div class="container">
-              <div class="row">
-                  <div class="col-xl-5 col-lg-7 col-md-8">
-                      <div class="hero__text">
-                          <h6>Summer Collection</h6>
-                          <h2>Fall - Winter Collections 2030</h2>
-                          <p>A specialist label creating luxury essentials. Ethically created.</p>
-                          <a href="#" class="primary-btn">Shop now <span class="arrow_right"></span></a>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-      <div class="hero__items set-bg" data-setbg="img/hero/hero-2.jpg">
-          <div class="container">
-              <div class="row">
-                  <div class="col-xl-5 col-lg-7 col-md-8">
-                      <div class="hero__text">
-                          <h6>Summer Collection</h6>
-                          <h2>Fall - Winter Collections 2030</h2>
-                          <p>A specialist label creating luxury essentials.</p>
-                          <a href="#" class="primary-btn">Shop now <span class="arrow_right"></span></a>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-  </div>
-</section>
-<section class="banner spad">
-  <div class="container">
-      <div class="row">
-          <div class="col-lg-7 offset-lg-4">
-              <div class="banner__item">
-                  <div class="banner__item__pic">
-                      <img src="img/banner/banner-1.jpg" alt="Clothing Collections 2030">
-                  </div>
-                  <div class="banner__item__text">
-                      <h2>Clothing Collections 2030</h2>
-                      <a href="#">Shop now</a>
-                  </div>
-              </div>
-          </div>
-          <div class="col-lg-5">
-              <div class="banner__item banner__item--middle">
-                  <div class="banner__item__pic">
-                      <img src="img/banner/banner-2.jpg" alt="Accessories">
-                  </div>
-                  <div class="banner__item__text">
-                      <h2>Accessories</h2>
-                      <a href="#">Shop now</a>
-                  </div>
-              </div>
-          </div>
-          <div class="col-lg-7">
-              <div class="banner__item banner__item--last">
-                  <div class="banner__item__pic">
-                      <img src="img/banner/banner-3.jpg" alt="Shoes Spring 2030">
-                  </div>
-                  <div class="banner__item__text">
-                      <h2>Shoes Spring 2030</h2>
-                      <a href="#">Shop now</a>
-                  </div>
-              </div>
-          </div>
-      </div>
-  </div>
-</section>
-<section class="product spad">
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-12">
-          <h2 class="text-center mb-4">Our Products</h2>
-        </div>
-      </div>
-      <div class="row">
-        <% for(let i = 0; i < products.length; i++) { %>
-          <div class="col-lg-3 col-md-4 col-sm-6 col-12">
-            <div class="card mb-4 shadow-sm">
-               
-              <!-- Image Section -->
-              <a href="/productDetails?id=<%=products[i]._id%>">
-              <div class="card-img-top" style="height: 200px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
-                <% if(products[i].productImage && products[i].productImage.length > 0) { %>
- 
-                  <img src="/uploads/re-image/<%= products[i].productImage[0] %>" alt="<%= products[i].productName %>" class="img-fluid" style="max-height: 100%; max-width: 100%; object-fit: cover;">
-                <% } else { %>
-                  <span class="text-muted">No Image Available</span>
-                <% } %>
-              </div>
-            </a>
-              <!-- Content Section -->
-              <div class="card-body text-center">
-                <h6 class="card-title text-truncate"><%= products[i].productName %></h6>
-                <p class="text-danger mb-2"><strong>₹<%= products[i].salePrice %></strong></p>
-                <div class="d-flex justify-content-between">
-                    <a href="/addToCart?id=<%= products[i]._id %>" 
-                       class="btn btn-sm btn-primary" 
-                       style="width: 48%; font-size: 14px;">
-                      Add to Cart
-                    </a>
-                    <a href="/addToWishlist?id=<%= products[i]._id %>" 
-                       class="btn btn-sm btn-outline-danger" 
-                       style="width: 48%; font-size: 14px;">
-                      Wishlist
-                    </a>
-                  </div>
-                  
-              </div>
+    <div class="hero__slider owl-carousel">
+        <div class="hero__items set-bg" data-setbg="perfumeBanner.jpg">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xl-5 col-lg-7 col-md-8">
+                        <div class="hero__text">
+                            <h6>Luxury Fragrances</h6>
+                            <h2>Fall - Winter Perfume Collection 2030</h2>
+                            <p>A curated collection of timeless fragrances. Ethically crafted and luxuriously scented.</p>
+                            <a href="#" class="primary-btn">Explore Now <span class="arrow_right"></span></a>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        <% } %>
-      </div>
+        </div>
+        <div class="hero__items set-bg" data-setbg="banner2.jpg">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xl-5 col-lg-7 col-md-8">
+                        <div class="hero__text">
+                            <h6>Signature Scents</h6>
+                            <h2>Winter Perfume Collection 2030</h2>
+                            <p>Discover luxurious fragrances that define your elegance and personality.</p>
+                            <a href="#" class="primary-btn">Shop Now <span class="arrow_right"></span></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
   </section>
   
+  <section class="banner spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-7 offset-lg-4">
+                <div class="banner__item">
+                    <div class="banner__item__pic">
+                        <img src="image1.jpg" alt="Perfume Collection 2030">
+                    </div>
+                    <div class="banner__item__text">
+                        <h2>Fragrance Collection 2030</h2>
+                        <a href="#">Shop Now</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="banner__item banner__item--middle">
+                    <div class="banner__item__pic">
+                        <img src="image3.jpg" alt="Luxury Perfumes">
+                    </div>
+                    <div class="banner__item__text">
+                        <h2>Luxury Perfumes</h2>
+                        <a href="#">Shop Now</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="banner__item banner__item--last">
+                    <div class="banner__item__pic">
+                        <img src="image2.jpg" alt="Spring Perfumes 2030">
+                    </div>
+                    <div class="banner__item__text">
+                        <h2>Spring Perfumes 2030</h2>
+                        <a href="#">Shop Now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </section>
+  
+<section class="product spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <h2 class="text-center mb-5">Our Products</h2>
+            </div>
+        </div>
+        <div class="row g-4">
+            <% for(let i = 0; i < products.length; i++) { %>
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="product-card">
+                        <div class="product-card-img">
+                            <% if(products[i].productImage && products[i].productImage.length > 0) { %>
+                                <img src="/uploads/re-image/<%= products[i].productImage[0] %>" alt="<%= products[i].productName %>">
+                            <% } else { %>
+                                <div class="no-image">No Image Available</div>
+                            <% } %>
+                            <div class="product-action">
+                                <a href="/addToWishlist?id=<%= products[i]._id %>" class="action-btn">
+                                    <i class="fas fa-heart"></i>
+                                </a>
+                                <a href="/productDetails?id=<%=products[i]._id%>" class="action-btn">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="product-card-content">
+                            <h3 class="product-title"><%= products[i].productName %></h3>
+                            <p class="product-brand"><%= products[i].brand %></p>
+                            <div class="product-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                            </div>
+                            <div class="product-price">
+                                <span class="current-price">₹<%= products[i].salePrice %></span>
+                            </div>
+                            <a href="/addToCart?id=<%= products[i]._id %>" class="add-to-cart">
+                                Add to Cart <i class="fas fa-shopping-cart"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</section>
+
+<style>
+    .product.spad {
+        padding: 80px 0;
+        background-color: #f8f9fa;
+    }
+
+    .product-card {
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .product-card-img {
+        position: relative;
+        padding-top: 100%;
+        background: #f8f9fa;
+        overflow: hidden;
+    }
+
+    .product-card-img img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .product-card:hover .product-card-img img {
+        transform: scale(1.1);
+    }
+
+    .product-action {
+        position: absolute;
+        top: 15px;
+        right: -60px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 1;
+    }
+
+    .product-card:hover .product-action {
+        right: 15px;
+        opacity: 1;
+    }
+
+    .action-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+    }
+
+    .action-btn:hover {
+        background: #333;
+        color: #fff;
+    }
+
+    .product-card-content {
+        padding: 20px;
+        text-align: center;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .product-title {
+        font-size: 1rem;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: #333;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        min-height: 2.5rem;
+    }
+
+    .product-brand {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+        font-weight: 400;
+        color: #666;
+    }
+
+    .product-rating {
+        color: #ffc107;
+        margin-bottom: 10px;
+    }
+
+    .product-price {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 15px;
+    }
+
+    .add-to-cart {
+        display: inline-block;
+        padding: 8px 20px;
+        background: #333;
+        color: #fff;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        margin-top: auto;
+    }
+
+    .add-to-cart:hover {
+        background: #555;
+        color: #fff;
+    }
+
+    .row.g-4 {
+        margin-right: -12px;
+        margin-left: -12px;
+    }
+
+    .col-lg-3, .col-md-4, .col-sm-6 {
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+</style>
   
 <%- include("../../views/partials/user/footer") %>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

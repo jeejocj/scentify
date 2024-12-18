@@ -2,80 +2,72 @@ const User = require("../../models/userModel");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
-
-
-const pageerror = async(req,res)=>{
-    res.render("admin-error")
-}
-
-
-const loadLogin = (req,res)=>{
-    if(req.session.admin){
-        return res.redirect("/admin/dashboard")
-    }
-    res.render("admin-login",{message:null})
-}
-
-
-const login = async(req,res)=>{
-  try{
-    const {email,password} = req.body;
-    // console.log(email,password)
-    const admin = await User.findOne({email,isAdmin:true})
-    // console.log(admin)
-    if(admin){
-        const passwordMatch = bcrypt.compare(password,admin.password)
-        if(passwordMatch){
-            req.session.admin = true;
-            return res.redirect("/admin")
-        }else{
-            return res.redirect("/admin/login")
-        }
-    }else{
-        return res.redirect("/admin/login")
-    }
-
-  }catch(error){
-    console.error("login error:",error)
-    return res.redirect("/pageerror")
-
+const pageerror = async (req, res) => {
+  try {
+    res.render("admin-error");
+  } catch (error) {
+    console.error(error);
   }
 };
 
-const loadDashboard = async(req,res)=>{
-    if(req.session.admin){
-        // console.log("this")
-        try{
-            res.render("dashboard");
-        }catch(error){
-            res.redirect("/pageerror")
 
-        }
+const loadLogin = (req, res) => {
+  try {
+    if (req.session.admin) {
+      return res.redirect("/admin/dashboard");
     }
+    res.render("admin-login", { message: null });
+  } catch (error) {
+    console.error(error);
+  }
+};
 
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const admin = await User.findOne({ email, isAdmin: true });
+    if (admin) {
+      const passwordMatch = bcrypt.compare(password, admin.password);
+      if (passwordMatch) {
+        req.session.admin = true;
+        return res.redirect("/admin");
+      } else {
+        return res.redirect("/admin/login");
+      }
+    } else {
+      return res.redirect("/admin/login");
     }
+  } catch (error) {
+    console.error("login error:", error);
+    return res.redirect("/pageerror");
+  }
+};
 
-    const logout = async(req,res)=>{
-        try{
-            req.session.destroy(err =>{
-                if(err){
-                    console.log("Error destroying sesssion",err);
-                    return res.redirect("/pageerror")
-                }
-                res.redirect("/admin/login")
-            })
-        }catch (error){
-            console.log("Unexpected error during logout:",error)
-            res.redirect("/pagerror")
-
-        }
-
+const loadDashboard = async (req, res) => {
+  try {
+    if (req.session.admin) {
+      res.render("dashboard");
+    } else {
+      res.redirect("/login");
     }
+  } catch (error) {
+    res.redirect("/pagerror");
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    req.session.admin = false;
+    res.redirect("/admin-login");
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 module.exports = {
-    loadLogin,
-    login,
-    loadDashboard,
-    pageerror,
-    logout
-}
+  loadLogin,
+  login,
+  loadDashboard,
+  pageerror,
+  logout,
+};

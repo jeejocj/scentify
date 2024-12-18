@@ -1,64 +1,377 @@
 <%- include("../../views/partials/admin/header") %>
-<div class="content-header row">
-    <div class="d-flex justify-content-between align-items-center">
-        <h2 class="content-title card-title">Customers</h2>
-       
-    </div>
-</div>         
-        </div>
+
+<style>
+    .content-main {
+        padding: 30px;
+        background-color: #f8f9fa;
+    }
+
+    .content-header {
+        margin-bottom: 30px;
+    }
+
+    .content-title {
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 1.8rem;
+        margin-bottom: 0;
+    }
+
+    .card-header {
+        background: transparent;
+        border-bottom: none;
+        padding: 25px;
+    }
+
+    .input-group-sm {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        transition: all 0.3s ease;
+    }
+
+    .input-group-sm:focus-within {
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .form-control {
+        border: 1px solid #e0e0e0;
+    }
+
+    .form-control:focus {
+        border-color: #3498db;
+    }
+
+    .table {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        margin-top: 20px;
+    }
+
+    .table thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #e9ecef;
+        color: #2c3e50;
+        font-weight: 600;
+        padding: 15px;
+    }
+
+    .table tbody td {
+        padding: 15px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #fcfcfc;
+    }
+
+    .btn {
+        border-radius: 5px;
+        padding: 8px 16px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-danger {
+        background-color: #e74c3c;
+        border: none;
+    }
+
+    .btn-success {
+        background-color: #2ecc71;
+        border: none;
+    }
+
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .pagination {
+        margin-top: 30px;
+    }
+
+    .page-link {
+        color: #3498db;
+        border: 1px solid #e0e0e0;
+        margin: 0 3px;
+        border-radius: 5px;
+        padding: 8px 16px;
+    }
+
+    .page-item.active .page-link {
+        background-color: #3498db;
+        border-color: #3498db;
+    }
+
+    .page-link:hover {
+        background-color: #f8f9fa;
+        color: #2980b9;
+        border-color: #e0e0e0;
+    }
+
+    .right {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        padding: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .input-group-sm {
+            width: 100% !important;
+            margin-left: 0 !important;
+        }
         
-            <header class="card-header text-center mb-20">
-                <form action="/admin/users/" method="get" class="d-inline">
-                    <div class="input-group input-group-sm border border-1 border-grey rounded-pill" style="width: 500px; margin-left: 230px;">
-                        <input type="text" class="form-control border-0 rounded-pill" placeholder="Search customers..." name="search">
-                        <button class="btn  border-0" type="submit">Search</button>
-                    </div>
-                </form>
-            </header>
-            <div class="right mt-5">
-                <table class="table table-striped">
-                    <thead>
-                      <tr>
-                        <th scope="col"><b>Name</b></th>
-                        <th scope="col"><b>Email</b></th>
-                        <th scope="col"><b>Phone No</b></th>
-                        <th scope="col"><b>Action</b></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                        <%for(let i=0;i<data.length;i++){%>
-                            <tr>
-                                <td><%=data[i].name%></td>
-                                <td><%=data[i].email%></td>
-                                <td><%=data[i].phone%></td>
-                                <td>
-                                    <% if (data[i].isBlocked === false) { %>
-                                        <button class="btn btn-danger" style="width: 80px;">
-                                            <a href="/admin/blockCustomer?id=<%= data[i]._id %>&page=<%= currentPage %>&search=<%= searchTerm %>" 
-                                               class="text-white" style="text-decoration: none;">Block</a>
-                                        </button>
-                                    <% } else { %>
-                                        <button class="btn btn-success" style="width: 80px;">
-                                            <a href="/admin/unblockCustomer?id=<%= data[i]._id %>&page=<%= currentPage %>&search=<%= searchTerm %>" 
-                                               class="text-white" style="text-decoration: none;">Unblock</a>
-                                        </button>
-                                    <% } %>
-                                </td>
-                                
-                            </tr>
-                            <%}%>
-                    </tbody>
-                  </table>
+        .content-main {
+            padding: 15px;
+        }
+    }
+
+    .search-container {
+      margin: 20px 0 30px;
+      padding: 15px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .search-box {
+      width: 500px;
+      margin: 0 auto;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      height: 45px;
+      border-radius: 25px;
+      padding-left: 45px;
+      padding-right: 150px;
+      border: 2px solid #e0e0e0;
+      transition: all 0.3s ease;
+      font-size: 0.95rem;
+      width: 100%;
+    }
+
+    .search-input:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 15px;
+      top: 52%;
+      transform: translateY(-50%);
+      color: #666;
+      z-index: 1;
+    }
+
+    .search-buttons {
+      position: absolute;
+      right: 7px;
+      top: 52%;
+      transform: translateY(-50%);
+      display: flex;
+      gap: 5px;
+      z-index: 2;
+    }
+
+    .search-button, .clear-button {
+      border-radius: 20px;
+      padding: 6px 15px;
+      color: white;
+      border: none;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      height: 33px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .search-button {
+      background: #3498db;
+    }
+
+    .clear-button {
+      background: #e74c3c;
+      text-decoration: none;
+    }
+
+    .search-button:hover {
+      background: #2980b9;
+      transform: scale(1.02);
+    }
+
+    .clear-button:hover {
+      background: #c0392b;
+      transform: scale(1.02);
+      color: white;
+    }
+
+    .search-buttons i {
+      margin-right: 4px;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 768px) {
+      .search-box {
+        width: 100%;
+        max-width: 500px;
+      }
+
+      .search-input {
+        height: 40px;
+        font-size: 0.85rem;
+        padding-right: 140px;
+      }
+
+      .search-button, .clear-button {
+        padding: 5px 12px;
+        font-size: 0.85rem;
+        height: 30px;
+      }
+    }
+
+    .no-results {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .no-results i {
+      display: block;
+      margin-bottom: 15px;
+    }
+
+    .no-results h4 {
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    .no-results p {
+      margin-bottom: 20px;
+      color: #666;
+    }
+
+    .no-results .btn {
+      padding: 8px 20px;
+      font-weight: 500;
+    }
+
+    .no-results .btn i {
+      display: inline-block;
+      margin-right: 5px;
+      margin-bottom: 0;
+    }
+</style>
+
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Customers</h2>
         </div>
-        <div class="container mt-3">
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center mb-20">
-                    <% for (let i = 1; i <= totalpages; i++) { %>
-                        <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
-                            <a class="page-link" href="?page=<%= i %>&search=<%= searchTerm %>"><%= i %></a>
-                        </li>
+    </div>
+
+    <div class="search-container">
+        <form action="/admin/users" method="get" class="d-flex justify-content-center">
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input 
+                    type="text" 
+                    class="form-control search-input" 
+                    placeholder="Search customers by name or email..." 
+                    name="search" 
+                    value="<%= typeof searchTerm !== 'undefined' ? searchTerm : '' %>"
+                    autocomplete="off"
+                >
+                <div class="search-buttons">
+                    <% if (typeof searchTerm !== 'undefined' && searchTerm !== '') { %>
+                        <a href="/admin/users" class="clear-button">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
                     <% } %>
-                </ul>
-            </nav>
-        </div>
-        <%- include("../../views/partials/admin/footer") %>
+                    <button class="search-button" type="submit">
+                        Search
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+     
+    <div class="right mt-5">
+        <% if (data && data.length > 0) { %>
+            <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th scope="col"><b>SI.No</b></th>
+                    <th scope="col"><b>Name</b></th>
+                    <th scope="col"><b>Email</b></th>
+                    <th scope="col"><b>Phone No</b></th>
+                    <th scope="col"><b>Action</b></th>
+                  </tr>
+                </thead>
+                <tbody>
+                    <% data.forEach((data,index) => { %>
+                    <tr>
+                        <td><%= (currentPage - 1) * 3 + index + 1 %></td>
+                        <td><%=data.name%></td>
+                        <td><%=data.email%></td>
+                        <td><%=data.phone%></td>
+                        <td>
+                            <% if (data.isBlocked === false) { %>
+                                <button class="btn btn-danger" style="width: 100px;">
+                                    <a href="/admin/blockCustomer?id=<%= data._id %>&page=<%= currentPage %>&search=<%= searchTerm %>" 
+                                       class="text-white" style="text-decoration: none;">Block</a>
+                                </button>
+                            <% } else { %>
+                                <button class="btn btn-success" style="width: 100px;">
+                                    <a href="/admin/unblockCustomer?id=<%= data._id %>&page=<%= currentPage %>&search=<%= searchTerm %>" 
+                                       class="text-white" style="text-decoration: none;">Unblock</a>
+                                </button>
+                            <% } %>
+                        </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        <% } else { %>
+            <div class="no-results">
+                <div class="text-center py-5">
+                    <i class="fas fa-search mb-3" style="font-size: 3rem; color: #ccc;"></i>
+                    <h4 class="text-muted">No Customers Found</h4>
+                    <% if (typeof searchTerm !== 'undefined' && searchTerm !== '') { %>
+                        <p class="text-muted">No customers match your search "<%= searchTerm %>"</p>
+                        <a href="/admin/users" class="btn btn-outline-primary mt-2">
+                            <i class="fas fa-undo"></i> View All Customers
+                        </a>
+                    <% } else { %>
+                        <p class="text-muted">No customers have been registered yet</p>
+                    <% } %>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
+    <div class="container mt-3">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mb-20">
+                <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                    <a class="page-link" href="?page=<%= currentPage - 1 %>&search=<%= searchTerm %>" <%= currentPage === 1 ? 'tabindex="-1" aria-disabled="true"' : '' %>>&lt;</a>
+                </li>
+                <li class="page-item active">
+                    <span class="page-link"><%= currentPage %> out of <%= totalpages %></span>
+                </li>
+                <li class="page-item <%= currentPage === totalpages ? 'disabled' : '' %>">
+                    <a class="page-link" href="?page=<%= currentPage + 1 %>&search=<%= searchTerm %>" <%= currentPage === totalpages ? 'tabindex="-1" aria-disabled="true"' : '' %>>&gt;</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+</section>  
+
+<%- include("../../views/partials/admin/footer") %>

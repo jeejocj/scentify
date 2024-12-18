@@ -9,12 +9,13 @@ const bcrypt = require("bcrypt");
 
 const loadHomepage = async (req, res) => {
   try {
-      const user = req.session?.user??req.session?.passport?.user;
+      const user = req.session?.user;
       const categories = await Category.find({isListed:true});
       let productData = await Product.find({
         isBlocked:false,
         category:{$in:categories.map(category=>category._id)},quantity:{$gt:0}
       })
+      console.log(productData);
 
 productData.sort((a,b)=>new Date(b.createdOn));
 productData = productData.slice(0,4);
@@ -110,7 +111,7 @@ async function sendVerificationEmail(email,otp) {
     try {
       res.render("shopping");
     } catch (error) {
-      console.log("shopping page not loading:", error);
+      console.error("shopping page not loading:", error);
       res.status(500).send("Sever error")
     }
   };
@@ -142,7 +143,6 @@ async function sendVerificationEmail(email,otp) {
       if(otp === req.session.userOtp){
         const user = req.session.userData
         const passwordHash = await securePassword(user.password)
-        console.log(passwordHash)
         const saveUserData = new User({
           name:user.name,
           email:user.email,
@@ -150,8 +150,7 @@ async function sendVerificationEmail(email,otp) {
           password:passwordHash
         })
         await saveUserData.save();
-        req.session.user = saveUserData._id;
-        res.json({success:true, redirectUrl:"/"})
+        res.json({success:true, redirectUrl:"/login"})
       }else{
         res.status(400).json({success:false,message:"Invalid OTP,Please try again"})
       }
@@ -185,16 +184,17 @@ async function sendVerificationEmail(email,otp) {
   
   const loadLogin = async (req, res) => {
     try {
-      console.log("authenticated")
       if(!req.session.user){
-        const error = req.session.loginError;
-        req.session.loginError = ''
-        return res.render("login",{message:error})
-      }else{
-        res.redirect("/")
+        const error = req.session.error_message || req.session.loginError;
+        req.session.error_message = '';
+        req.session.loginError = '';
+        console.log(error)
+        return res.render("login", { message: error });
+      } else {
+        res.redirect("/");
       }
     } catch (error) {
-      res.redirect("/pageNotFound")  
+      res.redirect("/pageNotFound");
     }
   };
 
@@ -214,7 +214,7 @@ async function sendVerificationEmail(email,otp) {
       if(!passwordMatch){
         return res.render("login",{message:"Incorrect password"})
       }
-      console.log(findUser)
+      // console.log(findUser)
       req.session.user = findUser;
       res.redirect("/")
 
@@ -245,8 +245,6 @@ async function sendVerificationEmail(email,otp) {
 
 
 
-
-
   module.exports = {
     loadHomepage,
     pageNotFound,
@@ -257,7 +255,10 @@ async function sendVerificationEmail(email,otp) {
     resendOtp,
     loadLogin,
     login,
-    logout
+    logout,
+
+    securePassword,
+    generateOtp
 
   };
   

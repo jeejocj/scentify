@@ -47,7 +47,7 @@
     <% if (message) { %>
     <div class="alert alert-danger text-center"><%= message %></div>
     <% } %>
-    <form id="adminLoginForm" method="post" action="/admin/login">
+    <form id="adminLoginForm" method="post" action="/admin/login" novalidate>
       <div class="form-group">
         <label for="adminEmail">Email address</label>
         <input
@@ -55,7 +55,7 @@
           class="form-control"
           id="adminEmail"
           name="email"
-          required
+          
         />
         <div id="emailError" class="error-message"></div>
       </div>
@@ -66,7 +66,7 @@
           class="form-control"
           id="adminPassword"
           name="password"
-          required
+          
         />
         <div id="passwordError" class="error-message"></div>
       </div>

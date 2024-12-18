@@ -1,22 +1,154 @@
 <%- include("../../views/partials/admin/header") %>
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
+    <style>
+        .error-message {
+            color: red;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+    </style>
+</head>
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-6 mt-60">
-            <form method="post" action="/admin/editCategory/<%=category._id%>">
-                <div class="d-grid text-end mt-30 col-md-5">
-                    <button class="btn btn-primary" type="submit">Update category</button>
-                </div>
-                <div class="mb-4 mt-30">
-                    <label for="product_name" class="form-label">Name</label>
-                    <input type="text" name="categoryName" value="<%=category.name%>" class="form-control border" />
+            <form id="editCategoryForm" method="post" action="/admin/editCategory/<%=category._id%>" onsubmit="handleSubmit(event)" novalidate>
+                <div class="mb-4">
+                    <label for="categoryName" class="form-label">Name</label>
+                    <input type="text" name="categoryName" value="<%=category.name%>" class="form-control border" id="categoryName" required />
+                    <div id="name-error" class="error-message"></div>
                 </div>
                 
                 <div class="mb-4">
                     <label class="form-label">Description</label>
-                    <textarea name="description" class="form-control border"><%=category.description%></textarea>
+                    <textarea name="description" class="form-control border" id="description" required><%=category.description%></textarea>
+                    <div id="description-error" class="error-message"></div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='/admin/category'">Close</button>
+                    <button class="btn btn-primary" type="submit">Update Category</button>
+                </div>
+
+                <div id="noChangesError" class="text-danger mt-3" style="display: none;">
+                    No changes were made to update.
                 </div>
             </form>
+            <%if(typeof error !== 'undefined') {%>
+                <p class="text-danger"><%= error %></p>
+            <% } %>
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<script>
+    // Store initial values
+    const initialName = '<%=category.name%>';
+    const initialDescription = '<%=category.description%>';
+
+    function displayErrorMessage(elementId, message) {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+            errorElement.innerHTML = message;
+            errorElement.style.display = "block";
+        }
+    }
+
+    function clearErrorMessages() {
+        const errorElements = document.getElementsByClassName("error-message");
+        for (let element of errorElements) {
+            element.style.display = "none";
+            element.innerHTML = "";
+        }
+        document.getElementById("noChangesError").style.display = "none";
+    }
+
+    function validateForm() {
+        clearErrorMessages();
+        let isValid = true;
+        const name = document.getElementById("categoryName").value.trim();
+        const description = document.getElementById("description").value.trim();
+
+        if (name === "") {
+            displayErrorMessage("name-error", "Please enter a name");
+            isValid = false;
+        } else if (!/^[a-zA-Z0-9\s]+$/.test(name)) {
+            displayErrorMessage("name-error", "Category name should contain only alphanumeric characters");
+            isValid = false;
+        }
+
+        if (description === "") {
+            displayErrorMessage("description-error", "Please enter a description");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    function handleSubmit(event) {
+        event.preventDefault();
+        if (!validateForm()) {
+            return;
+        }
+
+        const form = document.getElementById('editCategoryForm');
+        const formData = new FormData(form);
+        const currentName = formData.get('categoryName').trim();
+        const currentDescription = formData.get('description').trim();
+
+        // Check if any changes were made
+        if (currentName === initialName && currentDescription === initialDescription) {
+            document.getElementById("noChangesError").style.display = 'block';
+            return;
+        }
+
+        $.ajax({
+            url: form.action,
+            method: 'POST',
+            data: {
+                categoryName: currentName,
+                description: currentDescription
+            },
+            success: function(response) {
+                if (response.status === false) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'Category already exists',
+                        confirmButtonText: 'OK'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Category updated successfully!',
+                        showConfirmButton: true,
+                        confirmButtonText: 'OK'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/admin/category';
+                        }
+                    });
+                }
+            },
+            error: function(error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to update category. Please try again.',
+                    confirmButtonText: 'OK'
+                });
+            }
+        });
+    }
+
+    // Clear error messages when user starts typing
+    document.getElementById('categoryName').addEventListener('input', clearErrorMessages);
+    document.getElementById('description').addEventListener('input', clearErrorMessages);
+</script>
+
 <%- include("../../views/partials/admin/footer") %>

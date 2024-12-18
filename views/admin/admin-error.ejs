@@ -1,22 +1,24 @@
 <%- include("../../views/partials/admin/header") %>
+
 <style>
-  body {
+  /* Scoped Styles */
+  .error-page-admin {
       font-family: Arial, sans-serif;
       background-color: #f4f4f4;
       text-align: center;
       padding: 20px;
   }
 
-  h1 {
+  .error-page-admin h1 {
       color: #333;
   }
 
-  p {
+  .error-page-admin p {
       color: #666;
       margin-bottom: 20px;
   }
 
-  button {
+  .error-page-admin button {
       background-color: #007bff;
       color: #fff;
       border: none;
@@ -26,20 +28,21 @@
       transition: background-color 0.3s;
   }
 
-  button:hover {
+  .error-page-admin button:hover {
       background-color: #b30000;
   }
 </style>
 
-
+<div class="error-page-admin">
   <h1>Error Page Admin</h1>
-  <p>An error occurred.</p>
-  <button onclick="godashboard()">Go to Home Page</button>
+  <p>An error occurred</p>
+  <button onclick="godashboard()">Go to Dashboard</button>
+</div>
 
-  <script>
-      function godashboard() {
-          window.location.href = "/admin";
-      }
-  </script>
+<script>
+  function godashboard() {
+      window.location.href = "/admin";
+  }
+</script>
 
 <%- include("../../views/partials/admin/footer") %>
