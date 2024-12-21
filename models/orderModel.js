@@ -9,7 +9,6 @@ const orderSchema = new Schema({
         unique:true
     },
     orderedItems:[{
-
         product:{
             type:Schema.Types.ObjectId,
             ref:'Product',
@@ -41,6 +40,11 @@ const orderSchema = new Schema({
         type:Schema.Types.ObjectId,
         ref:'Address',
         required:true
+    },
+    paymentMethod: {
+        type: String,
+        enum: ['COD', 'Online Payment', 'Wallet'],
+        default: 'COD'
     },
     invoiceDate:{
         type:Date

@@ -1,0 +1,154 @@
+<%- include("../../views/partials/admin/header") %>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title">Order Details</h3>
+                        <a href="/admin/orderList" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Orders
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Order Information</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Order ID:</strong></td>
+                                    <td><%= order._id %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Order Date:</strong></td>
+                                    <td><%= new Date(order.createdOn).toLocaleDateString() %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        <span class="badge bg-<%= 
+                                            order.status === 'Delivered' ? 'success' :
+                                            order.status === 'Cancelled' ? 'danger' :
+                                            order.status === 'Processing' ? 'primary' :
+                                            order.status === 'Shipped' ? 'info' :
+                                            'warning'
+                                        %>">
+                                            <%= order.status %>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Payment Method:</strong></td>
+                                    <td><%= order.paymentMethod %></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Customer Information</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Name:</strong></td>
+                                    <td><%= order.user.name %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td><%= order.user.email %></td>
+                                </tr>
+                                <% if(order.address) { %>
+                                    <tr>
+                                        <td><strong>Shipping Address:</strong></td>
+                                        <td>
+                                            <%= order.address.name %><br>
+                                            <%= order.address.landMark %><br>
+                                            <%= order.address.city %>, <%= order.address.state %><br>
+                                            <%= order.address.pincode %><br>
+                                            Phone: <%= order.address.phone %><br>
+                                            Alt Phone: <%= order.address.altPhone %>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            </table>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3">Order Items</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% order.orderedItems.forEach(item => { %>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="/uploads/re-image/<%= item.product.productImage[0] %>" 
+                                                     alt="<%= item.product.productName %>"
+                                                     class="me-3"
+                                                     style="width: 50px; height: 50px; object-fit: cover;">
+                                                <div>
+                                                    <h6 class="mb-0"><%= item.product.productName %></h6>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>₹<%= item.price.toLocaleString() %></td>
+                                        <td><%= item.quantity %></td>
+                                        <td class="text-end">₹<%= (item.price * item.quantity).toLocaleString() %></td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                    <td class="text-end">₹<%= order.totalPrice.toLocaleString() %></td>
+                                </tr>
+                                <% if(order.discount > 0) { %>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Discount:</strong></td>
+                                        <td class="text-end text-success">-₹<%= order.discount.toLocaleString() %></td>
+                                    </tr>
+                                <% } %>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                    <td class="text-end"><strong>₹<%= order.finalAmount.toLocaleString() %></strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <% if(order.status === 'Return Request') { %>
+                        <div class="mt-4">
+                            <h5 class="mb-3">Return Request Details</h5>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <p><strong>Return Reason:</strong> <%= order.returnReason %></p>
+                                    <p><strong>Request Date:</strong> <%= new Date(order.returnRequestDate).toLocaleDateString() %></p>
+                                </div>
+                            </div>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table-borderless td {
+    padding: 0.5rem 0;
+}
+
+.badge {
+    font-size: 0.875rem;
+    padding: 0.5em 0.75em;
+}
+</style>
+
+<%- include("../../views/partials/admin/footer") %>

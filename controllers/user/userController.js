@@ -256,9 +256,7 @@ async function sendVerificationEmail(email,otp) {
     loadLogin,
     login,
     logout,
-
     securePassword,
     generateOtp
-
   };
   

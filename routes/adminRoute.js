@@ -3,9 +3,10 @@ const router = express.Router();
 const adminController = require("../controllers/admin/adminController");
 const customerController = require("../controllers/admin/customerController")
 const categoryController = require("../controllers/admin/categoryController")
-const {userAuth,adminAuth} = require("../middlewares/auth")
+const {adminAuth} = require("../middlewares/auth")
 const brandController = require("../controllers/admin/brandController")
 const productController = require("../controllers/admin/productController")
+const orderController = require("../controllers/admin/orderController")
 
 const multer = require("multer");
 const storage = require("../helpers/multer");
@@ -49,5 +50,11 @@ router.get("/editProduct/:id", adminAuth, productController.getEditProduct);
 router.post("/editProduct/:id", adminAuth,uploads.array("images",4),productController.editProduct);
 router.post("/deleteImage", adminAuth, productController.deleteSingleImage);
 router.post("/addProductImage", adminAuth, uploads.single("images"), productController.addProductImage);
+
+// Order Management Routes
+router.get("/orderList", adminAuth, orderController.listOrders);
+router.get("/orders/cancelled", adminAuth, orderController.getCancelledOrders);
+router.get("/orders/:orderId", adminAuth, orderController.getAdminOrderDetails);
+router.post("/orders/update-status", adminAuth, orderController.updateOrderStatus);
 
 module.exports = router;

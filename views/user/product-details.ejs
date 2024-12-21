@@ -1,220 +1,393 @@
 <%- include("../../views/partials/user/header") %>
 
 <style>
-    .breadcrumb-bar {
-        background-color: #f8f9fa;
-        padding: 30px;
-        margin-bottom: 50px;
-        display: flex;
-        align-items: center;
-        font-size: 14px;
-        color: #6c757d;
-    }
-    .breadcrumb-bar a {
-        color: #007bff;
-        text-decoration: none;
-    }
-    .breadcrumb-bar a:hover {
-        text-decoration: underline;
-    }
-    .breadcrumb-bar span {
-        margin: 0 5px;
-    }
-    .ProductContainer {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-    .product-detail {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 30px;
-    }
-    .product-images {
-        flex: 1;
-        min-width: 300px;
-    }
-    .main-image-container {
-        position: relative;
-        overflow: hidden;
-        width: 100%;
-        padding-top: 80%; /* Smaller Aspect Ratio */
-    }
-    .main-image {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 8px;
-        transition: transform 0.3s ease;
-    }
-    .thumbnail-strip {
-        display: flex;
-        gap: 10px;
-        margin-top: 10px;
-        overflow-x: auto;
-    }
-    .thumbnail {
-        width: 70px;
-        height: 70px;
-        object-fit: cover;
-        border-radius: 4px;
-        cursor: pointer;
-        border: 2px solid transparent;
-    }
-    .thumbnail.active {
-        border-color: #007bff;
-    }
-    .product-info {
-        flex: 1;
-        min-width: 300px;
-    }
-    h1 {
-        font-size: 24px;
-        margin-bottom: 10px;
-    }
-    .rating {
-        color: #ffc107;
-        font-size: 20px;
-    }
-    .price {
-        font-size: 24px;
-        font-weight: bold;
-        color: #007bff;
-        margin: 10px 0;
-    }
-    .quantity {
-        display: flex;
-        align-items: center;
+    .breadcrumb-option {
+        padding: 40px 0;
+        background: #f3f2ee;
         margin-bottom: 20px;
     }
-    .quantity button {
+
+    .breadcrumb__text h4 {
+        color: #111111;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .breadcrumb__links a {
+        font-size: 15px;
+        color: #111111;
+        margin-right: 18px;
+        display: inline-block;
+        position: relative;
+    }
+
+    .breadcrumb__links a:after {
+        position: absolute;
+        right: -12px;
+        top: 0;
+        content: ">";
+        color: #666666;
+    }
+
+    .breadcrumb__links span {
+        font-size: 15px;
+        color: #b7b7b7;
+        display: inline-block;
+    }
+
+    .product-details {
+        padding: 80px 0;
         background-color: #f8f9fa;
-        border: 1px solid #ced4da;
-        padding: 5px 10px;
-        font-size: 16px;
+    }
+
+    .product-gallery {
+        position: relative;
+        margin-bottom: 30px;
+        overflow: hidden;
+    }
+
+    .main-image {
+        width: 100%;
+        height: 500px;
+        object-fit: cover;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+        cursor: zoom-in;
+    }
+
+    .main-image.zoomed {
+        transform-origin: 0 0;
+        cursor: zoom-out;
+    }
+
+    .thumbnail-container {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .thumbnail {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
         cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
     }
-    .quantity span {
-        padding: 5px 15px;
-        border-top: 1px solid #ced4da;
-        border-bottom: 1px solid #ced4da;
+
+    .thumbnail:hover {
+        transform: translateY(-2px);
+        border-color: #e53637;
     }
+
+    .product-info {
+        padding: 20px;
+    }
+
+    .product-title {
+        font-size: 32px;
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .product-price {
+        font-size: 28px;
+        color: #e53637;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .original-price {
+        text-decoration: line-through;
+        color: #999;
+        font-size: 20px;
+    }
+
+    .discount-badge {
+        background-color: #e53637;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    .offer-details {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        margin: 20px 0;
+    }
+
+    .offer-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        color: #666;
+    }
+
+    .offer-icon {
+        color: #e53637;
+    }
+
+    .product-description {
+        color: #666;
+        line-height: 1.8;
+        margin-bottom: 30px;
+    }
+
     .add-to-cart {
-        background-color: #007bff;
+        background-color: #e53637;
         color: white;
         border: none;
-        padding: 10px 20px;
+        padding: 15px 40px;
+        border-radius: 30px;
         font-size: 16px;
         cursor: pointer;
-        border-radius: 4px;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
     }
+
     .add-to-cart:hover {
-        background-color: #0056b3;
+        background-color: #d32f2f;
+        transform: translateY(-2px);
     }
+
     .product-meta {
-        margin-top: 20px;
-        font-size: 14px;
-        color: #6c757d;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
     }
 
+    .meta-item {
+        margin-bottom: 10px;
+        color: #666;
+    }
 
-    .review-section {
-        margin-top: 40px;
-        padding: 20px;
+    .meta-label {
+        font-weight: 600;
+        color: #333;
+        margin-right: 10px;
+    }
+
+    .related-products {
+        padding: 60px 0;
+    }
+
+    .related-title {
+        font-size: 24px;
+        margin-bottom: 30px;
+        color: #333;
+        text-align: center;
+    }
+
+    .rating {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 20px;
+    }
+
+    .rating i {
+        color: #ffd700;
+    }
+
+    .rating-count {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .quantity-selector {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         border: 1px solid #ddd;
-        border-radius: 5px;
-        background-color: #f9f9f9;
+        border-radius: 25px;
+        padding: 4px 12px;
+        background: #fff;
+        width: 120px;
+        margin: 15px 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .quantity-btn {
+        background: none;
+        border: none;
+        color: #333;
+        font-size: 18px;
+        cursor: pointer;
+        padding: 0;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .quantity-btn:hover {
+        color: #000;
+        transform: scale(1.1);
+    }
+
+    .quantity-btn:active {
+        transform: scale(0.95);
+    }
+
+    .quantity-btn:focus {
+        outline: none;
+    }
+
+    .quantity-input {
+        width: 40px;
+        text-align: center;
+        border: none;
+        background: transparent;
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+        padding: 0;
+        margin: 0 4px;
+        -moz-appearance: textfield;
+    }
+
+    .quantity-input::-webkit-inner-spin-button,
+    .quantity-input::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .quantity-btn.minus::before {
+        content: "−"; /* Using a proper minus sign */
+    }
+    
+    .quantity-btn.plus::before {
+        content: "+";
+    }
+
+    @media (max-width: 768px) {
+        .quantity-selector {
+            width: 100px;
+            padding: 3px 8px;
+        }
+
+        .quantity-btn {
+            font-size: 16px;
+            width: 24px;
+            height: 24px;
+        }
+
+        .quantity-input {
+            font-size: 14px;
+            width: 32px;
+        }
+    }
+
+    .reviews-section {
+        margin-top: 60px;
+        padding: 30px;
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    }
+
+    .review-card {
+        padding: 20px;
+        border: 1px solid #eee;
+        border-radius: 10px;
+        margin-bottom: 20px;
     }
 
     .review-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
     }
 
-    .average-rating {
-        display: flex;
-        align-items: center;
+    .reviewer-name {
+        font-weight: 600;
+        color: #333;
     }
 
-    .average-rating h4 {
-        margin: 0 10px;
+    .review-date {
+        color: #999;
+        font-size: 14px;
     }
 
-    .rating-bar {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .rating-bar li {
-        display: flex;
-        align-items: center;
-        margin: 5px 0;
-    }
-
-    .rating-bar .progress {
-        width: 60%;
-        margin: 0 10px;
-    }
-
-    .review-card {
-        border: 1px solid #ddd;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 5px;
-        background-color: #fff;
-    }
-
-    .review-card .author {
-        font-weight: bold;
-    }
-
-    .review-card .verified {
+    .verified-badge {
         background: #28a745;
-        color: #fff;
-        border-radius: 4px;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
         font-size: 12px;
-        padding: 2px 6px;
-        margin-left: 5px;
+        margin-left: 10px;
     }
 
-    .related-products {
-        margin-top: 40px;
+    .product__item__text {
         padding: 20px;
+        text-align: center;
     }
 
-    .related-products h3 {
-        margin-bottom: 20px;
+    .product__item__text h6 {
+        margin-bottom: 10px;
     }
 
-    .card img {
-        object-fit: cover;
-        height: 200px;
+    .product__item__text .rating {
+        margin-bottom: 10px;
+        justify-content: center;
     }
 
-    #homed:hover{
-        color: black;
-        text-decoration: none;
+    .product__item__price {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 10px 0;
     }
-    
+
+    .product__item__price .original-price {
+        text-decoration: line-through;
+        color: #999;
+        font-size: 16px;
+    }
+
+    .product__item__price .sale-price {
+        color: #e53637;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .product__item__offer {
+        background: #e53637;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        display: inline-block;
+        margin-bottom: 10px;
+    }
 </style>
+
+
 
 <section class="breadcrumb-option">
     <div class="container">
         <div class="row">
             <div class="col-lg-12">
                 <div class="breadcrumb__text">
-                    <h4>Shop</h4>
+                    <h4>Product Details</h4>
                     <div class="breadcrumb__links">
-                        <a href="/" id="homed">Home</a>
-                        <span>Product Details</span>
+                        <a href="/">Home</a>
+                        <a href="/shop">Shop</a>
+                        <span><%= product.productName %></span>
                     </div>
                 </div>
             </div>
@@ -222,253 +395,332 @@
     </div>
 </section>
 
-<div class="ProductContainer">
-    <div class="product-detail">
-        <div class="product-images">
-            <div class="main-image-container" onmousemove="zoomImage(event)" >
-                <img id="mainImage" src="/uploads/re-image/<%= product.productImage[0] %>" alt="Product Image" class="main-image" onmouseleave="resetZoom(event)">
-            </div>
-            <div class="thumbnail-strip">
-                <% for (let i = 0; i < product.productImage.length; i++) { %>
-                    <div>
-                        <img src="/uploads/re-image/<%= product.productImage[i] %>" alt="Product Thumbnail <%= i + 1 %>" class="thumbnail" onclick="changeImage(this)">
-                    </div>
-                <% } %>
-            </div>
-        </div>
-        <div class="product-info">
-            <h1><%= product.productName %></h1>
-            <div class="rating">
-                ★★★★☆ <span style="color: #6c757d; font-size: 14px;">(25 reviews)</span>
-            </div>
-            <p><%= product.brand %></p>
-            <p><%= product.description %></p>
-            <div class="container mt-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="price text-dark font-weight-bold">
-                        <%= product.regularPrice %>
-                    </div>
-                    <div class="price text-center p-3 bg-light text-danger font-weight-bold rounded shadow-sm ">
-                        Discount: <%= totalOffer %>%
+<!-- Product Details Section -->
+<section class="product-details">
+    <div class="container">
+        <div class="row">
+            <!-- Product Gallery -->
+            <div class="col-lg-6">
+                <div class="product-gallery">
+                    <img src="/uploads/re-image/<%= product.productImage[0] %>" 
+                         alt="<%= product.productName %>" 
+                         class="main-image" 
+                         id="mainImage"
+                         onmousemove="zoomImage(event)"
+                         onmouseleave="resetZoom(event)"
+                         onclick="toggleZoom(event)">
+                    <div class="thumbnail-container">
+                        <% product.productImage.forEach((image, index) => { %>
+                            <img src="/uploads/re-image/<%= image %>" 
+                                 alt="<%= product.productName %> - <%= index + 1 %>" 
+                                 class="thumbnail"
+                                 onclick="changeImage(this)">
+                        <% }); %>
                     </div>
                 </div>
             </div>
-            
-            <!-- Add this to include Bootstrap if not already linked -->
-            <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-            
-            
-            <!-- Add this to include Bootstrap if not already linked -->
-            <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-            
-            <div class="quantity">
-                <button onclick="changeQuantity(-1)">-</button>
-                <span id="quantity">1</span>
-                <button onclick="changeQuantity(1)">+</button>
-            </div>
-            <button class="add-to-cart" onclick="addToCart()">Add to Cart</button>
-            <div class="product-meta">
-                <p>Stock Code: FWM15VKT</p>
-                <p>Availability: <span style="color: #28a745;"><%= product.quantity %></span></p>
+
+            <!-- Product Info -->
+            <div class="col-lg-6">
+                <div class="product-info">
+                    <h1 class="product-title"><%= product.productName %></h1>
+                    
+                    <div class="rating">
+                        <% for(let i = 0; i < 5; i++) { %>
+                            <% if (i < Math.floor(product.averageRating || 0)) { %>
+                                <i class="fa fa-star"></i>
+                            <% } else if (i === Math.floor(product.averageRating) && product.averageRating % 1 !== 0) { %>
+                                <i class="fa fa-star-half-o"></i>
+                            <% } else { %>
+                                <i class="fa fa-star-o"></i>
+                            <% } %>
+                        <% } %>
+                        <span class="rating-count">(<%= product.reviews?.length || 0 %> reviews)</span>
+                    </div>
+
+                    <div class="product-price">
+                        <% if (totalOffer > 0) { %>
+                            <span class="original-price">₹<%= product.regularPrice %></span>
+                            <span>₹<%= Math.round(product.regularPrice - (product.regularPrice * totalOffer / 100)) %></span>
+                            <span class="discount-badge"><%= totalOffer %>% OFF</span>
+                        <% } else { %>
+                            <span>₹<%= product.regularPrice %></span>
+                        <% } %>
+                    </div>
+
+                    <div class="offer-details">
+                        <% if (CategoryOffer > 0) { %>
+                            <div class="offer-item">
+                                <i class="fa fa-tag offer-icon"></i>
+                                <span>Category Offer: <%= CategoryOffer %>% off</span>
+                            </div>
+                        <% } %>
+                        <% if (ProductOffer > 0) { %>
+                            <div class="offer-item">
+                                <i class="fa fa-gift offer-icon"></i>
+                                <span>Product Offer: <%= ProductOffer %>% off</span>
+                            </div>
+                        <% } %>
+                        <div class="offer-item">
+                            <i class="fa fa-truck offer-icon"></i>
+                            <span>Free Delivery</span>
+                        </div>
+                        <div class="offer-item">
+                            <i class="fa fa-shield offer-icon"></i>
+                            <span>100% Authentic Products</span>
+                        </div>
+                    </div>
+
+                    <p class="product-description"><%= product.description %></p>
+
+                    <div class="quantity-selector">
+                        <button type="button" class="quantity-btn minus" onclick="updateQuantity(-1)" aria-label="Decrease quantity"></button>
+                        <input type="number" value="1" min="1" max="5" class="quantity-input" id="quantity" readonly>
+                        <button type="button" class="quantity-btn plus" onclick="updateQuantity(1)" aria-label="Increase quantity"></button>
+                    </div>
+
+                    <button class="add-to-cart" onclick="addToCart('<%= product._id %>')">
+                        <i class="fa fa-shopping-cart"></i>
+                        Add to Cart
+                    </button>
+
+                    <div class="product-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Category:</span>
+                            <%= category.name %>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Brand:</span>
+                            <%= product.brand %>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
+<!-- Reviews Section -->
+<section class="reviews-section container">
+    <h2 class="mb-4">Customer Reviews</h2>
+    
+    <!-- Review Card 1 -->
+    <div class="review-card">
+        <div class="review-header">
+            <div>
+                <span class="reviewer-name">Shreya Unni</span>
+                <span class="verified-badge">Verified Purchase</span>
+            </div>
+            <span class="review-date">December 15, 2023</span>
+        </div>
+        <div class="rating mb-2">
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+        </div>
+        <p>"Absolutely love this fragrance! The scent is elegant and long-lasting. I receive compliments every time I wear it. The bottle design is also beautiful and looks great on my dresser."</p>
+    </div>
 
-<div class="container mt-5">
-    <!-- Related Products Section -->
-    <div class="related-products">
-        <h3>Related Products</h3>
-        <div class="row row-cols-1 row-cols-md-3 g-4">
-            <% relatedProducts.forEach(function(relatedProduct) { %>
-                <div class="col">
-                    <div class="product-cart-wrap">
-                        <div class="product-img-action-wrap">
-                            <a href="/productDetails?id=<%= relatedProduct._id %>" class="product-img">
-                                <img src="/uploads/re-image/<%= relatedProduct.productImage[0] %>" alt="<%= relatedProduct.productName %>" class="default-img">
-                            </a>
-                            <button class="wishlist-btn">
-                                <i class="far fa-heart"></i>
-                            </button>
+    <!-- Review Card 2 -->
+    <div class="review-card">
+        <div class="review-header">
+            <div>
+                <span class="reviewer-name">Tala Basir</span>
+                <span class="verified-badge">Verified Purchase</span>
+            </div>
+            <span class="review-date">December 10, 2023</span>
+        </div>
+        <div class="rating mb-2">
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+        </div>
+        <p>"Perfect for daily wear! The fragrance is subtle yet distinctive. I especially appreciate how it evolves throughout the day. The shipping was fast and the packaging was secure."</p>
+    </div>
+
+    <!-- Review Card 3 -->
+    <div class="review-card">
+        <div class="review-header">
+            <div>
+                <span class="reviewer-name">Arun Kumar</span>
+                <span class="verified-badge">Verified Purchase</span>
+            </div>
+            <span class="review-date">December 5, 2023</span>
+        </div>
+        <div class="rating mb-2">
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+        </div>
+        <p>"Outstanding value for money! The fragrance lasts all day and the bottle size is generous. I've tried many premium perfumes, but this one stands out. Will definitely repurchase."</p>
+    </div>
+</section>
+
+<!-- Related Products Section -->
+<section class="related-products">
+    <div class="container">
+        <h2 class="related-title">Related Products</h2>
+        <div class="row">
+            <% relatedProducts.forEach(relatedProduct => { %>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="product__item">
+                        <div class="product__item__pic set-bg" data-setbg="/uploads/re-image/<%= relatedProduct.productImage[0] %>">
+                            <ul class="product__hover">
+                                <li><a href="#" class="wishlist-btn"><i class="fas fa-heart"></i></a></li>
+                                <li><a href="/productDetails?id=<%= relatedProduct._id %>" class="view-btn"><i class="fas fa-eye"></i></a></li>
+                            </ul>
                         </div>
-                        <div class="product-content-wrap">
-                            <h6><%= relatedProduct.productName %></h6>
-                            <h5>₹<%= relatedProduct.regularPrice %></h5>
-                            <a href="/productDetails?id=<%= relatedProduct._id %>" class="btn">View Details</a>
+                        <div class="product__item__text">
+                            <h6><a href="/productDetails?id=<%= relatedProduct._id %>"><%= relatedProduct.productName %></a></h6>
+                            
+                            <div class="rating">
+                                <% for(let i = 0; i < 5; i++) { %>
+                                    <% if (i < Math.floor(relatedProduct.averageRating || 0)) { %>
+                                        <i class="fa fa-star"></i>
+                                    <% } else if (i === Math.floor(relatedProduct.averageRating) && relatedProduct.averageRating % 1 !== 0) { %>
+                                        <i class="fa fa-star-half-o"></i>
+                                    <% } else { %>
+                                        <i class="fa fa-star-o"></i>
+                                    <% } %>
+                                <% } %>
+                            </div>
+
+                            <% 
+                                const categoryOffer = relatedProduct.category?.categoryOffer || 0;
+                                const productOffer = relatedProduct.productOffer || 0;
+                                const totalOffer = categoryOffer + productOffer;
+                                const discountedPrice = Math.round(relatedProduct.regularPrice - (relatedProduct.regularPrice * totalOffer / 100));
+                            %>
+
+                            <% if (totalOffer > 0) { %>
+                                <div class="product__item__offer">
+                                    <%= totalOffer %>% OFF
+                                </div>
+                            <% } %>
+
+                            <div class="product__item__price">
+                                <% if (totalOffer > 0) { %>
+                                    <span class="original-price">₹<%= relatedProduct.regularPrice %></span>
+                                    <span class="sale-price">₹<%= discountedPrice %></span>
+                                <% } else { %>
+                                    <span class="sale-price">₹<%= relatedProduct.regularPrice %></span>
+                                <% } %>
+                            </div>
+
+                            <a href="#" class="add-cart" onclick="addToCart('<%= relatedProduct._id %>', 1)">+ Add To Cart</a>
                         </div>
                     </div>
                 </div>
             <% }); %>
         </div>
     </div>
-</div>
-
-
-<div class="container mt-5">
-    <!-- Review Section -->
-    <div class="review-section">
-        <div class="review-header">
-            <!-- Average Rating -->
-            <div class="average-rating">
-                <h4>★★★★★</h4>
-                <p>5.0 out of 5 Based on 2 reviews</p>
-            </div>
-
-            <!-- Write Review Button -->
-            <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#reviewModal">
-                Write a Review
-            </button>
-        </div>
-
-        <!-- Rating Distribution -->
-        <div class="row">
-            <div class="col-md-6">
-                <ul class="rating-bar">
-                    <li>
-                        5 ★
-                        <div class="progress">
-                            <div class="progress-bar bg-warning" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                        2
-                    </li>
-                    <li>
-                        4 ★
-                        <div class="progress">
-                            <div class="progress-bar bg-warning" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                        0
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- User Reviews -->
-        <div class="review-card">
-            <p class="author">Shreya Unni <span class="verified">Verified</span></p>
-            <p>★★★★★</p>
-            <p>Nice Aroma</p>
-        </div>
-        <div class="review-card">
-            <p class="author">Tala Basir <span class="verified">Verified</span></p>
-            <p>★★★★★</p>
-            <p>The perfume lasts throughout the whole day.</p>
-        </div>
-    </div>
-</div>
-
-
-
-
-<!-- Review Modal -->
-<div class="modal fade" id="reviewModal" tabindex="-1"  aria-labelledby="reviewModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="reviewModalLabel">Write a Review</h5>
-                <i type="button" class=" fa fa-close" data-bs-dismiss="modal" aria-label="Close"></i>
-            </div>
-            <div class="modal-body">
-                <form id="reviewForm">
-                    <div class="mb-3">
-                        <label for="reviewName" class="form-label">Your Name</label>
-                        <input type="text" class="form-control" id="reviewName" placeholder="Enter your name">
-                    </div>
-                    <div class="mb-3">
-                        <label for="reviewRating" class="form-label">Rating</label>
-                        <select class="form-select" id="reviewRating">
-                            <option value="5">★★★★★</option>
-                            <option value="4">★★★★☆</option>
-                            <option value="3">★★★☆☆</option>
-                            <option value="2">★★☆☆☆</option>
-                            <option value="1">★☆☆☆☆</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="reviewText" class="form-label">Review</label>
-                        <textarea class="form-control" id="reviewText" rows="3" placeholder="Write your review here"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitReview()">Submit Review</button>
-            </div>
-        </div>
-    </div>
-</div>
-
+</section>
 
 <script>
     function changeImage(thumbnail) {
         const mainImage = document.getElementById('mainImage');
         mainImage.src = thumbnail.src;
-        mainImage.alt = thumbnail.alt;
-
-        document.querySelectorAll('.thumbnail').forEach(thumb => {
-            thumb.classList.remove('active');
-        });
-        thumbnail.classList.add('active');
-    }
-
-    function changeQuantity(change) {
-        const quantityElement = document.getElementById('quantity');
-        let quantity = parseInt(quantityElement.textContent) + change;
-        quantity = Math.max(1, quantity);
-        quantityElement.textContent = quantity;
-    }
-
-    function addToCart() {
-        const quantity = document.getElementById('quantity').textContent;
-        alert(`Added ${quantity} item(s) to cart!`);
+        // Reset zoom when changing image
+        resetZoom({ target: mainImage });
     }
 
     function zoomImage(e) {
         const image = e.target;
+        if (!image.classList.contains('zoomed')) return;
+        
         const zoomer = e.currentTarget;
-        const x = e.offsetX / zoomer.offsetWidth;
-        const y = e.offsetY / zoomer.offsetHeight;
-        const zoomLevel = 2;
-        image.style.transformOrigin = `${x * 100}% ${y * 100}%`;
-        image.style.transform = `scale(${zoomLevel})`;
+        const x = (e.offsetX / zoomer.offsetWidth) * 100;
+        const y = (e.offsetY / zoomer.offsetHeight) * 100;
+        
+        image.style.transformOrigin = `${x}% ${y}%`;
     }
 
     function resetZoom(e) {
         const image = e.target;
         image.style.transform = 'scale(1)';
+        image.classList.remove('zoomed');
     }
 
+    function toggleZoom(e) {
+        const image = e.target;
+        if (image.classList.contains('zoomed')) {
+            resetZoom(e);
+        } else {
+            image.style.transform = 'scale(2.5)';
+            image.classList.add('zoomed');
+            zoomImage(e);
+        }
+    }
 
-
-
-    function submitReview() {
-        const name = document.getElementById('reviewName').value;
-        const rating = document.getElementById('reviewRating').value;
-        const text = document.getElementById('reviewText').value;
-
-        if (!name || !text) {
-            alert('Please fill out all fields.');
+    function updateQuantity(change) {
+        const input = document.getElementById('quantity');
+        const currentValue = parseInt(input.value);
+        const newValue = currentValue + change;
+        
+        // Check limits
+        if (newValue < 1) {
+            toastr.error('Quantity cannot be less than 1');
             return;
         }
-
-        // Append new review dynamically
-        const reviewSection = document.querySelector('.review-section');
-        const newReview = `
-            <div class="review-card">
-                <p class="author">${name} <span class="verified">Verified</span></p>
-                <p>${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}</p>
-                <p>${text}</p>
-            </div>
-        `;
-        reviewSection.insertAdjacentHTML('beforeend', newReview);
-
-        // Close modal
-        const reviewModal = document.getElementById('reviewModal');
-        const modal = bootstrap.Modal.getInstance(reviewModal);
-        modal.hide();
-
-        // Clear form
-        document.getElementById('reviewForm').reset();
+        if (newValue > 5) {
+            toastr.error('Maximum quantity allowed is 5');
+            return;
+        }
+        
+        input.value = newValue;
     }
+
+    async function addToCart(productId) {
+        const quantity = document.getElementById('quantity').value;
+        
+        try {
+            const response = await fetch('/addToCart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    productId,
+                    quantity: parseInt(quantity)
+                }),
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (response.status === 401) {
+                toastr.warning('Please login to add items to cart');
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 1500);
+                return;
+            }
+
+            if (data.success) {
+                toastr.success('Product added to cart successfully!');
+            } else {
+                throw new Error(data.message || 'Failed to add product to cart');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            toastr.error(error.message || 'An error occurred while adding the product to cart');
+        }
+    }
+
+    // Initialize background images for related products
+    document.addEventListener('DOMContentLoaded', function() {
+        const bgElements = document.querySelectorAll('.set-bg');
+        bgElements.forEach(element => {
+            const bg = element.getAttribute('data-setbg');
+            element.style.backgroundImage = `url('${bg}')`;
+        });
+    });
 </script>
+
 <%- include("../../views/partials/user/footer") %>

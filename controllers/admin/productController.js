@@ -1,7 +1,6 @@
 const Product=require("../../models/productModel");
 const Category=require("../../models/categoryModel");
 const Brand=require("../../models/brandModel");
-const User=require("../../models/userModel")
 const fs=require("fs")
 const path = require("path")
 const sharp=require("sharp");
@@ -18,9 +17,7 @@ const getProductAddPage = async(req,res)=>{
             cat:category,
             brand:brand
         })
-
-    } catch (error) {
-        
+    } catch (error) {    
         res.redirect("/pageerror")
     }
 };
@@ -28,9 +25,7 @@ const getProductAddPage = async(req,res)=>{
 
 const addProducts = async (req, res) => {
     try {
-        console.log("Received request body:", req.body);
-        console.log("Received files:", req.files);
-        
+   
         const products = req.body;
         
         // Validate required fields
@@ -59,14 +54,14 @@ const addProducts = async (req, res) => {
                             "public",
                             "uploads",
                             "product-images",
-                            'resized-' + filename
+                             filename
                         );
 
                         // Ensure directory exists
-                        const dir = path.join("public", "uploads", "product-images");
-                        if (!fs.existsSync(dir)) {
-                            fs.mkdirSync(dir, { recursive: true });
-                        }
+                        // const dir = path.join("public", "uploads", "product-images");
+                        // if (!fs.existsSync(dir)) {
+                        //     fs.mkdirSync(dir, { recursive: true });
+                        // }
 
                         // Resize image
                         await sharp(originalImagePath)
@@ -74,19 +69,19 @@ const addProducts = async (req, res) => {
                             .toFile(resizedImagePath);
 
                         // Add the resized image filename to the array
-                        images.push('resized-' + filename);
+                        images.push(filename);
 
                         // Wait a bit before trying to delete the original file
-                        setTimeout(async () => {
-                            try {
-                                if (fs.existsSync(originalImagePath)) {
-                                    await fs.promises.unlink(originalImagePath);
-                                }
-                            } catch (err) {
-                                console.error('Error deleting original file:', err);
-                                // Continue execution even if deletion fails
-                            }
-                        }, 2000);
+                        // setTimeout(async () => {
+                        //     try {
+                        //         if (fs.existsSync(originalImagePath)) {
+                        //             await fs.promises.unlink(originalImagePath);
+                        //         }
+                        //     } catch (err) {
+                        //         console.error('Error deleting original file:', err);
+                        //         // Continue execution even if deletion fails
+                        //     }
+                        // }, 2000);
 
                     } catch (err) {
                         console.error('Error processing image:', err);
@@ -118,16 +113,16 @@ const addProducts = async (req, res) => {
                 salePrice: products.salePrice ? parseFloat(products.salePrice) : undefined,
                 createdOn: new Date(),
                 quantity: parseInt(products.quantity),
-                color: products.color,
+                // color: products.color,
                 productImage: images,
                 status: "Available",
             });
 
-            console.log("Attempting to save product:", newProduct);
+            // console.log("Attempting to save product:", newProduct);
             
             try {
                 await newProduct.save();
-                console.log("Product saved successfully");
+                // console.log("Product saved successfully");
                 return res.status(200).json({ 
                     success: true, 
                     message: "Product added successfully" 
@@ -168,7 +163,7 @@ const getAllProducts = async(req,res)=>{
     const searchQuery = {
       $or: [
         { productName: { $regex: ".*" + search + ".*", $options: "i" } },
-        { brand: { $regex: ".*" + search + ".*", $options: "i" } }
+        { "brand.brandName": { $regex: ".*" + search + ".*", $options: "i" } }
       ]
     };
 
@@ -183,12 +178,13 @@ const getAllProducts = async(req,res)=>{
 
     // Fetch products with pagination
     const productData = await Product.find(searchQuery)
+        .populate('brand')
+        .populate('category')
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip((page - 1) * limit)
-      .populate('category')
       .lean();
-
+    console.log(JSON.stringify(productData));
     // Get total count for pagination
     const count = await Product.countDocuments(searchQuery);
 
@@ -385,7 +381,7 @@ const editProduct = async(req,res)=>{
             regularPrice: data.regularPrice,
             salePrice: data.salePrice,
             quantity: data.quantity,
-            color: data.color
+            // color: data.color
         };
 
         if(req.files && req.files.length > 0){
@@ -494,12 +490,12 @@ const addProductImage = async (req, res) => {
 
         const file = req.file;
         const originalImagePath = file.path;
-        const filename = 'resized-' + file.filename;
+        const filename =   file.filename;
         const resizedImagePath = path.join(
             "public",
             "uploads",
             "product-images",
-            filename
+             filename
         );
 
         // Ensure directory exists

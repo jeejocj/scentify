@@ -1,0 +1,209 @@
+<%- include('../layouts/userHeader.ejs') %>
+
+<style>
+    .main {
+        background-color: #fff;
+        padding-top: 20px;
+        padding-bottom: 40px;
+    }
+
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        background-color: #fff;
+    }
+
+    .card-header {
+        background-color: #333;
+        color: #fff;
+        padding: 15px;
+        font-size: 16px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        border: 1px solid #ddd;
+    }
+
+    .table th, .table td {
+        padding: 12px;
+        text-align: left;
+        vertical-align: middle;
+        font-size: 16px;
+    }
+
+    .table th {
+        background-color: #f0f0f0;
+        color: #333;
+        border-bottom: 2px solid #ddd;
+    }
+
+    .table td {
+        background-color: #ffffff;
+        color: #333;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .table td img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 5px;
+    }
+
+    tfoot td {
+        font-weight: bold;
+        background-color: #f9f9f9;
+        color: #333;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }
+
+    .btn:hover {
+        opacity: 0.8;
+    }
+
+    @media (max-width: 768px) {
+        .table th, .table td {
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .table td img {
+            width: 70px;
+            height: 70px;
+        }
+    }
+</style>
+
+<main class="main">
+    <div class="page-header breadcrumb-wrap">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="/" rel="nofollow"><i class="fi-rs-home mr-5"></i>Home</a>
+                <span></span> <a href="/profile">Profile</a>
+                <span></span> Order Details
+            </div>
+        </div>
+    </div>
+    <section class="mt-50 mb-50">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Order Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-5">
+                                <div class="col-md-6">
+                                    <h6 class="mb-3">Order Information</h6>
+                                    <p><strong>Order ID:</strong> #<%= order._id.toString().slice(-6).toUpperCase() %></p>
+                                    <p><strong>Date:</strong> <%= new Date(order.createdOn).toLocaleString() %></p>
+                                    <p><strong>Status:</strong> 
+                                        <span class="badge 
+                                            <% if (order.status === 'Delivered') { %>bg-success
+                                            <% } else if (order.status === 'Cancelled') { %>bg-danger
+                                            <% } else { %>bg-warning<% } %>">
+                                            <%= order.status %>
+                                        </span>
+                                    </p>
+                                    <p><strong>Total Amount:</strong> ₹<%= order.finalAmount.toLocaleString() %></p>
+                                    <% if(order.discount > 0) { %>
+                                        <p><strong>Discount Applied:</strong> ₹<%= order.discount.toLocaleString() %></p>
+                                    <% } %>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="mb-3">Shipping Address</h6>
+                                    <% if(order.address) { %>
+                                        <p><%= order.address.name %></p>
+                                        <p><%= order.address.address %></p>
+                                        <p><%= order.address.city %>, <%= order.address.state %> <%= order.address.pincode %></p>
+                                        <p><strong>Phone:</strong> <%= order.address.phone %></p>
+                                    <% } %>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Image</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% order.orderItems.forEach(item => { %>
+                                            <tr>
+                                                <td>
+                                                    <h6 class="mb-0"><%= item.product.productName %></h6>
+                                                    <small class="text-muted">Brand: <%= item.product.brand %></small>
+                                                </td>
+                                                <td>
+                                                    <img src="<%= item.product.productImage[0] %>" 
+                                                         alt="<%= item.product.productName %>">
+                                                </td>
+                                                <td><%= item.quantity %></td>
+                                                <td>₹<%= item.price.toLocaleString() %></td>
+                                                <td>₹<%= (item.price * item.quantity).toLocaleString() %></td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+                                            <td>₹<%= order.totalPrice.toLocaleString() %></td>
+                                        </tr>
+                                        <% if(order.discount > 0) { %>
+                                            <tr>
+                                                <td colspan="4" class="text-end"><strong>Discount:</strong></td>
+                                                <td>-₹<%= order.discount.toLocaleString() %></td>
+                                            </tr>
+                                        <% } %>
+                                        <tr>
+                                            <td colspan="4" class="text-end"><strong>Final Amount:</strong></td>
+                                            <td>₹<%= order.finalAmount.toLocaleString() %></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <% if(order.status === 'Pending') { %>
+                                <div class="mt-4">
+                                    <form action="/orders/cancel" method="POST" class="d-inline">
+                                        <input type="hidden" name="orderId" value="<%= order._id %>">
+                                        <button type="submit" class="btn btn-danger" 
+                                            onclick="return confirm('Are you sure you want to cancel this order?')">
+                                            Cancel Order
+                                        </button>
+                                    </form>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<%- include('../layouts/userFooter.ejs') %>

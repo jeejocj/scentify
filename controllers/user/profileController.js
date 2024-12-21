@@ -1,6 +1,6 @@
 const User=require("../../models/userModel");
 const Address=require("../../models/addressModel")
-// const order=require("../../models/orderModel")
+const Order = require("../../models/orderModel");
 const nodemailer = require("nodemailer");
 const bcrypt =require("bcrypt");
 const env = require("dotenv").config();
@@ -144,13 +144,30 @@ const postNewPassword = async (req, res) => {
 };
 
 const userProfile = async (req, res) => {
-    try {    
-        const userId = req.session.user;
-        const userData = await User.findById(userId);
-        const addressData = await Address.findOne({userId:userId});
-        res.render("profile", { user: userData, userAddress:addressData});
+    try {
+        const userId = req.session.user._id;
+        
+        // Fetch user with populated orderHistory
+        const user = await User.findById(userId)
+            .populate({
+                path: 'orderHistory',
+                populate: {
+                    path: 'orderedItems.product',
+                    model: 'Product',
+                    select: 'productName productImage salesPrice'
+                },
+                options: { sort: { createdOn: -1 } }
+            });
+
+        const address = await Address.findOne({ userId: userId });
+
+        res.render('profile', {
+            user: user,
+            addressData: address || { address: [] },
+            orders: user.orderHistory || []
+        });
     } catch (error) {
-        console.error("Error for retrieve profile data", error);
+        console.error('Error in userProfile:', error);
         res.redirect("/pageNotFound");
     }
 };
@@ -512,16 +529,81 @@ const deleteAddress = async (req, res) => {
     }
 };
 
+const getOrderDetails = async (req, res) => {
+    try {
+        const orderId = req.params.orderId;
+        const order = await Order.findById(orderId)
+            .populate('orderItems.product');
 
+        if (!order) {
+            return res.redirect('/profile');
+        }
+
+        res.render('orderDetails', { order });
+    } catch (error) {
+        console.error('Error in getOrderDetails:', error);
+        res.redirect("/profile");
+    }
+};
+
+const cancelOrder = async (req, res) => {
+    try {
+        const orderId = req.body.orderId;
+        const order = await Order.findById(orderId);
+
+        if (!order || order.status !== 'Pending') {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Order not found or cannot be cancelled' 
+            });
+        }
+
+        order.status = 'Cancelled';
+        await order.save();
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Order cancelled successfully' 
+        });
+    } catch (error) {
+        console.error('Error in cancelOrder:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred while cancelling the order' 
+        });
+    }
+};
+
+const deleteOrder = async (req, res) => {
+    try {
+        const { orderId } = req.params; // Get the order ID from the URL
+        const user = req.session.user;
+
+        if (!user) {
+            return res.status(401).json({ success: false, message: "Unauthorized" });
+        }
+
+        // Find and delete the order
+        const order = await Order.findOneAndDelete({ _id: orderId, userId: user._id });
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found" });
+        }
+
+        res.status(200).json({ success: true, message: "Order deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting order:", error.message);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
 
 
 module.exports = {
     getForgotPassPage,
     forgotEmailValid,
-    sendVerificationEmail,
-    verifyForgotPassOtp ,
+    verifyForgotPassOtp,
     getResetPassPage,
-    resendOtp ,
+    resendOtp,
     postNewPassword,
     userProfile,
     changeEmail,
@@ -537,4 +619,7 @@ module.exports = {
     editAddress,
     postEditAddress,
     deleteAddress,
-}
+    getOrderDetails,
+    cancelOrder,
+    deleteOrder
+};

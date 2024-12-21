@@ -6,6 +6,10 @@ const userController = require("../controllers/user/userController");
 const productController = require("../controllers/user/productController");
 const profileController = require("../controllers/user/profileController");
 const shopController = require("../controllers/user/shopController");
+const cartController = require("../controllers/user/cartController");
+const checkoutController = require("../controllers/user/checkoutController");
+const orderController = require("../controllers/user/orderController");
+
 const passport = require("passport");
 const { userAuth,googleAuth } = require("../middlewares/auth");
 
@@ -37,6 +41,7 @@ router.get("/login",userController.loadLogin);
 router.post("/login",userController.login);
 router.get("/logout",userController.logout);
 router.get("/productDetails", productController.productDetails);
+router.get("/shop", shopController.loadShoppingPage);
 
 router.get("/forgot-password",profileController.getForgotPassPage);
 router.post("/forgot-email-valid",profileController.forgotEmailValid);
@@ -63,5 +68,31 @@ router.get("/deleteAddress",userAuth,profileController.deleteAddress);
 
 
 router.get("/shop",shopController.loadShoppingPage);
+
+router.post('/addToCart',userAuth,cartController.addToCart);
+router.get('/cart', cartController.getCart);
+router.post('/cart/update-quantity', userAuth, cartController.updateQuantity);
+router.post('/cart/remove', userAuth, cartController.removeFromCart);
+
+// Checkout Routes
+router.get("/checkout", userAuth, checkoutController.getcheckoutPage);
+router.post("/checkout", userAuth, checkoutController.postCheckout);
+router.get("/orderConfirm", checkoutController.orderConfirm);
+
+// Profile and Order Routes
+router.get("/profile", profileController.userProfile);
+router.get("/orders/:orderId", profileController.getOrderDetails);
+router.post("/orders/cancel", profileController.cancelOrder);
+router.delete('/orders/:orderId', userAuth, profileController.deleteOrder);
+
+// Order Routes
+router.get('/orders/get-details/:orderId', userAuth, orderController.getOrderDetailsJson);
+
+
+router.get('/orders/view/:orderId', userAuth, orderController.getOrderDetails);
+router.post('/orders/update-status', userAuth, orderController.updateOrderStatus);
+router.get('/return-reason', userAuth, orderController.showReturnReasonPage);
+router.post('/submit-return-reason', userAuth, orderController.submitReturnReason);
+
 
 module.exports = router

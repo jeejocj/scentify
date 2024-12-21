@@ -26,6 +26,8 @@ const productDetails = async(req,res)=>{
             product:product,
             quantity:product.quantity,
             totalOffer:totalOffer,
+            CategoryOffer:CategoryOffer,
+            ProductOffer:ProductOffer,
             category:findCategory,
             relatedProducts:relatedProducts
         });

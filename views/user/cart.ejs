@@ -1,0 +1,613 @@
+<%- include("../../views/partials/user/header") %>
+
+<style>
+    /* Reset table styles */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    td, th {
+        padding: 15px;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    th {
+        background: #f8f9fa;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .cart__status {
+        text-align: center;
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .status-placed {
+        background-color: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .status-cancelled {
+        background-color: #ffebee;
+        color: #d32f2f;
+    }
+
+    .status-delivered {
+        background-color: #e8f5e9;
+        color: #388e3c;
+    }
+
+    .cancellation-reason {
+        font-size: 12px;
+        color: #d32f2f;
+        margin-top: 5px;
+    }
+
+    .product__cart__item {
+        width: 120px;
+        padding: 10px;
+        margin: 0 auto;
+    }
+
+    .product__cart__item__pic {
+        width: 80px;
+        height: 80px;
+        overflow: hidden;
+        border-radius: 8px;
+        margin: 0 auto 8px;
+    }
+
+    .product__cart__item__pic img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .product__cart__item__text {
+        text-align: center;
+        margin-top: 8px;
+    }
+
+    .product__cart__item__text h6 {
+        margin: 0;
+        font-size: 14px;
+        color: #333;
+        line-height: 1.4;
+    }
+
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        width: 100px;
+        height: 36px;
+        border: 1px solid #ddd;
+        border-radius: 18px;
+        background: #fff;
+        margin: 0 auto;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .qty-btn {
+        border: none;
+        background: none;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.2s;
+        padding: 0;
+    }
+
+    .qty-btn:hover {
+        color: #000;
+    }
+
+    .qty-btn:active {
+        transform: scale(0.95);
+    }
+
+    .qty-input {
+        width: 36px;
+        text-align: center;
+        border: none;
+        background: none;
+        font-size: 15px;
+        font-weight: 500;
+        color: #333;
+        padding: 0;
+        -moz-appearance: textfield;
+    }
+
+    .qty-input::-webkit-inner-spin-button,
+    .qty-input::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .qty-btn.minus::before {
+        content: "−";
+    }
+
+    .qty-btn.plus::before {
+        content: "+";
+    }
+
+    .qty-btn:disabled {
+        color: #ccc;
+        cursor: not-allowed;
+    }
+
+    .cart__price {
+        font-size: 14px;
+        color: #333;
+    }
+
+    .cart__close button {
+        background: none;
+        border: none;
+        color: #dc3545;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+
+    .empty-cart-message {
+        padding: 40px 20px;
+        text-align: center;
+    }
+
+    .empty-cart-message h4 {
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .empty-cart-message p {
+        color: #666;
+        margin-bottom: 20px;
+    }
+
+    .remove-btn {
+        background: none;
+        border: none;
+        color: #d32f2f;
+        cursor: pointer;
+        font-size: 18px;
+    }
+
+    .remove-btn:hover {
+        color: #b71c1c;
+    }
+
+    .primary-btn.disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    .continue__btn {
+        text-align: left;
+        margin-top: 20px;
+    }
+
+    .continue__btn a {
+        display: inline-flex;
+        align-items: center;
+        padding: 12px 24px;
+        background: #fff;
+        color: #333;
+        text-decoration: none;
+        border: 2px solid #333;
+        border-radius: 30px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .continue__btn a i {
+        margin-right: 8px;
+        font-size: 16px;
+    }
+
+    .continue__btn a:hover {
+        background: #333;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .continue__btn a:active {
+        transform: translateY(0);
+    }
+
+    .cart__total .discount__content {
+        margin: 20px 0;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #eee;
+    }
+
+    .cart__total .discount__content h6 {
+        color: #333;
+        margin-bottom: 12px;
+        font-size: 15px;
+    }
+
+    .cart__total .discount__content form {
+        display: flex;
+        gap: 8px;
+    }
+
+    .cart__total .discount__content input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        min-width: 0;
+    }
+
+    .cart__total .discount__content .site-btn {
+        padding: 8px 15px;
+        background: #333;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        white-space: nowrap;
+        transition: background 0.2s;
+    }
+
+    .cart__total .discount__content .site-btn:hover {
+        background: #444;
+    }
+
+    @media (max-width: 768px) {
+        .pro-qty-2 {
+            gap: 5px;
+            padding: 3px;
+        }
+
+        .pro-qty-2 button {
+            font-size: 16px;
+            padding: 0 5px;
+        }
+
+        .pro-qty-2 input {
+            width: 30px;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+    }
+</style>
+
+    <!-- Breadcrumb Section Begin -->
+    <section class="breadcrumb-option">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="breadcrumb__text">
+                        <h4>Shopping Cart</h4>
+                        <div class="breadcrumb__links">
+                            <a href="/">Home</a>
+                            <a href="/shop">Shop</a>
+                            <span>Shopping Cart</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Breadcrumb Section End -->
+    
+    <!-- Shopping Cart Section Begin -->
+    <section class="shopping-cart spad">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="shopping__cart__table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (products && products.length > 0) { %>
+                                    <% products.forEach(item => { %>
+                                        <tr>
+                                            <td>
+                                                <div class="product__cart__item">
+                                                    <div class="product__cart__item__pic">
+                                                        <img src="/uploads/re-image/<%= item.productId.productImage?.[0] || 'default.png' %>" 
+                                                             alt="<%= item.productId.productName %>"
+                                                             loading="lazy">
+                                                    </div>
+                                                    <div class="product__cart__item__text">
+                                                        <h6><%= item.productId.productName %></h6>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="cart__price">₹<%= item.price %></td>
+                                            <td class="quantity__item">
+                                                <div class="quantity-control" data-stock="<%= item.productId.quantity %>">
+                                                    <button type="button" 
+                                                            class="qty-btn minus" 
+                                                            onclick="updateQuantity('<%= item.productId._id %>', -1)"
+                                                            aria-label="Decrease quantity"></button>
+                                                    <input type="number" 
+                                                           class="qty-input"
+                                                           id="qty-<%= item.productId._id %>"
+                                                           value="<%= item.quantity %>"
+                                                           readonly>
+                                                    <button type="button" 
+                                                            class="qty-btn plus" 
+                                                            onclick="updateQuantity('<%= item.productId._id %>', 1)"
+                                                            aria-label="Increase quantity"></button>
+                                                </div>
+                                            </td>
+                                            <td class="cart__price">₹<%= item.totalPrice %></td>
+                                            <td class="cart__close">
+                                                <button onclick="removeFromCart('<%= item.productId._id %>', this)" class="btn">
+                                                    <i class="fa fa-close"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="5" class="text-center">
+                                            <div class="empty-cart-message">
+                                                <h4>Your Cart is Empty</h4>
+                                                <p>Start shopping to add items to your cart!</p>
+                                                <a href="/shop" class="continue__btn">
+                                                    <i class="fa fa-arrow-left"></i>
+                                                    Continue Shopping
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6 col-sm-6">
+                            <div class="continue__btn">
+                                <a href="/shop">
+                                    <i class="fa fa-arrow-left"></i>
+                                    Continue Shopping
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="cart__total">
+                        <h6>Cart total</h6>
+                        <ul>
+                            <li>Subtotal <span>₹<%= totalAmount.toLocaleString() %></span></li>
+                            <li>Total <span>₹<%= totalAmount.toLocaleString() %></span></li>
+                        </ul>
+                        <div class="discount__content">
+                            <h6>Discount codes</h6>
+                            <form action="#">
+                                <input type="text" placeholder="Enter your coupon code">
+                                <button type="submit" class="site-btn">Apply</button>
+                            </form>
+                        </div>
+                        <% if (products && products.length > 0) { %>
+                            <a href="/checkout" class="primary-btn">Proceed to checkout</a>
+                        <% } else { %>
+                            <button class="primary-btn disabled" disabled>Cart is empty</button>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Shopping Cart Section End -->
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    
+    <script>
+        // Configure Toastr after jQuery loads
+        $(document).ready(function() {
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "timeOut": "2000"
+            };
+        });
+
+        async function removeFromCart(productId, element) {
+            try {
+                const response = await fetch('/cart/remove', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ productId }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Find and remove the table row
+                    const row = element.closest('tr');
+                    if (row) {
+                        row.remove();
+                        toastr.success('Product removed from cart');
+                        
+                        // Update cart total
+                        updateCartTotal();
+                        
+                        // Check if cart is empty
+                        const tbody = document.querySelector('.shopping__cart__table tbody');
+                        if (tbody && tbody.children.length === 0) {
+                            tbody.innerHTML = `
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        <div class="empty-cart-message">
+                                            <h4>Your Cart is Empty</h4>
+                                            <p>Add items to your cart to continue shopping</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                    }
+                } else {
+                    toastr.error(data.message || 'Failed to remove product from cart');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                toastr.error('An error occurred while removing the product');
+            }
+        }
+
+        async function updateQuantity(productId, change) {
+            const qtyInput = document.getElementById(`qty-${productId}`);
+            const currentQty = parseInt(qtyInput.value);
+            const newQty = currentQty + change;
+            const stockLimit = parseInt(qtyInput.closest('.quantity-control').dataset.stock);
+            
+            // Frontend validation
+            if (newQty < 1) {
+                toastr.error('Quantity cannot be less than 1');
+                return;
+            }
+            if (newQty > 5) {
+                toastr.error('Maximum quantity allowed is 5');
+                return;
+            }
+            if (newQty > stockLimit) {
+                toastr.error(`Only ${stockLimit} items available in stock`);
+                return;
+            }
+
+            try {
+                const response = await fetch('/cart/update-quantity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        productId,
+                        quantity: newQty
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    toastr.success('Cart updated successfully');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    toastr.error(data.message || 'Failed to update quantity');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                toastr.error('An error occurred while updating quantity');
+            }
+        }
+
+        function updateQuantityButtons(productId) {
+            const container = document.getElementById(`qty-${productId}`).closest('.quantity-control');
+            const quantity = parseInt(container.querySelector('.qty-input').value);
+            const stock = parseInt(container.dataset.stock);
+            
+            // Get the buttons
+            const minusBtn = container.querySelector('.minus');
+            const plusBtn = container.querySelector('.plus');
+            
+            // Update minus button
+            minusBtn.disabled = quantity <= 1;
+            
+            // Update plus button
+            plusBtn.disabled = quantity >= Math.min(5, stock);
+        }
+
+        // Initialize button states for all quantity controls
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.quantity-control').forEach(container => {
+                const productId = container.querySelector('.qty-input').id.replace('qty-', '');
+                updateQuantityButtons(productId);
+            });
+        });
+
+        function updateCartTotal() {
+            const priceElements = document.querySelectorAll('.cart__price');
+            let total = 0;
+            
+            // Skip the first price element in each row (it's the unit price)
+            // and sum up the total prices (last column)
+            priceElements.forEach((element, index) => {
+                if (index % 2 === 1) { // Only count total price columns
+                    const price = parseFloat(element.textContent.replace('₹', '').replace(',', ''));
+                    if (!isNaN(price)) {
+                        total += price;
+                    }
+                }
+            });
+
+            // Update both subtotal and total
+            const subtotalSpan = document.querySelector('.cart__total li:first-child span');
+            const totalSpan = document.querySelector('.cart__total li:last-child span');
+            if (subtotalSpan && totalSpan) {
+                const formattedTotal = total.toLocaleString('en-IN', {
+                    maximumFractionDigits: 2,
+                    minimumFractionDigits: 2
+                });
+                subtotalSpan.textContent = `₹${formattedTotal}`;
+                totalSpan.textContent = `₹${formattedTotal}`;
+            }
+
+            // Hide/show checkout button based on cart status
+            const checkoutButton = document.querySelector('.primary-btn');
+            if (checkoutButton) {
+                if (total === 0) {
+                    checkoutButton.classList.add('disabled');
+                    checkoutButton.disabled = true;
+                } else {
+                    checkoutButton.classList.remove('disabled');
+                    checkoutButton.disabled = false;
+                }
+            }
+        }
+    </script>
+
+    <%- include("../../views/partials/user/footer") %>
