@@ -56,18 +56,18 @@ const loadShoppingPage = async (req, res) => {
     const sortOption = req.query.sort;
     if (sortOption) {
       switch (sortOption) {
-        case 'popularity':
-          sort = { salesCount: -1 };
-          break;
+        // case 'popularity':
+        //   sort = { salesCount: -1 };
+        //   break;
         case 'price_asc':
           sort = { regularPrice: 1 };
           break;
         case 'price_desc':
           sort = { regularPrice: -1 };
           break;
-        case 'rating':
-          sort = { averageRating: -1 };
-          break;
+        // case 'rating':
+        //   sort = { averageRating: -1 };
+        //   break;
         case 'newest':
           sort = { createdOn: -1 };
           break;
