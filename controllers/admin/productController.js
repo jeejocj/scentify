@@ -321,87 +321,133 @@ const unblockProduct = async (req, res) => {
 
 const getEditProduct = async (req, res) => {
     try {
-        const productId = req.params.id;
-        const product = await Product.findById(productId).populate('category');
-        const category = await Category.find({ isListed: true });
+        const id = req.params.id;
+        const product = await Product.findById(id).populate(['brand', 'category']);
         const brand = await Brand.find({ isBlocked: false });
+        const cat = await Category.find({ isListed: true });
 
         if (!product) {
-            return res.status(400).json({ 
-                success: false, 
-                error: "Product not found" 
-            });
+            return res.redirect("/admin/products");
         }
 
-        res.render('edit-product', {
-            product,
-            cat: category,
-            brand
-        });
+        console.log('Product:', product);
+        console.log('Categories:', cat);
+
+        res.render("edit-product", { product, brand, cat });
     } catch (error) {
         console.error("Error in getEditProduct:", error);
-        return res.status(500).json({ 
-            success: false, 
-            error: "Internal server error" 
-        });
+        res.redirect("/admin/products");
     }
 };
 
-const editProduct = async(req,res)=>{
+const updateProduct = async (req, res) => {
     try {
-        const id = req.params.id;
-        const product = await Product.findOne({_id:id});
-        const data = req.body;
+        const productId = req.params.id;
+        const {
+            productName,
+            description,
+            brand: brandId,
+            category: categoryId,
+            regularPrice,
+            salePrice,
+            quantity
+        } = req.body;
 
-        // Check if another product (excluding current one) has the same name
-        const existingProduct = await Product.findOne({
-            productName: data.productName,
-            _id: { $ne: id }  // Exclude current product
-        });
-
-        if(existingProduct){
-            return res.status(400).json({ 
-                success: false, 
-                error: "Product with this name already exists. Please try with another name" 
+        // Input validation
+        if (!productName || !description || !brandId || !categoryId || !regularPrice || !quantity) {
+            return res.status(400).json({
+                success: false,
+                message: "Please fill all required fields"
             });
         }
 
+        // Validate brand exists
+        const brandDoc = await Brand.findById(brandId);
+        if (!brandDoc) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid brand selected"
+            });
+        }
+
+        // Validate category exists
+        const categoryDoc = await Category.findById(categoryId);
+        if (!categoryDoc) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid category selected"
+            });
+        }
+
+        // Handle image uploads
         const images = [];
-        if(req.files && req.files.length > 0){
-            for(let i = 0; i < req.files.length; i++){
-                images.push(req.files[i].filename);
+        if (req.files && req.files.length > 0) {
+            for (let file of req.files) {
+                images.push(file.filename);
             }
         }
 
-        const updateFields = {
-            productName: data.productName,
-            description: data.description,
-            brand: data.brand,
-            category: product.category,
-            regularPrice: data.regularPrice,
-            salePrice: data.salePrice,
-            quantity: data.quantity,
-            // color: data.color
-        };
+        // Convert price and quantity to numbers
+        const numRegularPrice = Number(regularPrice);
+        const numSalePrice = salePrice ? Number(salePrice) : undefined;
+        const numQuantity = Number(quantity);
 
-        if(req.files && req.files.length > 0){
-            updateFields.$push = {productImage: {$each: images}};
+        if (isNaN(numRegularPrice) || isNaN(numQuantity) || (salePrice && isNaN(numSalePrice))) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid price or quantity values"
+            });
         }
 
-        await Product.findByIdAndUpdate(id, updateFields, {new: true});
-        return res.status(200).json({ 
-            success: true, 
-            message: "Product updated successfully" 
+        // Prepare update object
+        const updateFields = {
+            productName,
+            description,
+            brand: brandId,
+            category: categoryId,
+            regularPrice: numRegularPrice,
+            quantity: numQuantity,
+            status: numQuantity > 0 ? "Available" : "out of stock"
+        };
+
+        // Only include salePrice if it's provided
+        if (numSalePrice !== undefined) {
+            updateFields.salePrice = numSalePrice;
+        }
+
+        // Add images if any were uploaded
+        if (images.length > 0) {
+            updateFields.$push = { productImage: { $each: images } };
+        }
+
+        // Update the product
+        const updatedProduct = await Product.findByIdAndUpdate(
+            productId,
+            updateFields,
+            { new: true, runValidators: true }
+        ).populate(['brand', 'category']);
+
+        if (!updatedProduct) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Product updated successfully",
+            product: updatedProduct
         });
+
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ 
-            success: false, 
-            error: "Internal server error" 
+        console.error("Error updating product:", error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Failed to update product"
         });
     }
-}
-
+};
 
 const deleteSingleImage = async(req,res)=>{
     try {
@@ -552,7 +598,7 @@ module.exports={
     blockProduct,
     unblockProduct,
     getEditProduct,
-    editProduct,
+    updateProduct,
     deleteSingleImage,
     addProductImage
 }

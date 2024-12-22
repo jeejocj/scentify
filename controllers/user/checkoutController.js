@@ -43,7 +43,7 @@ const getcheckoutPage = async (req, res) => {
                     _id: product._id,
                     productName: product.productName,
                     productImage: productImage.length > 0 ? productImage : ["default-image.jpg"],
-                    salesPrice: product.salesPrice || 0,
+                    salesPrice: product.salePrice || 0,
                     quantity: item.quantity || 1,
                     // total: product.salesPrice * item.quantity
                 };
@@ -122,7 +122,6 @@ const postCheckout = async (req, res) => {
         }
 
         const { address: addressId, products, subtotal, total, paymentMethod } = req.body;
-
         console.log("Checkout Request Body:", req.body);
         console.log("Selected Address ID:", addressId);
         console.log("Payment Method:", paymentMethod);

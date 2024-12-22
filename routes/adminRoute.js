@@ -25,8 +25,6 @@ router.get("/unblockCustomer",adminAuth,customerController.customerunBlocked)
 router.get("/category",adminAuth,categoryController.categoryInfo)
 router.post("/addCategory",adminAuth,categoryController.addCategory)
 
-router.post("/addCategoryOffer",adminAuth,categoryController.addCategoryOffer)
-router.post("/removeCategoryOffer",adminAuth,categoryController.removeCategoryOffer)
 router.get("/listCategory",adminAuth,categoryController.getListCategory)
 router.get("/unlistCategory",adminAuth,categoryController.getUnListCategory)
 router.get("/editCategory",adminAuth,categoryController.getEditCategory)
@@ -47,7 +45,10 @@ router.get("/removeProductOffer/:id",adminAuth,productController.removeProductOf
 router.get('/blockProduct/:id', adminAuth, productController.blockProduct);
 router.get("/unblockProduct/:id", adminAuth, productController.unblockProduct);
 router.get("/editProduct/:id", adminAuth, productController.getEditProduct);
-router.post("/editProduct/:id", adminAuth,uploads.array("images",4),productController.editProduct);
+router.post('/product/edit/:id', 
+    uploads.array('productImage', 4),
+    productController.updateProduct
+);
 router.post("/deleteImage", adminAuth, productController.deleteSingleImage);
 router.post("/addProductImage", adminAuth, uploads.single("images"), productController.addProductImage);
 

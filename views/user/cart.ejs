@@ -446,7 +446,7 @@
                 "closeButton": true,
                 "progressBar": true,
                 "positionClass": "toast-top-right",
-                "timeOut": "2000"
+                "timeOut": "1000"
             };
         });
 
@@ -535,7 +535,7 @@
                     toastr.success('Cart updated successfully');
                     setTimeout(() => {
                         window.location.reload();
-                    }, 1500);
+                    }, 1000);
                 } else {
                     toastr.error(data.message || 'Failed to update quantity');
                 }

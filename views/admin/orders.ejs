@@ -44,18 +44,28 @@
                                         <td><%= new Date(order.createdOn).toLocaleDateString() %></td>
                                         <td>
                                             <select class="form-select status-select" 
-                                                    data-order-id="<%= order._id %>"
-                                                    <%= order.status === 'Cancelled' ? 'disabled' : '' %>>
+                                                    data-order-id="<%= order._id.toString() %>"
+                                                    <%= order.status === 'Cancelled' || order.status === 'Returned' ? 'disabled' : '' %>>
                                                 <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
                                                 <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
                                                 <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
                                                 <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                                                 <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-                                                <option value="Return Request" <%= order.status === 'Return Request' ? 'selected' : '' %>>Return Request</option>
-                                                <option value="Returned" <%= order.status === 'Returned' ? 'selected' : '' %>>Returned</option>
+                                                <% if (order.status === 'Return Request') { %>
+                                                    <option value="Return Request" selected>Return Request</option>
+                                                    <option value="Returned">Returned</option>
+                                                <% } %>
                                             </select>
+                                            <% if (order.status === 'Return Request') { %>
+                                                <small class="text-muted d-block mt-1">
+                                                    <i class="fas fa-info-circle"></i> Return requested by customer
+                                                </small>
+                                            <% } %>
                                         </td>
-                                        <td>₹<%= order.finalAmount.toLocaleString() %></td>
+                                        <td>₹<%= order.finalAmount ? order.finalAmount.toLocaleString('en-IN', {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2
+                                        }) : '0.00' %></td>
                                         <td>
                                             <a href="/admin/orders/<%= order._id %>" 
                                                class="btn btn-info btn-sm">
@@ -77,72 +87,185 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+// Define valid status transitions (same as backend)
+const validStatusTransitions = {
+    'Pending': ['Processing', 'Cancelled'],
+    'Processing': ['Shipped', 'Cancelled'],
+    'Shipped': ['Delivered', 'Cancelled'],
+    'Delivered': [], // Admin can't initiate return request
+    'Return Request': ['Returned', 'Cancelled'], // Admin can only approve or cancel return requests
+    'Returned': [], // No further transitions allowed
+    'Cancelled': [] // No further transitions allowed
+};
+
+// Initialize DataTable when document is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize DataTable
-    $('#ordersTable').DataTable({
-        "order": [[2, "desc"]], // Sort by date column descending
-        "pageLength": 10,
-        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
-    });
-
-    // Handle status changes
-    document.querySelectorAll('.status-select').forEach(select => {
-        select.addEventListener('change', async function() {
-            const orderId = this.dataset.orderId;
-            const status = this.value;
-            const originalValue = this.getAttribute('data-original-value');
-            
-            try {
-                const result = await Swal.fire({
-                    title: 'Update Order Status',
-                    text: `Are you sure you want to change the status to ${status}?`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, update it!'
-                });
-
-                if (result.isConfirmed) {
-                    const response = await fetch('/admin/orders/update-status', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ orderId, status })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        Swal.fire(
-                            'Updated!',
-                            'Order status has been updated.',
-                            'success'
-                        );
-                        // Store new value as original
-                        this.setAttribute('data-original-value', status);
-                    } else {
-                        throw new Error(data.message || 'Failed to update status');
+    // Check if DataTable is available
+    if ($.fn.DataTable) {
+        console.log('DataTable plugin is loaded');
+        try {
+            let table = $('#ordersTable').DataTable({
+                order: [[2, "desc"]], 
+                pageLength: 10,
+                language: {
+                    lengthMenu: "Show _MENU_ entries per page",
+                    zeroRecords: "No matching records found",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "No records available",
+                    infoFiltered: "(filtered from _MAX_ total records)",
+                    search: "Search:",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
                     }
-                } else {
-                    // Reset to original value if cancelled
-                    this.value = originalValue;
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                Swal.fire(
-                    'Error!',
-                    error.message || 'Failed to update order status',
-                    'error'
-                );
-                // Reset to original value
-                this.value = originalValue;
+            });
+            console.log('DataTable initialized successfully');
+        } catch (error) {
+            console.error('Error initializing DataTable:', error);
+        }
+    } else {
+        console.error('DataTable plugin is not loaded');
+    }
+
+    // Function to update status options based on current status
+    function updateStatusOptions($select) {
+        const currentStatus = $select.find('option[selected]').val() || $select.val();
+        const allowedNextStatuses = validStatusTransitions[currentStatus] || [];
+        
+        // Disable all options first
+        $select.find('option').each(function() {
+            const $option = $(this);
+            const statusValue = $option.val();
+            
+            // Always show current status
+            if (statusValue === currentStatus) {
+                $option.show().prop('disabled', false);
+                return;
+            }
+            
+            // For Return Request status, show specific options
+            if (currentStatus === 'Return Request' && ['Returned', 'Cancelled'].includes(statusValue)) {
+                $option.show().prop('disabled', false);
+                return;
+            }
+            
+            // Show and enable only valid next statuses
+            if (allowedNextStatuses.includes(statusValue)) {
+                $option.show().prop('disabled', false);
+            } else {
+                $option.hide().prop('disabled', true);
             }
         });
-        
-        // Store original value
-        select.setAttribute('data-original-value', select.value);
+
+        // Add visual indicator for return requests
+        const $container = $select.parent();
+        const $note = $container.find('.return-note');
+        if (currentStatus === 'Return Request') {
+            if (!$note.length) {
+                $container.append('<small class="text-muted d-block mt-1 return-note"><i class="fas fa-info-circle"></i> Return requested by customer</small>');
+            }
+        } else {
+            $note.remove();
+        }
+    }
+
+    // Initialize status options for all selects
+    $('.status-select').each(function() {
+        updateStatusOptions($(this));
+    });
+
+    // Add event listeners to all status select dropdowns
+    $('.status-select').on('change', function() {
+        console.log('Status changed');
+        const $select = $(this);
+        const orderId = $select.data('orderId');
+        const newStatus = $select.val();
+        const oldStatus = $select.find('option[selected]').val() || 
+                         $select.find('option[selected]').val();
+
+        console.log('Order ID:', orderId);
+        console.log('New Status:', newStatus);
+        console.log('Old Status:', oldStatus);
+
+        // Check if the status transition is valid
+        const allowedNextStatuses = validStatusTransitions[oldStatus] || [];
+        if (!allowedNextStatuses.includes(newStatus)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Status Change',
+                text: `Cannot change order status from ${oldStatus} to ${newStatus}. Allowed next statuses are: ${allowedNextStatuses.join(', ')}`
+            });
+            $select.val(oldStatus);
+            return;
+        }
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `Do you want to change the order status to ${newStatus}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, change it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show loading state
+                Swal.fire({
+                    title: 'Updating Status...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Make API call
+                $.ajax({
+                    url: '/admin/orders/update-status',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify({
+                        orderId: orderId,
+                        status: newStatus
+                    }),
+                    success: function(response) {
+                        console.log('Response:', response);
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Updated!',
+                                text: response.message || 'Order status has been updated successfully'
+                            }).then(() => {
+                                // Update the select options before reloading
+                                updateStatusOptions($select);
+                                window.location.reload();
+                            });
+                        } else {
+                            throw new Error(response.message || 'Failed to update status');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                        console.error('Response:', xhr.responseText);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: xhr.responseJSON?.message || 'Failed to update order status'
+                        });
+                        // Revert to old status
+                        $select.val(oldStatus);
+                        updateStatusOptions($select);
+                    }
+                });
+            } else {
+                // If user cancels, revert to old status
+                $select.val(oldStatus);
+            }
+        });
     });
 });
 </script>

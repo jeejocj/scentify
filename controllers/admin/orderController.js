@@ -1,23 +1,55 @@
-const Order = require('../../models/orderModel');
 const User = require('../../models/userModel');
-const Address = require('../../models/addressModel'); // Import the Address model
+const Address = require('../../models/addressModel');
+const Order = require('../../models/orderModel');
+
+// Define valid status transitions for admin
+const validStatusTransitions = {
+    'Pending': ['Processing', 'Cancelled'],
+    'Processing': ['Shipped', 'Cancelled'],
+    'Shipped': ['Delivered', 'Cancelled'],
+    'Delivered': [], // Admin can't initiate return request
+    'Return Request': ['Returned', 'Cancelled'], // Admin can only approve or cancel return requests
+    'Returned': [], // No further transitions allowed
+    'Cancelled': [] // No further transitions allowed
+};
 
 const listOrders = async (req, res) => {
     try {
+        // Find all users and populate their order history
         const users = await User.find()
-            .populate('orderHistory')
-            .sort({ 'orderHistory.createdOn': -1 });
+            .populate({
+                path: 'orderHistory',
+                model: 'Order',
+                populate: {
+                    path: 'orderedItems.product',
+                    model: 'Product',
+                    select: 'productName productImage salesPrice'
+                }
+            });
 
-        const orders = users.reduce((allOrders, user) => {
-            return allOrders.concat(user.orderHistory.map(order => ({
-                ...order.toObject(),
-                userName: user.name,
-                userEmail: user.email
-            })));
-        }, []);
+        // Process orders from all users
+        const orders = [];
+        users.forEach(user => {
+            if (user.orderHistory && user.orderHistory.length > 0) {
+                user.orderHistory.forEach(order => {
+                    if (order) {
+                        const orderData = order.toObject();
+                        orders.push({
+                            ...orderData,
+                            userName: user.name,
+                            userEmail: user.email,
+                            // Ensure finalAmount is a number
+                            finalAmount: orderData.finalAmount ? Number(orderData.finalAmount) : 0
+                        });
+                    }
+                });
+            }
+        });
 
         // Sort orders by creation date
-        orders.sort((a, b) => b.createdOn - a.createdOn);
+        orders.sort((a, b) => new Date(b.createdOn) - new Date(a.createdOn));
+
+        console.log('Processed Orders:', orders); // Debug log
 
         res.render('orders', {
             orders,
@@ -149,34 +181,51 @@ const getAdminOrderDetails = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
     try {
         const { orderId, status } = req.body;
+        console.log('Received update request:', { orderId, status });
 
-        const users = await User.find()
-            .populate({
-                path: 'orderHistory',
-                match: { _id: orderId }
+        if (!orderId || !status) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Order ID and status are required' 
             });
+        }
 
-        const order = users.reduce((foundOrder, user) => {
-            return foundOrder || user.orderHistory.find(order => order._id.toString() === orderId);
-        }, null);
-
+        // Find the order
+        const order = await Order.findById(orderId);
+        
         if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' });
+            console.log('Order not found:', orderId);
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Order not found' 
+            });
         }
 
-        // Validate status transition
-        const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Request', 'Returned'];
-        if (!validStatuses.includes(status)) {
-            return res.status(400).json({ success: false, message: 'Invalid status' });
+        // Check if the status transition is valid
+        const allowedNextStatuses = validStatusTransitions[order.status] || [];
+        if (!allowedNextStatuses.includes(status)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `Cannot change order status from ${order.status} to ${status}. Allowed next statuses are: ${allowedNextStatuses.join(', ')}` 
+            });
         }
 
+        // Update the order status
         order.status = status;
         await order.save();
 
-        res.json({ success: true, message: 'Order status updated successfully', error: null });
+        console.log('Order status updated successfully:', { orderId, status });
+        res.json({ 
+            success: true, 
+            message: 'Order status updated successfully'
+        });
     } catch (error) {
         console.error('Error updating order status:', error);
-        res.status(500).json({ success: false, message: 'Error updating order status', error: 'Error updating order status' });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error updating order status',
+            error: error.message 
+        });
     }
 };
 

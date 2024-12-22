@@ -257,8 +257,8 @@
                             <th>Brand</th>
                             <th>Category</th>
                             <th>Sale Price</th>
-                            <th>Offer Price</th>
                             <th>Offer</th>
+                            <th>Actions</th>
                             <th>Quantity</th>
                             <th>Status</th>
                             <th>Block/Unblock</th>
@@ -270,7 +270,7 @@
                             <tr>
                                 <td class="text-center"><%= (currentPage - 1) * 4 + index + 1 %></td>
                                 <td><%= product.productName %></td>
-                                <td><%= product.brand %></td>
+                                <td><%= product.brand.brandName %></td>
                                 <td><%= product.category.name %></td>
                                 <td>₹<%= product.salePrice %></td>
                                 <td>

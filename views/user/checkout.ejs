@@ -215,7 +215,7 @@
                                 <li>Subtotal <span>₹<%= subtotal.toLocaleString() %></span></li>
                                 <li>Total <span>₹<%= subtotal.toLocaleString() %></span></li>
                             </ul>
-                            <button type="button" onclick="placeOrder()" class="site-btn">PLACE ORDER</button>
+                            <button type="button" id="placeOrder" class="site-btn">PLACE ORDER</button>
                         </div>
                     </div>
                 </div>
@@ -227,6 +227,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("DOM loaded");
+        document.getElementById('placeOrder').addEventListener('click', placeOrder);
+    });
+
     function selectAddress(card, addressId) {
         // Remove selected class from all cards
         document.querySelectorAll('.address-card').forEach(card => {
@@ -240,6 +245,7 @@
 
     async function placeOrder() {
         try {
+            console.log('Placing order...');
             const selectedAddress = document.querySelector('input[name="address"]:checked');
             if (!selectedAddress) {
                 Swal.fire({
@@ -265,6 +271,8 @@
                 paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value
             };
 
+            console.log('Sending order data:', orderData);
+
             const response = await fetch('/checkout', {
                 method: 'POST',
                 headers: {
@@ -274,6 +282,7 @@
             });
 
             const result = await response.json();
+            console.log('Server response:', result);
 
             if (result.success) {
                 Swal.fire({
@@ -289,6 +298,7 @@
                 throw new Error(result.message || 'Failed to place order');
             }
         } catch (error) {
+            console.error('Error placing order:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Oops...',

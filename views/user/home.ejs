@@ -198,6 +198,7 @@
     text-decoration: underline;
 }
 </style>
+
 <section class="hero">
     <div class="hero__slider owl-carousel">
         <div class="hero__items set-bg" data-setbg="perfumeBanner.jpg">
@@ -206,7 +207,7 @@
                     <div class="col-xl-5 col-lg-7 col-md-8">
                         <div class="hero__text">
                             <h6>Luxury Fragrances</h6>
-                            <h2>Fall - Winter Perfume Collection 2030</h2>
+                            <h2>Fall - Winter Perfume Collection 2024</h2>
                             <p>A curated collection of timeless fragrances. Ethically crafted and luxuriously scented.</p>
                             <a href="#" class="primary-btn">Explore Now <span class="arrow_right"></span></a>
                         </div>
@@ -220,7 +221,7 @@
                     <div class="col-xl-5 col-lg-7 col-md-8">
                         <div class="hero__text">
                             <h6>Signature Scents</h6>
-                            <h2>Winter Perfume Collection 2030</h2>
+                            <h2>Winter Perfume Collection 2024</h2>
                             <p>Discover luxurious fragrances that define your elegance and personality.</p>
                             <a href="#" class="primary-btn">Shop Now <span class="arrow_right"></span></a>
                         </div>
@@ -231,45 +232,7 @@
     </div>
   </section>
   
-  <section class="banner spad">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-7 offset-lg-4">
-                <div class="banner__item">
-                    <div class="banner__item__pic">
-                        <img src="image1.jpg" alt="Perfume Collection 2030">
-                    </div>
-                    <div class="banner__item__text">
-                        <h2>Fragrance Collection 2030</h2>
-                        <a href="#">Shop Now</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-5">
-                <div class="banner__item banner__item--middle">
-                    <div class="banner__item__pic">
-                        <img src="image3.jpg" alt="Luxury Perfumes">
-                    </div>
-                    <div class="banner__item__text">
-                        <h2>Luxury Perfumes</h2>
-                        <a href="#">Shop Now</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-7">
-                <div class="banner__item banner__item--last">
-                    <div class="banner__item__pic">
-                        <img src="image2.jpg" alt="Spring Perfumes 2030">
-                    </div>
-                    <div class="banner__item__text">
-                        <h2>Spring Perfumes 2030</h2>
-                        <a href="#">Shop Now</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-  </section>
+  
   
 <section class="product spad">
     <div class="container">
@@ -299,7 +262,7 @@
                         </div>
                         <div class="product-card-content">
                             <h3 class="product-title"><%= products[i].productName %></h3>
-                            <p class="product-brand"><%= products[i].brand %></p>
+    
                             <div class="product-rating">
                                 <i class="fas fa-star"></i>
                                 <i class="fas fa-star"></i>
@@ -310,7 +273,7 @@
                             <div class="product-price">
                                 <span class="current-price">₹<%= products[i].salePrice %></span>
                             </div>
-                            <a href="#" class="add-cart" data-product-id="<%= products[i]._id %>"><a href="#" class="add-cart" data-product-id="<%= products[i]._id %>">+ Add To Cart</a></a>
+                            <a href="#" class="add-cart" data-product-id="<%= products[i]._id %>">+ Add To Cart</a>
                         </div>
                     </div>
                 </div>
@@ -531,6 +494,31 @@
     .col-lg-3, .col-md-4, .col-sm-6 {
         padding-right: 12px;
         padding-left: 12px;
+    }
+
+    .add-cart {
+        display: inline-block;
+        padding: 8px 20px;
+        background-color: #2d3436;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: 1px solid #2d3436;
+        cursor: pointer;
+        margin-top: 12px;
+    }
+
+    .add-cart:hover {
+        background-color: white;
+        color: #2d3436;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .add-cart:active {
+        transform: scale(0.98);
     }
 </style>
   

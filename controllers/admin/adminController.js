@@ -16,7 +16,9 @@ const loadLogin = (req, res) => {
     if (req.session.admin) {
       return res.redirect("/admin/dashboard");
     }
-    res.render("admin-login", { message: null });
+    const error = req.session.adminError;
+    req.session.adminError = null;
+    res.render("admin-login", { message: error });
   } catch (error) {
     console.error(error);
   }
@@ -27,14 +29,16 @@ const login = async (req, res) => {
     const { email, password } = req.body;
     const admin = await User.findOne({ email, isAdmin: true });
     if (admin) {
-      const passwordMatch = bcrypt.compare(password, admin.password);
+      const passwordMatch = await bcrypt.compare(password, admin.password);
       if (passwordMatch) {
         req.session.admin = true;
         return res.redirect("/admin");
       } else {
+        req.session.adminError = "Incorrect Password";
         return res.redirect("/admin/login");
       }
     } else {
+      req.session.adminError = "Admin not found";
       return res.redirect("/admin/login");
     }
   } catch (error) {
@@ -45,11 +49,7 @@ const login = async (req, res) => {
 
 const loadDashboard = async (req, res) => {
   try {
-    if (req.session.admin) {
-      res.render("dashboard");
-    } else {
-      res.redirect("/login");
-    }
+    res.render("dashboard");
   } catch (error) {
     res.redirect("/pagerror");
   }
@@ -58,7 +58,7 @@ const loadDashboard = async (req, res) => {
 const logout = async (req, res) => {
   try {
     req.session.admin = false;
-    res.redirect("/admin-login");
+    res.redirect("/admin/login");
   } catch (error) {
     console.error(error);
   }

@@ -191,20 +191,20 @@
             </div>
         </div>
         <div class="col-lg-8">
-            <form method="post" action="/admin/editProduct/<%= product._id %>" enctype="multipart/form-data" id="editProductForm" onsubmit="handleSubmit(event)">
+            <form method="post" action="/admin/product/edit/<%= product._id %>" enctype="multipart/form-data" id="editProductForm" onsubmit="handleSubmit(event)">
                 <div class="card">
                     <div class="card-body">
                         <div class="form-section">
                             <div class="form-section-title">Basic Information</div>
                             <div class="mb-4">
                                 <label for="product_name" class="form-label">Product Name</label>
-                                <input type="text" placeholder="Enter product name" name="productName" class="form-control" id="product_name" value="<%= product.productName %>">
+                                <input type="text" placeholder="Enter product name" name="productName" class="form-control" id="product_name" value="<%= product.productName %>" required>
                                 <div id="productName-error" class="error-message"></div>
                             </div>
                             
                             <div class="mb-4">
                                 <label for="descriptionid" class="form-label">Description</label>
-                                <textarea class="form-control" id="descriptionid" name="description" rows="4" placeholder="Enter product description"><%= product.description %></textarea>
+                                <textarea class="form-control" id="descriptionid" name="description" rows="4" placeholder="Enter product description" required><%= product.description %></textarea>
                                 <div id="description-error" class="error-message"></div>
                             </div>
                         </div>
@@ -214,45 +214,42 @@
                             <div class="row">
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label">Brand</label>
-                                    <select class="form-select" name="brand">
+                                    <select class="form-select" name="brand" required>
                                         <% for(let i = 0; i < brand.length; i++) { %>
-                                            <option value="<%= brand[i].brandName %>" <%= product.brand === brand[i].brandName ? 'selected' : '' %>><%= brand[i].brandName %></option>
+                                            <option value="<%= brand[i]._id %>" <%= product.brand && product.brand.equals(brand[i]._id) ? 'selected' : '' %>>
+                                                <%= brand[i].brandName %>
+                                            </option>
                                         <% } %>
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label">Category</label>
-                                    <select class="form-select" name="category">
+                                    <select class="form-select" name="category" required>
                                         <% for(let i = 0; i < cat.length; i++) { %>
-                                            <option value="<%= cat[i].name %>" <%= product.category.name === cat[i].name ? 'selected' : '' %>><%= cat[i].name %></option>
+                                            <option value="<%= cat[i]._id %>" 
+                                                <%= (product.category && product.category._id && product.category._id.toString() === cat[i]._id.toString()) ? 'selected' : '' %>>
+                                                <%= cat[i].name %>
+                                            </option>
                                         <% } %>
                                     </select>
                                 </div>
                             </div>
 
                             <div class="row">
-                                <div class="col-md-4 mb-4">
+                                <div class="col-md-6 mb-4">
                                     <label class="form-label">Regular Price</label>
-                                    <input type="text" class="form-control" name="regularPrice" value="<%= product.regularPrice %>" placeholder="Enter regular price">
-                                    <div id="regularPrice-error" class="error-message"></div>
+                                    <input type="number" class="form-control" name="regularPrice" value="<%= product.regularPrice %>" required>
                                 </div>
-                                <div class="col-md-4 mb-4">
+                                <div class="col-md-6 mb-4">
                                     <label class="form-label">Sale Price</label>
-                                    <input type="text" class="form-control" name="salePrice" value="<%= product.salePrice %>" placeholder="Enter sale price">
-                                    <div id="salePrice-error" class="error-message"></div>
-                                </div>
-                                <div class="col-md-4 mb-4">
-                                    <label class="form-label">Quantity</label>
-                                    <input type="text" class="form-control" name="quantity" value="<%= product.quantity %>" placeholder="Enter quantity">
-                                    <div id="quantity-error" class="error-message"></div>
+                                    <input type="number" class="form-control" name="salePrice" value="<%= product.salePrice %>">
                                 </div>
                             </div>
 
                             <div class="row">
-                                <div class="col-md-4 mb-4">
-                                    <label class="form-label">Color</label>
-                                    <input type="text" class="form-control" name="color" value="<%= product.color %>" placeholder="Enter color">
-                                    <div id="color-error" class="error-message"></div>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label">Quantity</label>
+                                    <input type="number" class="form-control" name="quantity" value="<%= product.quantity %>" required>
                                 </div>
                             </div>
                         </div>
@@ -329,6 +326,53 @@
     let currentFile = null;
     let cropper = null;
     let isProcessing = false;
+
+    async function handleSubmit(event) {
+        event.preventDefault();
+        
+        try {
+            const form = event.target;
+            const formData = new FormData(form);
+
+            // Add validation here if needed
+            if (!formData.get('productName').trim()) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Product name is required'
+                });
+                return;
+            }
+
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: result.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    window.location.href = '/admin/products';
+                });
+            } else {
+                throw new Error(result.message || 'Failed to update product');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Failed to update product'
+            });
+        }
+    }
 
     function handleImageUpload(event) {
         const files = Array.from(event.target.files);
@@ -560,46 +604,6 @@
                 icon: 'error',
                 title: 'Oops...',
                 text: error.message || 'Failed to delete image'
-            });
-        }
-    }
-
-    async function handleSubmit(event) {
-        event.preventDefault(); // Prevent default form submission
-        
-        const form = document.getElementById('editProductForm');
-        const formData = new FormData(form);
-
-        try {
-            const response = await fetch(form.action, {
-                method: 'POST',
-                body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: data.message,
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-                window.location.href = '/admin/products';
-            } else {
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: data.error || 'Failed to update product'
-                });
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            await Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: 'Something went wrong!'
             });
         }
     }

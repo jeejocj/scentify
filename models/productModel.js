@@ -38,10 +38,6 @@ const productSchema = new Schema({
         required: true,
         default: 0
     },
-    color: {
-        type: String,
-        required: false
-    },
     productImage: {
         type: [String],
         required: true
