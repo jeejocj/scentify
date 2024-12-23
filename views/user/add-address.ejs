@@ -1,162 +1,197 @@
 <%- include("../../views/partials/user/header") %>
+<style>
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + 0.75rem);
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+</style>
 <div class="container mt-4">
    <h3 class="mt-3" style="color: #046963; margin-bottom:70px">Create User Address</h3>
-   <form id="addressForm" method="POST" action="/addAddress" class="border-0 p-3">
+   <form id="addressForm" method="POST" action="/addAddress" class="border-0 p-3" novalidate>
        <div class="row mb-50">
            <div class="form-group col-md-4">
                <label for="addressType">Address Type:</label>
-               <input type="text" class="form-control border-3" id="addressType" name="addressType" required>
+               <input type="text" class="form-control border-3" id="addressType" name="addressType">
+               <div class="error-message" id="addressTypeError"></div>
            </div>
            <div class="form-group col-md-4">
                <label for="name">Name:</label>
-               <input type="text" class="form-control border-3" id="name" name="name" required>
+               <input type="text" class="form-control border-3" id="name" name="name">
+               <div class="error-message" id="nameError"></div>
            </div>
            <div class="form-group col-md-4">
                <label for="city">City:</label>
-               <input type="text" class="form-control border-3" id="city" name="city" required>
+               <input type="text" class="form-control border-3" id="city" name="city">
+               <div class="error-message" id="cityError"></div>
            </div>
        </div>
        <div class="row mb-3">
            <div class="form-group col-md-4">
                <label for="landMark">Landmark:</label>
-               <input type="text" class="form-control border-3" id="landMark" name="landMark" required>
+               <input type="text" class="form-control border-3" id="landMark" name="landMark">
+               <div class="error-message" id="landMarkError"></div>
            </div>
            <div class="form-group col-md-4">
                <label for="state">State:</label>
-               <input type="text" class="form-control border-3" id="state" name="state" required>
+               <input type="text" class="form-control border-3" id="state" name="state">
+               <div class="error-message" id="stateError"></div>
            </div>
            <div class="form-group col-md-4">
                <label for="pincode">Pincode:</label>
-               <input type="number" class="form-control border-3" id="pincode" name="pincode" required>
+               <input type="text" class="form-control border-3" id="pincode" name="pincode">
+               <div class="error-message" id="pincodeError"></div>
            </div>
        </div>
        <div class="row mb-3">
            <div class="form-group col-md-4">
                <label for="phone">Phone:</label>
-               <input type="number" class="form-control border-3" id="phone" name="phone" required>
+               <input type="text" class="form-control border-3" id="phone" name="phone">
+               <div class="error-message" id="phoneError"></div>
            </div>
            <div class="form-group col-md-4">
                <label for="altPhone">Alternate Phone:</label>
-               <input type="number" class="form-control border-3" id="altPhone" name="altPhone" required>
+               <input type="text" class="form-control border-3" id="altPhone" name="altPhone">
+               <div class="error-message" id="altPhoneError"></div>
            </div>
        </div>
        <button type="submit" id="submitButton" class="btn btn-primary">Submit</button>
    </form>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-  
-   document.getElementById('addressForm').addEventListener('submit', function(event) {
-       if (!validateForm()) {
-           event.preventDefault();
-       }
-   });
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('addressForm');
+    const inputs = form.querySelectorAll('input');
+    
+    // Validation patterns
+    const patterns = {
+        name: /^[A-Za-z\s]{3,50}$/,
+        city: /^[A-Za-z\s]{3,50}$/,
+        state: /^[A-Za-z\s]{3,50}$/,
+        landMark: /^[A-Za-z0-9\s,.-]{3,100}$/,
+        phone: /^[0-9]{10}$/,
+        altPhone: /^[0-9]{10}$/,
+        pincode: /^[0-9]{6}$/,
+        addressType: /^[A-Za-z\s]{3,20}$/
+    };
 
+    // Error messages
+    const errorMessages = {
+        addressType: {
+            required: 'Address type is required',
+            pattern: 'Please enter a valid address type (3-20 characters)'
+        },
+        name: {
+            required: 'Name is required',
+            pattern: 'Please enter a valid name (only letters and spaces)'
+        },
+        city: {
+            required: 'City is required',
+            pattern: 'Please enter a valid city name (only letters and spaces)'
+        },
+        landMark: {
+            required: 'Landmark is required',
+            pattern: 'Please enter a valid landmark (3-100 characters)'
+        },
+        state: {
+            required: 'State is required',
+            pattern: 'Please enter a valid state name (only letters and spaces)'
+        },
+        pincode: {
+            required: 'Pincode is required',
+            pattern: 'Please enter a valid 6-digit pincode'
+        },
+        phone: {
+            required: 'Phone number is required',
+            pattern: 'Please enter a valid 10-digit phone number'
+        },
+        altPhone: {
+            required: 'Alternate phone number is required',
+            pattern: 'Please enter a valid 10-digit phone number',
+            match: 'Phone and alternate phone numbers should be different'
+        }
+    };
 
-   function validateForm() {
-       let isValid = true;
-       const requiredFields = ["addressType", "name", "city", "landMark", "state", "pincode", "phone", "altPhone"];
-       requiredFields.forEach(function(field) {
-           const input = document.getElementById(field);
-           const inputValue = input.value.trim();
-           const errorElement = document.getElementById(field + '-error');
+    // Real-time validation
+    inputs.forEach(input => {
+        ['input', 'blur'].forEach(eventType => {
+            input.addEventListener(eventType, function() {
+                validateField(this);
+                
+                // Special check for phone numbers matching
+                if (this.id === 'phone' || this.id === 'altPhone') {
+                    const phone = document.getElementById('phone').value;
+                    const altPhone = document.getElementById('altPhone').value;
+                    const altPhoneError = document.getElementById('altPhoneError');
+                    
+                    if (phone && altPhone && phone === altPhone) {
+                        altPhoneError.textContent = errorMessages.altPhone.match;
+                        document.getElementById('altPhone').classList.add('is-invalid');
+                    }
+                }
+            });
+        });
+    });
 
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        let isValid = true;
+        inputs.forEach(input => {
+            if (!validateField(input)) {
+                isValid = false;
+            }
+        });
 
-           if (inputValue === "") {
-               if (!errorElement) {
-                   const errorMessage = "This field is required.";
-                   const errorDiv = document.createElement('div');
-                   errorDiv.className = "text-danger";
-                   errorDiv.textContent = errorMessage;
-                   errorDiv.id = field + '-error';
-                   input.parentNode.appendChild(errorDiv);
-               }
-               isValid = false;
-           } else {
-               if (errorElement) {
-                   errorElement.remove();
-               }
-           }
-       });
+        // Check if phone numbers are different
+        const phone = document.getElementById('phone').value;
+        const altPhone = document.getElementById('altPhone').value;
+        if (phone === altPhone && phone !== '' && altPhone !== '') {
+            document.getElementById('altPhoneError').textContent = errorMessages.altPhone.match;
+            document.getElementById('altPhone').classList.add('is-invalid');
+            isValid = false;
+        }
 
+        if (isValid) {
+            form.submit();
+        }
+    });
 
-       const addressType = document.getElementById('addressType').value;
-       const name = document.getElementById('name').value;
-       const city = document.getElementById('city').value;
-       const landMark = document.getElementById('landMark').value;
-       const state = document.getElementById('state').value;
-       const pincode = document.getElementById('pincode').value;
-       const phone = document.getElementById('phone').value;
-       const altPhone = document.getElementById('altPhone').value;
-       const namePattern = /^[A-Za-z\s]+$/;
-       const pincodePattern = /^\d{6}$/;
-       const phonePattern = /^\d{10}$/;
-       if (!namePattern.test(name)) {
-           Swal.fire({
-               title: 'Error',
-               text: 'Name should contain alphabets only.',
-               icon: 'error'
-           });
-           isValid = false;
-       }
-       if (!namePattern.test(city)) {
-           Swal.fire({
-               title: 'Error',
-               text: 'City should contain alphabets only.',
-               icon: 'error'
-           });
-           isValid = false;
-       }
-       if (!namePattern.test(landMark)) {
-           Swal.fire({
-               title: 'Error',
-               text: 'Landmark should contain alphabets only.',
-               icon: 'error'
-           });
-           isValid = false;
-       }
-       if (!namePattern.test(state)) {
-           Swal.fire({
-               title: 'Error',
-               text: 'State should contain alphabets only.',
-               icon: 'error'
-           });
-           isValid = false;
-       }
-       if (!pincodePattern.test(pincode)) {
-           Swal.fire({
-               title: 'Error',
-               text: 'Pincode should be a 6-digit number.',
-               icon: 'error'
-           });
-           isValid = false;
-       }
-       if (!phonePattern.test(phone)) {
-           Swal.fire({
-               title: 'Error',
-               text: 'Phone number should be a 10-digit number.',
-               icon: 'error'
-           });
-           isValid = false;
-       }
-       if (!phonePattern.test(altPhone)) {
-           Swal.fire({
-               title: 'Error',
-               text: 'Alternate phone number should be a 10-digit number.',
-               icon: 'error'
-           });
-           isValid = false;
-       }
-       if (phone === altPhone) {
-           Swal.fire({
-               title: 'Error',
-               text: 'Phone number and alternate phone number should be different.',
-               icon: 'error'
-           });
-           isValid = false;
-       }
-       return isValid;
-   }
+    function validateField(input) {
+        const field = input.id;
+        const value = input.value.trim();
+        const errorElement = document.getElementById(field + 'Error');
+        
+        // Reset previous validation
+        input.classList.remove('is-invalid');
+        errorElement.textContent = '';
+        
+        // Required field validation
+        if (!value) {
+            errorElement.textContent = errorMessages[field].required;
+            input.classList.add('is-invalid');
+            return false;
+        }
+        
+        // Pattern validation
+        if (patterns[field] && !patterns[field].test(value)) {
+            errorElement.textContent = errorMessages[field].pattern;
+            input.classList.add('is-invalid');
+            return false;
+        }
+        
+        return true;
+    }
+});
 </script>
 <%- include("../../views/partials/user/footer") %>
-

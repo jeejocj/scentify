@@ -169,9 +169,17 @@
                                                 <i class="far fa-star"></i>
                                             </div>
                                             <div class="product-price">
-                                                <% if (product.discountPrice && product.discountPrice < product.regularPrice) { %>
+                                                <% 
+                                                    const categoryOffer = product.category?.categoryOffer || 0;
+                                                    const productOffer = product.productOffer || 0;
+                                                    const totalOffer = categoryOffer + productOffer;
+                                                    const finalPrice = product.salePrice || (totalOffer > 0 ? 
+                                                        Math.round(product.regularPrice - (product.regularPrice * totalOffer / 100)) : 
+                                                        product.regularPrice);
+                                                %>
+                                                <% if (product.salePrice || totalOffer > 0) { %>
                                                     <span class="old-price">₹<%= product.regularPrice %></span>
-                                                    <span class="current-price">₹<%= product.discountPrice %></span>
+                                                    <span class="current-price">₹<%= finalPrice %></span>
                                                 <% } else { %>
                                                     <span class="current-price">₹<%= product.regularPrice %></span>
                                                 <% } %>
@@ -302,21 +310,23 @@
         }
 
         .product-price {
-            font-size: 18px;
-            font-weight: 700;
-            color: #000000;
-            margin-bottom: 15px;
-        }
-
-        .current-price {
-            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
         }
 
         .old-price {
             text-decoration: line-through;
             color: #999;
-            margin-right: 10px;
             font-size: 14px;
+        }
+
+        .current-price {
+            color: #ff7f50;
+            font-weight: bold;
+            font-size: 16px;
         }
 
         .add-cart {

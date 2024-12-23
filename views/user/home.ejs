@@ -199,6 +199,22 @@
 }
 </style>
 
+<head>
+    <style>
+        .old-price {
+            text-decoration: line-through;
+            color: #999;
+            margin-right: 8px;
+            font-size: 14px;
+        }
+        .current-price {
+            color: #ff7f50;
+            font-weight: bold;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
 <section class="hero">
     <div class="hero__slider owl-carousel">
         <div class="hero__items set-bg" data-setbg="perfumeBanner.jpg">
@@ -271,7 +287,20 @@
                                 <i class="far fa-star"></i>
                             </div>
                             <div class="product-price">
-                                <span class="current-price">₹<%= products[i].salePrice %></span>
+                                <% 
+                                    const categoryOffer = products[i].category?.categoryOffer || 0;
+                                    const productOffer = products[i].productOffer || 0;
+                                    const totalOffer = categoryOffer + productOffer;
+                                    const finalPrice = products[i].salePrice || (totalOffer > 0 ? 
+                                        Math.round(products[i].regularPrice - (products[i].regularPrice * totalOffer / 100)) : 
+                                        products[i].regularPrice);
+                                %>
+                                <% if (products[i].salePrice || totalOffer > 0) { %>
+                                    <span class="old-price">₹<%= products[i].regularPrice %></span>
+                                    <span class="current-price">₹<%= finalPrice %></span>
+                                <% } else { %>
+                                    <span class="current-price">₹<%= products[i].regularPrice %></span>
+                                <% } %>
                             </div>
                             <a href="#" class="add-cart" data-product-id="<%= products[i]._id %>">+ Add To Cart</a>
                         </div>

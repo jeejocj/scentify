@@ -230,15 +230,14 @@
                                <div class="card-body">
                                  <h6 class="card-title"><%= addr.name %></h6>
                                  <p class="card-text">
-                                   <%= addr.street %><br>
+                                   <%= addr.landMark %><br>
                                    <%= addr.city %>, <%= addr.state %><br>
                                    <%= addr.pincode %><br>
-                                   Phone: <%= addr.mobile %>
+                                   Phone: <%= addr.phone %>
                                  </p>
                                  <div class="d-flex gap-2">
-                                   <a href="/editAddress?id=<%= addr._id %>" class="btn btn-sm btn-primary">Edit</a>
-                                   <a href="/deleteAddress?id=<%= addr._id %>" class="btn btn-sm btn-danger" 
-                                      onclick="return confirm('Are you sure you want to delete this address?')">Delete</a>
+                                   <button onclick="editAddress('<%= addr._id %>')" class="btn btn-sm btn-primary">Edit</button>
+                                   <button onclick="deleteAddress('<%= addr._id %>')" class="btn btn-sm btn-danger">Delete</button>
                                  </div>
                                </div>
                              </div>
@@ -280,7 +279,7 @@
                                  <td>#<%= order.orderId %></td>
                                  <td><%= new Date(order.createdOn).toLocaleDateString() %></td>
                                  <td><%= order.status %></td>
-                                 <td>$<%= order.finalAmount ? order.finalAmount.toFixed(2) : '0.00' %></td>
+                                 <td>₹<%= order.finalAmount ? order.finalAmount.toFixed(2) : '0.00' %></td>
                                  <td>
                                    <button type="button" 
                                           class="btn btn-sm btn-info view-order-btn" 
@@ -450,125 +449,180 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // View Order Button Click Handler
-    const viewButtons = document.querySelectorAll('.view-order-btn');
-    viewButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const orderId = this.getAttribute('data-order-id');
-            fetchOrderDetails(orderId);
+    // Address Functions
+    function editAddress(addressId) {
+        Swal.fire({
+            title: 'Edit Address',
+            text: 'Do you want to edit this address?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, edit it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/editAddress?id=${addressId}`;
+            }
         });
-    });
+    }
 
-    // Function to fetch order details
-    function fetchOrderDetails(orderId) {
-        fetch(`/orders/get-details/${orderId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    populateModal(data.order);
-                    new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
-                } else {
-                    Swal.fire('Error', data.message || 'Failed to fetch order details', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire('Error', 'Something went wrong', 'error');
+    function deleteAddress(addressId) {
+        Swal.fire({
+            title: 'Delete Address?',
+            text: 'This action cannot be undone!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, keep it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/deleteAddress?id=${addressId}`;
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // View Order Button Click Handler
+        const viewButtons = document.querySelectorAll('.view-order-btn');
+        viewButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const orderId = this.getAttribute('data-order-id');
+                fetchOrderDetails(orderId);
             });
-    }
+        });
 
-    // Function to populate modal with order details
-    function populateModal(order) {
-        // Order Information
-        document.getElementById('modalOrderId').textContent = order.orderId;
-        document.getElementById('modalOrderDate').textContent = new Date(order.createdOn).toLocaleDateString();
-        document.getElementById('modalOrderStatus').textContent = order.status;
-        document.getElementById('modalOrderTotal').textContent = order.finalAmount.toLocaleString();
-
-        // Discount Information
-        if (order.discount > 0) {
-            document.getElementById('modalOrderDiscount').style.display = 'block';
-            document.getElementById('modalDiscountAmount').textContent = order.discount.toLocaleString();
-            document.getElementById('modalDiscountRow').style.display = 'table-row';
-            document.getElementById('modalDiscountTotal').textContent = order.discount.toLocaleString();
-        } else {
-            document.getElementById('modalOrderDiscount').style.display = 'none';
-            document.getElementById('modalDiscountRow').style.display = 'none';
-        }
-
-        // Shipping Address
-        const addressHtml = order.address ? `
-            <p><strong>${order.address.name}</strong></p>
-            <p>${order.address.landMark}</p>
-            <p>${order.address.city}, ${order.address.state} ${order.address.pincode}</p>
-            <p><strong>Phone:</strong> ${order.address.phone}</p>
-        ` : '<p>No address information available</p>';
-        document.getElementById('modalShippingAddress').innerHTML = addressHtml;
-
-        // Order Items
-        const itemsHtml = order.orderedItems.map(item => `
-            <tr>
-                <td>
-                    <div class="product-cell">
-                        <div class="product-image">
-                            <img src="/uploads/re-image/${item.product.productImage[0]}" 
-                                 alt="${item.product.productName}" 
-                                 class="img-fluid" 
-                                 style="max-width: 60px;">
-                        </div>
-                        <div class="product-info">
-                            <h6 class="product-name">${item.product.productName}</h6>
-                        </div>
-                    </div>
-                </td>
-                <td>${item.quantity}</td>
-                <td>₹${item.price.toLocaleString()}</td>
-                <td>₹${(item.quantity * item.price).toLocaleString()}</td>
-            </tr>
-        `).join('');
-        document.getElementById('modalOrderItems').innerHTML = itemsHtml;
-
-        // Totals
-        document.getElementById('modalSubtotal').textContent = order.totalPrice.toLocaleString();
-        document.getElementById('modalFinalTotal').textContent = order.finalAmount.toLocaleString();
-    }
-
-    // Add event listener for cancel buttons
-    const cancelButtons = document.querySelectorAll('.cancel-order-btn');
-    cancelButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const orderId = this.getAttribute('data-order-id');
-            if (confirm('Are you sure you want to cancel this order?')) {
-                fetch('/orders/cancel', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ orderId: orderId })
-                })
+        // Function to fetch order details
+        function fetchOrderDetails(orderId) {
+            fetch(`/orders/get-details/${orderId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Update the status in the table
-                        const statusCell = this.closest('tr').querySelector('td:nth-child(3)');
-                        statusCell.textContent = 'Cancelled';
-                        // Remove the cancel button
-                        this.remove();
-                        alert('Order cancelled successfully');
+                        populateModal(data.order);
+                        new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
                     } else {
-                        alert(data.message || 'Failed to cancel order');
+                        Swal.fire('Error', data.message || 'Failed to fetch order details', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred while cancelling the order');
+                    Swal.fire('Error', 'Something went wrong', 'error');
                 });
+        }
+
+        // Function to populate modal with order details
+        function populateModal(order) {
+            // Order Information
+            document.getElementById('modalOrderId').textContent = order.orderId;
+            document.getElementById('modalOrderDate').textContent = new Date(order.createdOn).toLocaleDateString();
+            document.getElementById('modalOrderStatus').textContent = order.status;
+            document.getElementById('modalOrderTotal').textContent = order.finalAmount.toLocaleString();
+
+            // Discount Information
+            if (order.discount > 0) {
+                document.getElementById('modalOrderDiscount').style.display = 'block';
+                document.getElementById('modalDiscountAmount').textContent = order.discount.toLocaleString();
+                document.getElementById('modalDiscountRow').style.display = 'table-row';
+                document.getElementById('modalDiscountTotal').textContent = order.discount.toLocaleString();
+            } else {
+                document.getElementById('modalOrderDiscount').style.display = 'none';
+                document.getElementById('modalDiscountRow').style.display = 'none';
             }
+
+            // Shipping Address
+            const addressHtml = order.address ? `
+                <p><strong>${order.address.name}</strong></p>
+                <p>${order.address.landMark}</p>
+                <p>${order.address.city}, ${order.address.state} ${order.address.pincode}</p>
+                <p><strong>Phone:</strong> ${order.address.phone}</p>
+            ` : '<p>No address information available</p>';
+            document.getElementById('modalShippingAddress').innerHTML = addressHtml;
+
+            // Order Items
+            const itemsHtml = order.orderedItems.map(item => `
+                <tr>
+                    <td>
+                        <div class="product-cell">
+                            <div class="product-image">
+                                <img src="/uploads/re-image/${item.product.productImage[0]}" 
+                                     alt="${item.product.productName}" 
+                                     class="img-fluid" 
+                                     style="max-width: 60px;">
+                            </div>
+                            <div class="product-info">
+                                <h6 class="product-name">${item.product.productName}</h6>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${item.quantity}</td>
+                    <td>₹${item.price.toLocaleString()}</td>
+                    <td>₹${(item.quantity * item.price).toLocaleString()}</td>
+                </tr>
+            `).join('');
+            document.getElementById('modalOrderItems').innerHTML = itemsHtml;
+
+            // Totals
+            document.getElementById('modalSubtotal').textContent = order.totalPrice.toLocaleString();
+            document.getElementById('modalFinalTotal').textContent = order.finalAmount.toLocaleString();
+        }
+
+        // Add event listener for cancel buttons
+        const cancelButtons = document.querySelectorAll('.cancel-order-btn');
+        cancelButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const orderId = this.getAttribute('data-order-id');
+                Swal.fire({
+                    title: 'Cancel Order?',
+                    text: 'Are you sure you want to cancel this order?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, cancel it!',
+                    cancelButtonText: 'No, keep it'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('/orders/cancel', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ orderId: orderId })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire(
+                                    'Cancelled!',
+                                    'Your order has been cancelled.',
+                                    'success'
+                                ).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    data.message || 'Could not cancel the order.',
+                                    'error'
+                                );
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire(
+                                'Error!',
+                                'There was a problem cancelling your order.',
+                                'error'
+                            );
+                        });
+                    }
+                });
+            });
         });
     });
-});
 </script>
 
 <style>
