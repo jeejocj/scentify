@@ -420,30 +420,180 @@
             display: inline-block;
             margin-bottom: 10px;
         }
+
+        .product-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-card-img {
+            position: relative;
+            padding-top: 100%;
+            background: #f8f9fa;
+            overflow: hidden;
+        }
+
+        .product-card-img img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .product-card:hover .product-card-img img {
+            transform: scale(1.1);
+        }
+
+        .product-action {
+            position: absolute;
+            top: 15px;
+            right: -60px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: right 0.3s ease;
+        }
+
+        .product-card:hover .product-action {
+            right: 15px;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000000;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #000000;
+            color: #fff;
+        }
+
+        .product-card-content {
+            padding: 20px;
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            text-decoration: none;
+        }
+
+        .product-rating {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+
+        .product-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 15px;
+        }
+
+        .current-price {
+            color: #000000;
+        }
+
+        .old-price {
+            text-decoration: line-through;
+            color: #999;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        .add-cart {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #000000;
+            color: #fff;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: auto;
+        }
+
+        .add-cart:hover {
+            background: #333333;
+            transform: translateY(-2px);
+        }
+
+        .no-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            color: #999;
+        }
+
+        .related-section.spad {
+            padding: 80px 0;
+            background-color: #f8f9fa;
+        }
+
+        .related-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 40px;
+        }
     </style>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
 
-
-
-
-        <!-- Breadcrumb Section Begin -->
-        <section class="breadcrumb-option">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="breadcrumb__text">
-                            <h4>product details</h4>
-                            <div class="breadcrumb__links">
-                                <a href="/">Home</a>
-                                <a href="/shop">shop</a>
-                                <span><%= product.productName %></span>
-                            </div>
+    <!-- Breadcrumb Section Begin -->
+    <section class="breadcrumb-option">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="breadcrumb__text">
+                        <h4>product details</h4>
+                        <div class="breadcrumb__links">
+                            <a href="/">Home</a>
+                            <a href="/shop">shop</a>
+                            <span><%= product.productName %></span>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
-        <!-- Breadcrumb Section End -->
+        </div>
+    </section>
+    <!-- Breadcrumb Section End -->
 
     <!-- Product Details Section -->
     <section class="product-details">
@@ -482,11 +632,18 @@
                         </div>
 
                         <div class="product-price">
-                            <span class="original-price">₹<%= product.regularPrice %></span>
-                            <span>₹<%= product.salePrice %></span>
-                            <span class="discount-badge">
-                                <%= totalOffer %>% OFF
-                            </span>
+                            <% 
+                                const categoryOffer = product.category?.categoryOffer || 0;
+                                const productOffer = product.productOffer || 0;
+                                const totalOffer = categoryOffer + productOffer;
+                                const salePrice = product.salePrice || Math.round(product.regularPrice - (product.regularPrice * totalOffer / 100));
+                            %>
+                            <% if (totalOffer > 0 || product.salePrice) { %>
+                                <span class="old-price">₹<%= product.regularPrice %></span>
+                                <span class="current-price">₹<%= salePrice %></span>
+                            <% } else { %>
+                                <span class="current-price">₹<%= product.regularPrice %></span>
+                            <% } %>
                         </div>
 
                         <div class="stock-status <%= product.quantity > 10 ? 'in-stock' : product.quantity > 0 ? 'low-stock' : 'out-of-stock' %>">
@@ -500,26 +657,26 @@
                         </div>
 
                         <div class="offer-details">
-                            <% if (CategoryOffer> 0) { %>
+                            <% if (product.category?.categoryOffer > 0) { %>
                                 <div class="offer-item">
                                     <i class="fa fa-tag offer-icon"></i>
-                                    <span>Category Offer: <%= CategoryOffer %>% off</span>
+                                    <span>Category Offer: <%= product.category.categoryOffer %>% off</span>
                                 </div>
-                                <% } %>
-                                    <% if (ProductOffer> 0) { %>
-                                        <div class="offer-item">
-                                            <i class="fa fa-gift offer-icon"></i>
-                                            <span>Product Offer: <%= ProductOffer %>% off</span>
-                                        </div>
-                                        <% } %>
-                                            <div class="offer-item">
-                                                <i class="fa fa-truck offer-icon"></i>
-                                                <span>Free Delivery</span>
-                                            </div>
-                                            <div class="offer-item">
-                                                <i class="fa fa-shield offer-icon"></i>
-                                                <span>100% Authentic Products</span>
-                                            </div>
+                            <% } %>
+                            <% if (product.productOffer > 0) { %>
+                                <div class="offer-item">
+                                    <i class="fa fa-gift offer-icon"></i>
+                                    <span>Product Offer: <%= product.productOffer %>% off</span>
+                                </div>
+                            <% } %>
+                            <div class="offer-item">
+                                <i class="fa fa-truck offer-icon"></i>
+                                <span>Free Delivery</span>
+                            </div>
+                            <div class="offer-item">
+                                <i class="fa fa-shield offer-icon"></i>
+                                <span>100% Authentic Products</span>
+                            </div>
                         </div>
 
                         <p class="product-description">
@@ -543,7 +700,7 @@
                         <div class="product-meta">
                             <div class="meta-item">
                                 <span class="meta-label">Category:</span>
-                                <%= category.name %>
+                                <%= product.category.name %>
                             </div>
                             <div class="meta-item">
                                 <span class="meta-label">Brand:</span>
@@ -557,70 +714,132 @@
     </section>
 
     <!-- Related Products Section -->
-    <section class="related-products">
+    <section class="related-section spad">
         <div class="container">
-            <h2 class="related-title">Related Products</h2>
             <div class="row">
-                <% relatedProducts.forEach(relatedProduct=> { %>
-                    <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="product__item">
-                            <div class="product__item__pic set-bg"
-                                data-setbg="/uploads/re-image/<%= relatedProduct.productImage[0] %>">
-                                <ul class="product__hover">
-                                    <li><a href="#" class="wishlist-btn"><i class="fas fa-heart"></i></a></li>
-                                    <li><a href="/productDetails?id=<%= relatedProduct._id %>" class="view-btn"><i
-                                                class="fas fa-eye"></i></a></li>
-                                </ul>
-                            </div>
-                            <div class="product__item__text">
-                                <h6><a href="/productDetails?id=<%= relatedProduct._id %>">
-                                        <%= relatedProduct.productName %>
-                                    </a></h6>
-
-                                <div class="rating">
-                                    <% for(let i=0; i < 5; i++) { %>
-                                        <% if (i < Math.floor(relatedProduct.averageRating || 0)) { %>
-                                            <i class="fa fa-star"></i>
-                                            <% } else if (i===Math.floor(relatedProduct.averageRating) &&
-                                                relatedProduct.averageRating % 1 !==0) { %>
-                                                <i class="fa fa-star-half-o"></i>
-                                                <% } else { %>
-                                                    <i class="fa fa-star-o"></i>
-                                                    <% } %>
-                                                        <% } %>
+                <div class="col-lg-12">
+                    <h2 class="related-title text-center mb-5">Related Products</h2>
+                </div>
+            </div>
+            <div class="row">
+                <% relatedProducts.forEach(function(product) { %>
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="product-card">
+                            <div class="product-card-img">
+                                <% if (product.productImage && product.productImage.length > 0) { %>
+                                    <img src="/uploads/re-image/<%= product.productImage[0] %>" alt="<%= product.productName %>">
+                                <% } else { %>
+                                    <div class="no-image">No Image Available</div>
+                                <% } %>
+                                <div class="product-action">
+                                    <a href="#" class="action-btn">
+                                        <i class="fas fa-heart"></i>
+                                    </a>
+                                    <a href="/productDetails?id=<%= product._id %>" class="action-btn">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
                                 </div>
-
-                                <% const categoryOffer=relatedProduct.category?.categoryOffer || 0; const
-                                    productOffer=relatedProduct.productOffer || 0; const totalOffer=categoryOffer +
-                                    productOffer; const discountedPrice=Math.round(relatedProduct.regularPrice -
-                                    (relatedProduct.regularPrice * totalOffer / 100)); %>
-
-                                    <% if (totalOffer> 0) { %>
-                                        <div class="product__item__offer">
-                                            <%= totalOffer %>% OFF
-                                        </div>
-                                        <% } %>
-
-                                            <div class="product__item__price">
-                                                <% if (totalOffer> 0) { %>
-                                                    <span class="original-price">₹<%= relatedProduct.regularPrice %>
-                                                            </span>
-                                                    <span class="sale-price">₹<%= discountedPrice %></span>
-                                                    <% } else { %>
-                                                        <span class="sale-price">₹<%= relatedProduct.regularPrice %>
-                                                                </span>
-                                                        <% } %>
-                                            </div>
-
-                                            <a href="#" class="add-cart"
-                                                onclick="addToCart('<%= relatedProduct._id %>', 1)">+ Add To Cart</a>
+                            </div>
+                            <div class="product-card-content">
+                                <h3 class="product-title"><%= product.productName %></h3>
+                                <div class="product-rating">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                </div>
+                                <div class="product-price">
+                                    <% 
+                                        const categoryOffer = product.category?.categoryOffer || 0;
+                                        const productOffer = product.productOffer || 0;
+                                        const totalOffer = categoryOffer + productOffer;
+                                        const finalPrice = product.salePrice || (totalOffer > 0 ? 
+                                            Math.round(product.regularPrice - (product.regularPrice * totalOffer / 100)) : 
+                                            product.regularPrice);
+                                    %>
+                                    <% if (product.salePrice || totalOffer > 0) { %>
+                                        <span class="old-price">₹<%= product.regularPrice %></span>
+                                        <span class="current-price">₹<%= finalPrice %></span>
+                                    <% } else { %>
+                                        <span class="current-price">₹<%= product.regularPrice %></span>
+                                    <% } %>
+                                </div>
+                                <a href="#" class="add-cart" data-product-id="<%= product._id %>">+ Add To Cart</a>
                             </div>
                         </div>
                     </div>
-                    <% }); %>
+                <% }); %>
             </div>
         </div>
     </section>
+
+    <script>
+        $(document).ready(function() {
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "timeOut": "2000"
+            };
+        });
+
+        const addToCartButtons = document.querySelectorAll('.add-cart');
+        addToCartButtons.forEach(button => {
+            button.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const productId = this.getAttribute('data-product-id');
+                console.log('Adding product:', productId);
+
+                try {
+                    // Show loading state
+                    this.textContent = 'Adding...';
+                    this.style.opacity = '0.7';
+
+                    const response = await fetch('/addToCart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            productId: productId,
+                            quantity: 1
+                        }),
+                        credentials: 'include'
+                    });
+
+                    console.log('Response status:', response.status);
+                    const data = await response.json();
+                    console.log('Response data:', data);
+
+                    // Reset button state
+                    this.textContent = '+ Add To Cart';
+                    this.style.opacity = '1';
+
+                    if (response.status === 401) {
+                        toastr.warning('Please login to add items to cart');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 1500);
+                        return;
+                    }
+
+                    if (data.success) {
+                        toastr.success('Product added to cart successfully!');
+                    } else {
+                        throw new Error(data.message || 'Failed to add product to cart');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    // Reset button state
+                    this.textContent = '+ Add To Cart';
+                    this.style.opacity = '1';
+                    
+                    toastr.error(error.message || 'An error occurred while adding the product to cart');
+                }
+            });
+        });
+    </script>
 
     <script>
         function changeImage(thumbnail) {

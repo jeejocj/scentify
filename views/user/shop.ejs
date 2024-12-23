@@ -143,35 +143,40 @@
                         <% if (products && products.length > 0) { %>
                             <% products.forEach(function(product) { %>
                                 <div class="col-lg-4 col-md-6 col-sm-6">
-                                    <div class="product__item">
-                                        <div class="product__item__pic set-bg" data-setbg="<%= product.productImage && product.productImage.length > 0 ? `/uploads/re-image/${product.productImage[0]}` : '/user-assets/img/product/default.jpg' %>">
-                                            <ul class="product__hover">
-                                                <li><a href="#" class="wishlist-btn"><i class="fas fa-heart"></i></a></li>
-                                                <li><a href="/productDetails?id=<%= product._id %>" class="view-btn"><i class="fas fa-eye"></i></a></li>
-                                            </ul>
+                                    <div class="product-card">
+                                        <div class="product-card-img">
+                                            <% if (product.productImage && product.productImage.length > 0) { %>
+                                                <img src="/uploads/re-image/<%= product.productImage[0] %>" alt="<%= product.productName %>">
+                                            <% } else { %>
+                                                <div class="no-image">No Image Available</div>
+                                            <% } %>
+                                            <div class="product-action">
+                                                <a href="#" class="action-btn">
+                                                    <i class="fas fa-heart"></i>
+                                                </a>
+                                                <a href="/productDetails?id=<%= product._id %>" class="action-btn">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </div>
                                         </div>
-                                        <div class="product__item__text">
-                                            <h6><%= product.productName %></h6>
-                                            <a href="#" class="add-cart" data-product-id="<%= product._id %>">+ Add To Cart</a>
-                                            <div class="rating">
-                                                <% for(let i = 0; i < 5; i++) { %>
-                                                    <% if (i < Math.floor(product.averageRating || 0)) { %>
-                                                        <i class="fa fa-star" aria-hidden="true"></i>
-                                                    <% } else if (i === Math.floor(product.averageRating) && product.averageRating % 1 !== 0) { %>
-                                                        <i class="fa fa-star-half-o" aria-hidden="true"></i>
-                                                    <% } else { %>
-                                                        <i class="fa fa-star-o" aria-hidden="true"></i>
-                                                    <% } %>
+                                        <div class="product-card-content">
+                                            <h3 class="product-title"><%= product.productName %></h3>
+                                            <div class="product-rating">
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="far fa-star"></i>
+                                            </div>
+                                            <div class="product-price">
+                                                <% if (product.discountPrice && product.discountPrice < product.regularPrice) { %>
+                                                    <span class="old-price">₹<%= product.regularPrice %></span>
+                                                    <span class="current-price">₹<%= product.discountPrice %></span>
+                                                <% } else { %>
+                                                    <span class="current-price">₹<%= product.regularPrice %></span>
                                                 <% } %>
                                             </div>
-                                            <h5>
-                                                <% if (product.discountPrice && product.discountPrice < product.regularPrice) { %>
-                                                    <span class="new-price">₹<%= product.discountPrice %></span>
-                                                    <span class="old-price">₹<%= product.regularPrice %></span>
-                                                <% } else { %>
-                                                    ₹<%= product.regularPrice %>
-                                                <% } %>
-                                            </h5>
+                                            <a href="#" class="add-cart" data-product-id="<%= product._id %>">+ Add To Cart</a>
                                         </div>
                                     </div>
                                 </div>
@@ -182,7 +187,7 @@
                             </div>
                         <% } %>
                     </div>
-                    <div class="row">
+                    <!-- <div class="row">
                         <div class="col-lg-12">
                             <div class="product__pagination">
                                 <a class="active" href="#">1</a>
@@ -192,7 +197,7 @@
                                 <a href="#">21</a>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>
@@ -201,216 +206,499 @@
 
 
     <style>
-    .price-range {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding: 15px 0;
-    }
+        .product.spad {
+            padding: 80px 0;
+            background-color: #f8f9fa;
+        }
 
-    .price-range input {
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        margin-bottom: 5px;
-    }
+        .product-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
 
-    .filter-item a.active {
-        color: #e53637 !important;
-        font-weight: bold;
-    }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
 
-    .out-of-stock {
-        color: #e53637;
-        font-style: italic;
-    }
+        .product-card-img {
+            position: relative;
+            padding-top: 100%;
+            background: #f8f9fa;
+            overflow: hidden;
+        }
 
-    .add-cart-btn {
-        background: none;
-        border: none;
-        color: #666666;
-        font-size: 15px;
-        cursor: pointer;
-    }
+        .product-card-img img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
 
-    .add-cart-btn:hover {
-        color: #e53637;
-    }
+        .product-card:hover .product-card-img img {
+            transform: scale(1.1);
+        }
 
-    .product__pagination {
-        display: flex;
-        justify-content: center;
-        gap: 5px;
-        margin-top: 30px;
-    }
+        .product-action {
+            position: absolute;
+            top: 15px;
+            right: -60px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: right 0.3s ease;
+        }
 
-    .product__pagination a {
-        display: inline-flex;
-        justify-content: center;
-        align-items: center;
-        width: 30px;
-        height: 30px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        color: #333;
-        text-decoration: none;
-    }
+        .product-card:hover .product-action {
+            right: 15px;
+        }
 
-    .product__pagination a.active {
-        background-color: #e53637;
-        color: white;
-        border-color: #e53637;
-    }
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000000;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
 
-    .form-select {
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        background-color: white;
-    }
+        .action-btn:hover {
+            background: #000000;
+            color: #fff;
+        }
 
-    .price-filter-form {
-        margin-bottom: 0;
-    }
+        .product-card-content {
+            padding: 20px;
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
 
-    .product__price {
-        margin: 10px 0;
-    }
+        .product-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            text-decoration: none;
+        }
 
-    .product__price .new-price {
-        color: #e53637;
-        font-weight: bold;
-        font-size: 18px;
-    }
+        .product-rating {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
 
-    .product__price .old-price {
-        color: #888;
-        text-decoration: line-through;
-        margin-left: 8px;
-        font-size: 14px;
-    }
+        .product-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 15px;
+        }
 
-    .product__item {
-        margin-bottom: 35px;
-    }
+        .current-price {
+            color: #000000;
+        }
 
-    .product__item__pic {
-        height: 260px;
-        position: relative;
-        overflow: hidden;
-        background-position: center;
-        background-size: cover;
-    }
+        .old-price {
+            text-decoration: line-through;
+            color: #999;
+            margin-right: 10px;
+            font-size: 14px;
+        }
 
-    .product__hover {
-        position: absolute;
-        right: 20px;
-        top: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        opacity: 0;
-        transform: translateX(20px);
-        transition: all 0.3s ease;
-    }
+        .add-cart {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #000000;
+            color: #fff;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: auto;
+        }
 
-    .product__hover li {
-        list-style: none;
-    }
+        .add-cart:hover {
+            background: #333333;
+            transform: translateY(-2px);
+        }
 
-    .product__hover li a {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 45px;
-        height: 45px;
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 50%;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-    }
+        .no-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            color: #999;
+        }
 
-    .product__hover li a i {
-        font-size: 18px;
-        color: #111111;
-        transition: all 0.3s ease;
-    }
+        .price-range {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px 0;
+        }
 
-    .product__hover li a:hover i {
-        color: #ffffff;
-    }
+        .price-range input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
 
-    .product__hover li a:hover {
-        background: #e53637;
-        transform: scale(1.1);
-    }
+        .filter-item a.active {
+            color: #e53637 !important;
+            font-weight: bold;
+        }
 
-    .product__item:hover .product__hover {
-        opacity: 1;
-        transform: translateX(0);
-    }
+        .out-of-stock {
+            color: #e53637;
+            font-style: italic;
+        }
 
-    .product__item__text {
-        padding-top: 25px;
-        text-align: center;
-    }
+        .add-cart-btn {
+            background: none;
+            border: none;
+            color: #666666;
+            font-size: 15px;
+            cursor: pointer;
+        }
 
-    .product__item__text h6 {
-        margin-bottom: 12px;
-        font-size: 15px;
-        color: #111111;
-        font-weight: 600;
-    }
+        .add-cart-btn:hover {
+            color: #e53637;
+        }
 
-    .product__item__text .add-cart {
-        font-size: 15px;
-        color: #e53637;
-        font-weight: 500;
-        text-transform: uppercase;
-        display: inline-block;
-        margin-bottom: 12px;
-        cursor: pointer;
-        text-decoration: none;
-    }
+        .product__pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 30px;
+        }
 
-    .product__item__text .add-cart:hover {
-        color: #111111;
-    }
+        .product__pagination a {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: #333;
+            text-decoration: none;
+        }
 
-    .product__item__text .rating {
-        margin-bottom: 6px;
-    }
+        .product__pagination a.active {
+            background-color: #e53637;
+            color: white;
+            border-color: #e53637;
+        }
 
-    .product__item__text .rating i {
-        font-size: 14px;
-        color: #e3c01c;
-        margin-right: 3px;
-    }
+        .form-select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
 
-    .product__item__text .rating i.fa-star-o {
-        color: #d6d6d6;
-    }
+        .price-filter-form {
+            margin-bottom: 0;
+        }
 
-    .product__item__text .rating i.fa-star-half-o {
-        color: #e3c01c;
-    }
+        .product__price {
+            margin: 10px 0;
+        }
 
-    .product__item__text h5 {
-        color: #0d0d0d;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
+        .product__price .new-price {
+            color: #e53637;
+            font-weight: bold;
+            font-size: 18px;
+        }
 
-    .new-price {
-        color: #e53637;
-    }
+        .product__price .old-price {
+            color: #888;
+            text-decoration: line-through;
+            margin-left: 8px;
+            font-size: 14px;
+        }
 
-    .old-price {
-        color: #888;
-        text-decoration: line-through;
-        margin-left: 8px;
-        font-size: 14px;
-    }
+        .product__item {
+            margin-bottom: 35px;
+        }
+
+        .product__item__pic {
+            height: 260px;
+            position: relative;
+            overflow: hidden;
+            background-position: center;
+            background-size: cover;
+        }
+
+        .product__hover {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s ease;
+        }
+
+        .product__hover li {
+            list-style: none;
+        }
+
+        .product__hover li a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .product__hover li a i {
+            font-size: 18px;
+            color: #111111;
+            transition: all 0.3s ease;
+        }
+
+        .product__hover li a:hover i {
+            color: #ffffff;
+        }
+
+        .product__hover li a:hover {
+            background: #e53637;
+            transform: scale(1.1);
+        }
+
+        .product__item:hover .product__hover {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .product__item__text {
+            padding-top: 25px;
+            text-align: center;
+        }
+
+        .product__item__text h6 {
+            margin-bottom: 12px;
+            font-size: 15px;
+            color: #111111;
+            font-weight: 600;
+        }
+
+        .product__item__text .add-cart {
+            font-size: 15px;
+            color: #e53637;
+            font-weight: 500;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-bottom: 12px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .product__item__text .add-cart:hover {
+            color: #111111;
+        }
+
+        .product__item__text .rating {
+            margin-bottom: 6px;
+        }
+
+        .product__item__text .rating i {
+            font-size: 14px;
+            color: #e3c01c;
+            margin-right: 3px;
+        }
+
+        .product__item__text .rating i.fa-star-o {
+            color: #d6d6d6;
+        }
+
+        .product__item__text .rating i.fa-star-half-o {
+            color: #e3c01c;
+        }
+
+        .product__item__text h5 {
+            color: #0d0d0d;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .new-price {
+            color: #000000;
+        }
+
+        .old-price {
+            color: #888;
+            text-decoration: line-through;
+            margin-left: 8px;
+            font-size: 14px;
+        }
+
+        .btn {
+          display: inline-block;
+          padding: 12px 20px;
+          font-size: 16px;
+          font-weight: bold;
+          color: #fff;
+          background-color: #000000;
+          border: none;
+          border-radius: 5px;
+          transition: background-color 0.3s, transform 0.3s;
+          cursor: pointer;
+          text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #333333;
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .wishlist-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 50%;
+            color: #000000;
+            font-size: 18px;
+            z-index: 10;
+            transition: background-color 0.3s, color 0.3s, transform 0.3s;
+        }
+
+        .wishlist-btn:hover {
+            background-color: rgba(255, 255, 255, 1);
+            color: #333333;
+            transform: translateY(-2px);
+        }
+
+        .wishlist-btn:active {
+            transform: translateY(1px);
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .product__item {
+            margin-bottom: 35px;
+        }
+
+        .product__item__pic {
+            position: relative;
+            overflow: hidden;
+            border-radius: 3px;
+        }
+
+        .product__item__pic:hover .product__hover {
+            right: 20px;
+            opacity: 1;
+        }
+
+        .product__hover {
+            position: absolute;
+            right: -200px;
+            top: 20px;
+            opacity: 0;
+            transition: all 0.5s;
+        }
+
+        .product__hover li {
+            list-style: none;
+            margin-bottom: 10px;
+        }
+
+        .product__hover li:last-child {
+            margin-bottom: 0;
+        }
+
+        .product__hover li a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            background: #ffffff;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .product__hover li a:hover {
+            background: #111111;
+            color: #ffffff;
+        }
+
+        .product__item__text {
+            padding-top: 25px;
+            text-align: center;
+        }
+
+        .product__item__text h6 {
+            margin-bottom: 12px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .product__item__text h5 {
+            color: #0d0d0d;
+            font-weight: 700;
+        }
+
+        .product__item__text .add-cart {
+            font-size: 15px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .old-price {
+            text-decoration: line-through;
+            color: #999;
+            margin-right: 10px;
+        }
+
+        .new-price {
+            color: #000000;
+            font-weight: bold;
+        }
     </style>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
