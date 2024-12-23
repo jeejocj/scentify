@@ -160,11 +160,20 @@ const userProfile = async (req, res) => {
             });
 
         const address = await Address.findOne({ userId: userId });
-
+        
+        // Map through orders to find matching address from address array
+        const ordersWithAddress = user.orderHistory.map(order => {
+            const addressDetails = address?.address.find(addr => addr._id.toString() === order.address.toString());
+            return {
+                ...order.toObject(),
+                address: addressDetails || {}
+            };
+        });
+        console.log("ordersWithAddress",ordersWithAddress);
         res.render('profile', {
             user: user,
             addressData: address || { address: [] },
-            orders: user.orderHistory || []
+            orders: ordersWithAddress || []
         });
     } catch (error) {
         console.error('Error in userProfile:', error);
@@ -574,28 +583,7 @@ const cancelOrder = async (req, res) => {
     }
 };
 
-const deleteOrder = async (req, res) => {
-    try {
-        const { orderId } = req.params; // Get the order ID from the URL
-        const user = req.session.user;
 
-        if (!user) {
-            return res.status(401).json({ success: false, message: "Unauthorized" });
-        }
-
-        // Find and delete the order
-        const order = await Order.findOneAndDelete({ _id: orderId, userId: user._id });
-
-        if (!order) {
-            return res.status(404).json({ success: false, message: "Order not found" });
-        }
-
-        res.status(200).json({ success: true, message: "Order deleted successfully" });
-    } catch (error) {
-        console.error("Error deleting order:", error.message);
-        res.status(500).json({ success: false, message: "Internal Server Error" });
-    }
-};
 
 
 module.exports = {
@@ -621,5 +609,4 @@ module.exports = {
     deleteAddress,
     getOrderDetails,
     cancelOrder,
-    deleteOrder
 };

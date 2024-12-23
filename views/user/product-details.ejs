@@ -92,6 +92,27 @@
             color: #333;
         }
 
+        .star-rating {
+            color: #ffc107;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .star-rating .fas {
+            margin-right: 2px;
+        }
+
+        .star-rating .far {
+            color: #ffc107;
+            margin-right: 2px;
+        }
+
+        .rating-count {
+            color: #666;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+
         .product-price {
             font-size: 28px;
             color: #e53637;
@@ -113,6 +134,28 @@
             padding: 5px 10px;
             border-radius: 5px;
             font-size: 14px;
+        }
+
+        .stock-status {
+            font-size: 16px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .in-stock {
+            color: #28a745;
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+
+        .low-stock {
+            color: #ffc107;
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+
+        .out-of-stock {
+            color: #dc3545;
+            background-color: rgba(220, 53, 69, 0.1);
         }
 
         .offer-details {
@@ -425,17 +468,31 @@
                             <%= product.productName %>
                         </h1>
 
-
-
+                        <div class="star-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <span class="rating-count">(4.0)</span>
+                        </div>
 
                         <div class="product-price">
-
                             <span class="original-price">₹<%= product.regularPrice %></span>
                             <span>₹<%= product.salePrice %></span>
                             <span class="discount-badge">
                                 <%= totalOffer %>% OFF
                             </span>
+                        </div>
 
+                        <div class="stock-status <%= product.quantity > 10 ? 'in-stock' : product.quantity > 0 ? 'low-stock' : 'out-of-stock' %>">
+                            <% if (product.quantity > 10) { %>
+                                <i class="fas fa-check-circle"></i> In Stock
+                            <% } else if (product.quantity > 0) { %>
+                                <i class="fas fa-exclamation-circle"></i> Low Stock (Only <%= product.quantity %> left)
+                            <% } else { %>
+                                <i class="fas fa-times-circle"></i> Out of Stock
+                            <% } %>
                         </div>
 
                         <div class="offer-details">

@@ -259,7 +259,11 @@ const updateQuantity = async (req, res) => {
     // Calculate cart total (with validation)
     let cartTotal = 0;
     for (const item of cart.items) {
-      const price = item.productId.salesPrice || item.productId.price;
+      if (!item.productId) {
+        console.error('Product reference is null for cart item');
+        continue;
+      }
+      const price = item.productId.salePrice || item.productId.regularPrice;
       if (typeof price !== 'number' || isNaN(price)) {
         console.error('Invalid price for item:', item.productId._id);
         continue;

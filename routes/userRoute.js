@@ -83,7 +83,6 @@ router.get("/orderConfirm", checkoutController.orderConfirm);
 router.get("/profile", profileController.userProfile);
 router.get("/orders/:orderId", profileController.getOrderDetails);
 router.post("/orders/cancel", profileController.cancelOrder);
-router.delete('/orders/:orderId', userAuth, profileController.deleteOrder);
 
 // Order Routes
 router.get('/orders/get-details/:orderId', userAuth, orderController.getOrderDetailsJson);

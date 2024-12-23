@@ -36,18 +36,28 @@ const getcheckoutPage = async (req, res) => {
             }
 
             // Map cart items to extract product details
-            const products = cart.items.map(item => {
-                const product = item.productId;
-                const productImage = product?.productImage || [];
-                return {
-                    _id: product._id,
-                    productName: product.productName,
-                    productImage: productImage.length > 0 ? productImage : ["default-image.jpg"],
-                    salesPrice: product.salePrice || 0,
-                    quantity: item.quantity || 1,
-                    // total: product.salesPrice * item.quantity
-                };
-            });
+            const products = cart.items
+                .filter(item => item.productId !== null) // Filter out null products
+                .map(item => {
+                    const product = item.productId;
+                    if (!product) {
+                        return null; // Skip invalid products
+                    }
+                    const productImage = product.productImage || [];
+                    return {
+                        _id: product._id,
+                        productName: product.productName,
+                        productImage: productImage.length > 0 ? productImage : ["default-image.jpg"],
+                        salesPrice: product.salePrice || 0,
+                        quantity: item.quantity || 1,
+                    };
+                })
+                .filter(item => item !== null); // Remove any null items
+
+            if (products.length === 0) {
+                // If no valid products in cart after filtering
+                return res.redirect("/");
+            }
 
             const subtotal = products.reduce((sum, item) => {
                 return sum + item.salesPrice * item.quantity;

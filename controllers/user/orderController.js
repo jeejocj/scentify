@@ -1,7 +1,7 @@
 const User = require("../../models/userModel");
 const Product = require("../../models/productModel");
 const Cart = require("../../models/cartModel");
-const Address = require("../../models/addressModel");
+const Address = require('../../models/addressModel');
 const Order = require('../../models/orderModel');
 
 const getOrderHistory = async (req, res) => {
@@ -259,6 +259,10 @@ const getOrderDetailsJson = async (req, res) => {
             });
         }
 
+        // Get address details
+        const address = await Address.findOne({ userId: userId });
+        const addressDetails = address?.address.find(addr => addr._id.toString() === order.address.toString()) || {};
+
         // Calculate totals
         const totalPrice = order.orderedItems.reduce((total, item) => total + (item.price * item.quantity), 0);
         const finalAmount = totalPrice - (order.discount || 0);
@@ -270,7 +274,7 @@ const getOrderDetailsJson = async (req, res) => {
                 createdOn: order.createdOn,
                 status: order.status,
                 orderedItems: order.orderedItems,
-                address: order.address,
+                address: addressDetails,
                 totalPrice: totalPrice,
                 discount: order.discount || 0,
                 finalAmount: finalAmount

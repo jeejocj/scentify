@@ -501,9 +501,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Shipping Address
         const addressHtml = order.address ? `
             <p><strong>${order.address.name}</strong></p>
-            <p>${order.address.street}</p>
+            <p>${order.address.landMark}</p>
             <p>${order.address.city}, ${order.address.state} ${order.address.pincode}</p>
-            <p><strong>Phone:</strong> ${order.address.mobile}</p>
+            <p><strong>Phone:</strong> ${order.address.phone}</p>
         ` : '<p>No address information available</p>';
         document.getElementById('modalShippingAddress').innerHTML = addressHtml;
 
