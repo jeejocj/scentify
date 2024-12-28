@@ -1,0 +1,181 @@
+<%- include("../../views/partials/admin/header") %>
+
+<% if (typeof message !== 'undefined' && message) { %>
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <%= message %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <% if (typeof error !== 'undefined' && error.stack && process.env.NODE_ENV === 'development') { %>
+        <pre class="mt-2 mb-0 small"><%= error.stack %></pre>
+    <% } %>
+</div>
+<% } %>
+
+<div class="content-main">
+    <div class="content-header d-flex justify-content-between align-items-center">
+        <h2 class="content-title">Sales Report</h2>
+        <div class="btn-group">
+            <button onclick="downloadReport('pdf')" class="btn btn-outline-primary">
+                <i class="fas fa-file-pdf"></i> Download PDF
+            </button>
+            <button onclick="downloadReport('excel')" class="btn btn-outline-success ms-2">
+                <i class="fas fa-file-excel"></i> Download Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mt-4">
+        <div class="col-12 col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 border-primary">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Total Sales</h6>
+                    <h3 class="card-title text-primary">₹<%= totals.finalAmount.toFixed(2) %></h3>
+                    <p class="card-text small">After all discounts & deductions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 border-success">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Total Orders</h6>
+                    <h3 class="card-title text-success"><%= totals.count %></h3>
+                    <p class="card-text small">
+                        Active: <%= totals.count - totals.cancelledCount - totals.returnedCount %> |
+                        Cancelled: <%= totals.cancelledCount %> |
+                        Returned: <%= totals.returnedCount %>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 border-info">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Regular Discounts</h6>
+                    <h3 class="card-title text-info">₹<%= totals.regularDiscount.toFixed(2) %></h3>
+                    <p class="card-text small">Non-coupon discounts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 border-warning">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Coupon Discounts</h6>
+                    <h3 class="card-title text-warning">₹<%= totals.couponDiscount.toFixed(2) %></h3>
+                    <p class="card-text small">Discounts from coupons</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="filter-form" method="GET" class="row g-3 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label for="period" class="form-label">Time Period</label>
+                    <select id="period" name="period" class="form-select">
+                        <option value="daily" <%= period === 'daily' ? 'selected' : '' %>>Daily</option>
+                        <option value="weekly" <%= period === 'weekly' ? 'selected' : '' %>>Weekly</option>
+                        <option value="monthly" <%= period === 'monthly' ? 'selected' : '' %>>Monthly</option>
+                        <option value="yearly" <%= period === 'yearly' ? 'selected' : '' %>>Yearly</option>
+                        <option value="custom" <%= period === 'custom' ? 'selected' : '' %>>Custom Range</option>
+                    </select>
+                </div>
+                
+                <div class="col-12 col-md-3 custom-dates" style="display: none;">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" id="startDate" name="startDate" class="form-control" 
+                           value="<%= startDate || '' %>">
+                </div>
+                
+                <div class="col-12 col-md-3 custom-dates" style="display: none;">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" id="endDate" name="endDate" class="form-control" 
+                           value="<%= endDate || '' %>">
+                </div>
+                
+                <div class="col-12 col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-sync-alt"></i> Update Report
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Items</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-end">Discount</th>
+                            <th class="text-end">Final Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% orders.forEach(order => { %>
+                        <tr>
+                            <td><%= order.orderId %></td>
+                            <td><%= order.userName %></td>
+                            <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
+                            <td><%= order.itemsCount %> items</td>
+                            <td>₹<%= order.totalPrice.toFixed(2) %></td>
+                            <td>₹<%= (order.discount || 0).toFixed(2) %></td>
+                            <td>₹<%= order.finalAmount.toFixed(2) %></td>
+                            <td>
+                                <span class="badge bg-<%= 
+                                    order.status === 'Delivered' ? 'success' : 
+                                    order.status === 'Cancelled' ? 'danger' : 
+                                    order.status === 'Returned' ? 'warning' : 
+                                    'primary' 
+                                %>">
+                                    <%= order.status %>
+                                </span>
+                            </td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const periodSelect = document.getElementById('period');
+    const customDates = document.querySelectorAll('.custom-dates');
+    
+    function toggleCustomDates() {
+        const isCustom = periodSelect.value === 'custom';
+        customDates.forEach(el => {
+            el.style.display = isCustom ? 'block' : 'none';
+        });
+    }
+    
+    periodSelect.addEventListener('change', toggleCustomDates);
+    toggleCustomDates();
+});
+
+function downloadReport(format) {
+    const period = document.getElementById('period').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    let url = `/admin/sales-report/download?format=${format}&period=${period}`;
+    if (period === 'custom' && startDate && endDate) {
+        url += `&startDate=${startDate}&endDate=${endDate}`;
+    }
+    
+    window.location.href = url;
+}
+</script>
+<%- include("../../views/partials/admin/footer") %>

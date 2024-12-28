@@ -794,7 +794,7 @@
             button.addEventListener('click', async function(e) {
                 e.preventDefault();
                 const productId = this.getAttribute('data-product-id');
-                console.log('Adding product:', productId);
+                // console.log('Adding product:', productId);
 
                 try {
                     // Show loading state
@@ -813,9 +813,9 @@
                         credentials: 'include'
                     });
 
-                    console.log('Response status:', response.status);
+                    // console.log('Response status:', response.status);
                     const data = await response.json();
-                    console.log('Response data:', data);
+                    // console.log('Response data:', data);
 
                     // Reset button state
                     this.textContent = '+ Add To Cart';

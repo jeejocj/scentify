@@ -88,10 +88,10 @@ router.post("/orders/cancel", profileController.cancelOrder);
 router.get('/orders/get-details/:orderId', userAuth, orderController.getOrderDetailsJson);
 
 
-router.get('/orders/view/:orderId', userAuth, orderController.getOrderDetails);
+// router.get('/orders/view/:orderId', userAuth, orderController.getOrderDetails);
 router.post('/orders/update-status', userAuth, orderController.updateOrderStatus);
-router.get('/return-reason', userAuth, orderController.showReturnReasonPage);
-router.post('/submit-return-reason', userAuth, orderController.submitReturnReason);
+// router.get('/return-reason', userAuth, orderController.showReturnReasonPage);
+// router.post('/submit-return-reason', userAuth, orderController.submitReturnReason);
 
 
 module.exports = router

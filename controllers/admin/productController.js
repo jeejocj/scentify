@@ -71,17 +71,7 @@ const addProducts = async (req, res) => {
                         // Add the resized image filename to the array
                         images.push(filename);
 
-                        // Wait a bit before trying to delete the original file
-                        // setTimeout(async () => {
-                        //     try {
-                        //         if (fs.existsSync(originalImagePath)) {
-                        //             await fs.promises.unlink(originalImagePath);
-                        //         }
-                        //     } catch (err) {
-                        //         console.error('Error deleting original file:', err);
-                        //         // Continue execution even if deletion fails
-                        //     }
-                        // }, 2000);
+                       
 
                     } catch (err) {
                         console.error('Error processing image:', err);
@@ -113,7 +103,6 @@ const addProducts = async (req, res) => {
                 salePrice: products.salePrice ? parseFloat(products.salePrice) : undefined,
                 createdOn: new Date(),
                 quantity: parseInt(products.quantity),
-                // color: products.color,
                 productImage: images,
                 status: "Available",
             });

@@ -19,40 +19,40 @@ const getOrderHistory = async (req, res) => {
     }
 };
 
-const getOrderDetails = async (req, res) => {
-    try {
-        const orderId = req.params.orderId;
-        const userId = req.session.user._id;
+// const getOrderDetails = async (req, res) => {
+//     try {
+//         const orderId = req.params.orderId;
+//         const userId = req.session.user._id;
 
-        const order = await Order.findById(orderId)
-            .populate({
-                path: 'orderedItems.product',
-                model: 'Product',
-                select: 'productName productImage salesPrice'
-            });
+//         const order = await Order.findById(orderId)
+//             .populate({
+//                 path: 'orderedItems.product',
+//                 model: 'Product',
+//                 select: 'productName productImage salesPrice'
+//             });
 
-        if (!order) {
-            return res.status(404).render('error', { 
-                message: 'Order not found',
-                user: req.session.user
-            });
-        }
+//         if (!order) {
+//             return res.status(404).render('error', { 
+//                 message: 'Order not found',
+//                 user: req.session.user
+//             });
+//         }
 
-        // Calculate totals
-        order.totalPrice = order.orderedItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-        order.finalAmount = order.totalPrice - (order.discount || 0);
-        res.render('orderDetails', { 
-            order,
-            user: req.session.user
-        });
-    } catch (error) {
-        console.error('Error fetching order details:', error);
-        res.status(500).render('error', { 
-            message: 'Internal Server Error',
-            user: req.session.user
-        });
-    }
-};
+//         // Calculate totals
+//         order.totalPrice = order.orderedItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+//         order.finalAmount = order.totalPrice - (order.discount || 0);
+//         res.render('orderDetails', { 
+//             order,
+//             user: req.session.user
+//         });
+//     } catch (error) {
+//         console.error('Error fetching order details:', error);
+//         res.status(500).render('error', { 
+//             message: 'Internal Server Error',
+//             user: req.session.user
+//         });
+//     }
+// };
 
 // Cancel an Order
 const cancelOrder = async (req, res) => {
@@ -195,50 +195,50 @@ const updateOrderStatus = async (req, res) => {
     }
 };
 
-const showReturnReasonPage = async (req, res) => {
-    try {
-        const orderId = req.query.orderId;
-        res.render('return-reason', { 
-            orderId,
-            user: req.session.user
-        });
-    } catch (error) {
-        console.error('Error showing return reason page:', error);
-        res.status(500).render('error', { message: 'Internal Server Error' });
-    }
-};
+// const showReturnReasonPage = async (req, res) => {
+//     try {
+//         const orderId = req.query.orderId;
+//         res.render('return-reason', { 
+//             orderId,
+//             user: req.session.user
+//         });
+//     } catch (error) {
+//         console.error('Error showing return reason page:', error);
+//         res.status(500).render('error', { message: 'Internal Server Error' });
+//     }
+// };
 
-const submitReturnReason = async (req, res) => {
-    try {
-        const { orderId, reason } = req.body;
-        const userId = req.session.user._id;
+// const submitReturnReason = async (req, res) => {
+//     try {
+//         const { orderId, reason } = req.body;
+//         const userId = req.session.user._id;
 
-        const order = await Order.findById(orderId);
+//         const order = await Order.findById(orderId);
 
-        if (!order) {
-            return res.status(404).json({
-                success: false,
-                message: "Order not found"
-            });
-        }
+//         if (!order) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "Order not found"
+//             });
+//         }
 
-        order.status = 'Return Requested';
-        order.returnReason = reason;
-        await order.save();
+//         order.status = 'Return Requested';
+//         order.returnReason = reason;
+//         await order.save();
 
-        return res.status(200).json({
-            success: true,
-            message: "Return request submitted successfully"
-        });
+//         return res.status(200).json({
+//             success: true,
+//             message: "Return request submitted successfully"
+//         });
 
-    } catch (error) {
-        console.error('Error submitting return reason:', error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
-    }
-};
+//     } catch (error) {
+//         console.error('Error submitting return reason:', error);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Internal server error"
+//         });
+//     }
+// };
 
 const getOrderDetailsJson = async (req, res) => {
     try {
@@ -291,13 +291,13 @@ const getOrderDetailsJson = async (req, res) => {
 
 module.exports = {
     getOrderHistory,
-    getOrderDetails,
+    // getOrderDetails,
     cancelOrder,
     getOrderStatus,
     viewOrderDetails,
     changeOrderStatus,
     updateOrderStatus,
-    showReturnReasonPage,
-    submitReturnReason,
+    // showReturnReasonPage,
+    // submitReturnReason,
     getOrderDetailsJson
 };

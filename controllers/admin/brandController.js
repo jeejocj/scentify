@@ -108,32 +108,64 @@ const unBlockBrand = async (req, res) => {
     }
 };
 
-const deleteBrand = async (req, res) => {
+const getEditBrand = async (req, res) => {
+    try {
+        const id = req.query.id;
+        const brand = await Brand.findOne({_id: id});
+        res.render("edit-brand", {brand: brand});
+    } catch (error) {
+        console.error('Error in getEditBrand:', error);
+        res.status(500).render('error', { message: 'Internal server error' });
+    }
+};
+
+const editBrand = async (req, res) => {
     try {
         const id = req.params.id;
-        const page = parseInt(req.query.page) || 1;
-        const searchTerm = req.query.search || '';
-        const limit = 4; 
-        
-        
-        await Brand.findByIdAndDelete(id);
-        
-        
-        const totalBrands = await Brand.countDocuments({
-            ...(searchTerm && {
-                name: { $regex: searchTerm, $options: 'i' }
-            })
+        const { name } = req.body;
+        const file = req.file;
+
+        const existingBrand = await Brand.findOne({ 
+            brandName: { $regex: new RegExp('^' + name + '$', 'i') } 
         });
-        const totalPages = Math.ceil(totalBrands / limit);
-        
-        if (page > totalPages && page > 1) {
-            res.redirect(`/admin/brands?page=${page - 1}${searchTerm ? '&search=' + searchTerm : ''}`);
+
+        if (existingBrand && existingBrand._id.toString() !== id) {
+            return res.render('edit-brand', {
+                brand: existingBrand,
+                error: "Brand exists, please choose another name"
+            });
+        }
+
+        const brand = await Brand.findById(id);
+        if (brand.brandName === name && !file) {
+            return res.render('edit-brand', {
+                brand: existingBrand,
+                error: "No changes were made. Please update the data before submitting."
+            });
+        }
+
+        const updateData = {
+            brandName: name
+        };
+
+        if (file) {
+            updateData.brandImage = [file.filename];
+        }
+
+        const updatedBrand = await Brand.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true }
+        );
+
+        if (updatedBrand) {
+            return res.redirect("/admin/brands");
         } else {
-            res.redirect(`/admin/brands?page=${page}${searchTerm ? '&search=' + searchTerm : ''}`);
+            return res.status(404).json({ error: "Brand not found" });
         }
     } catch (error) {
-        console.error('Error in deleteBrand:', error);
-        res.status(500).render('error', { message: 'Internal server error' });
+        console.error("Error updating brand:", error);
+        return res.status(500).json({ error: "Internal Server Error" });
     }
 };
 
@@ -142,5 +174,6 @@ module.exports = {
     addBrand,
     blockBrand,
     unBlockBrand,
-    deleteBrand
+    getEditBrand,
+    editBrand
 };

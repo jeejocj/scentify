@@ -299,6 +299,8 @@
                   <th class="text-center">SI.No</th>
                   <th>Name</th>
                   <th>Description</th>
+                  <th>Offer Price</th>
+                  <th>Offer</th>
                   <th>Status</th>
                   <th>List/Unlist</th>
                   <th class="text-start">Edit</th>
@@ -310,6 +312,22 @@
                   <td class="text-center"><%= (currentPage - 1) * 4 + index + 1 %></td>
                   <td class="text-start"><%= category.name %></td>
                   <td class="text-start"><%= category.description %></td>
+                  <td>
+                    <% if (category.categoryOffer) { %>
+                    <%= category.categoryOffer %>%
+                    <% } else { %> 0% <% } %>
+                  </td>
+                  <td>
+                    <% if (!category.categoryOffer) { %>
+                    <button class="btn btn-info" style="width: 100px" onclick="addOffer('<%=category._id%>')">
+                      <a href="#" class="text-white">Add Offer</a>
+                    </button>
+                    <% } else { %>
+                    <button class="btn btn-info" style="width: 100px" onclick="removeOffer('<%=category._id%>')">
+                      <a href="#" class="text-white">Remove</a>
+                    </button>
+                    <% } %>
+                  </td>
 
 
                   <td class="text-start">
@@ -465,6 +483,102 @@
       });
     }
 
+    async function addOffer(categoryId) {
+      try {
+        const { value: amount } = await Swal.fire({
+          title: 'Offer in Percentage',
+          input: 'number',
+          inputLabel: 'Percentage',
+          inputPlaceholder: 'Enter the offer percentage',
+          showCancelButton: true,
+          confirmButtonText: 'Add Offer',
+          cancelButtonText: 'Cancel',
+          inputValidator: (value) => {
+            if (!value || isNaN(value) || value <= 0 || value > 100) {
+              return 'Please enter a valid percentage (1-100).';
+            }
+          }
+        });
+
+        if (amount) {
+          $.ajax({
+            url: "/admin/addCategoryOffer",
+            method: 'POST',
+            data: {
+              percentage: amount,
+              categoryId: categoryId
+            },
+            success: (response) => {
+              if (response.status === true) {
+                Swal.fire('Offer Added', 'The offer has been successfully added!', 'success')
+                  .then(() => location.reload());
+              } else {
+                Swal.fire('Failed', 'Unable to add the offer. Please try again.', 'error');
+              }
+            },
+            error: (error) => {
+              console.error('Error:', error);
+              Swal.fire('Error', 'An unexpected error occurred.', 'error');
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error in addOffer:', error);
+      }
+    }
+
+    async function removeOffer(categoryId) {
+      const confirm = await Swal.fire({
+        title: "Remove Offer",
+        text: "Are you sure you want to remove the offer from this category?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Remove",
+        cancelButtonText: "Cancel",
+      });
+
+      if (confirm.isConfirmed) {
+        try {
+          Swal.fire({
+            title: "Removing Offer...",
+            text: "Please wait while the offer is being removed",
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            },
+          });
+
+          const response = await fetch("/admin/removeCategoryOffer", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              categoryId: categoryId,
+            }),
+          });
+
+          const data = await response.json();
+
+          Swal.close();
+
+          if (response.ok && data.status === true) {
+            Swal.fire("Offer Removed", "The offer has been successfully removed", "success").then(() => {
+              location.reload();
+            });
+          } else {
+            Swal.fire("Failed", data.message || "Removing offer failed", "error");
+          }
+        } catch (error) {
+          Swal.fire(
+            "Error",
+            "An error occurred while removing the offer. Please try again.",
+            "error"
+          );
+          console.error("Error removing offer:", error);
+        }
+      }
+    }
     
     async function handleListStatus(categoryId, listStatus) {
         const action = listStatus ? 'list' : 'unlist';

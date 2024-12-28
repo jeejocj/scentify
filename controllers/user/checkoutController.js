@@ -3,7 +3,7 @@ const Product = require("../../models/productModel");
 const Cart = require("../../models/cartModel");
 const Address = require("../../models/addressModel");
 const Order = require('../../models/orderModel');
-const { compareSync } = require("bcrypt");
+
 
 
 
@@ -246,12 +246,16 @@ const postCheckout = async (req, res) => {
 
 
 const  orderConfirm = async(req,res)=>{
+    const userId=req.session.user;
+    const userData= await User.findById(userId);
     const orderId = req.query.id;
     try {
         if(!req.session.user){
             return res.redirect("/signup");
         }
-      return  res.render("orderConfirmation");
+      return  res.render("orderConfirmation",{
+        user:userData, 
+      });
         
     } catch (error) {
         console.log("error in loading confirmation page ",error.message);

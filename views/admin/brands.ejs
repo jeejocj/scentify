@@ -228,6 +228,11 @@
     }
 </style>
 
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+</head>
+
 <section class="content-main">
     <div class="content-header">
         <h2 class="content-title">Brands</h2>
@@ -275,6 +280,7 @@
                                 <th>Logo</th>
                                 <th>Status</th>
                                 <th>Actions</th>
+                                <th>Edit</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -298,21 +304,15 @@
                                             <span class="badge rounded-pill alert-success">Active</span>
                                         <% } %>
                                     </td>
-                                    <td class="text-start">
-                                        <div class="action-buttons">
-                                            <% if(brand.isBlocked === false) { %>
-                                                <button class="btn btn-sm btn-danger" onclick="confirmBlock('<%= brand._id %>', <%= currentPage %>)">
-                                                    Block
-                                                </button>
-                                            <% } else { %>
-                                                <button class="btn btn-sm btn-success" onclick="confirmUnblock('<%= brand._id %>', <%= currentPage %>)">
-                                                    Unblock
-                                                </button>
-                                            <% } %>
-                                            <button class="btn btn-sm btn-danger" onclick="confirmDelete('<%= brand._id %>', <%= currentPage %>)">
-                                                Delete
-                                            </button>
-                                        </div>
+                                    <td>
+                                        <% if (brand.isBlocked) { %>
+                                            <a href="javascript:void(0)" class="btn btn-success btn-sm" onclick="confirmUnblock('<%= brand._id %>','<%= currentPage %>','<%= searchTerm %>')">Unblock</a>
+                                        <% } else { %>
+                                            <a href="javascript:void(0)" class="btn btn-warning btn-sm" onclick="confirmBlock('<%= brand._id %>','<%= currentPage %>','<%= searchTerm %>')">Block</a>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <a href="/admin/brands/edit?id=<%= brand._id %>" class="btn btn-primary btn-sm">Edit</a>
                                     </td>
                                 </tr>
                             <% }) %>
@@ -364,7 +364,7 @@
                 <h5 class="modal-title" id="addBrandModalLabel">Add New Brand</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="addBrandForm" method="post" action="/admin/addBrand" enctype="multipart/form-data" onsubmit="return validateForm()">
+            <form id="addBrandForm" method="post" action="/admin/addBrand" enctype="multipart/form-data">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="brandName" class="form-label">Brand Name</label>
@@ -387,15 +387,17 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
 <script>
     function previewImage(event) {
         const input = event.target;
+        const preview = document.getElementById('imagePreview');
+        
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                const preview = document.getElementById('imagePreview');
                 preview.src = e.target.result;
                 preview.style.display = 'block';
             };
@@ -403,33 +405,56 @@
         }
     }
 
-    function validateForm() {
-        let isValid = true;
-        const brandName = document.getElementById('brandName');
-        const brandImage = document.getElementById('brandImage');
+    function confirmBlock(brandId, currentPage, searchTerm = '') {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You want to block this brand?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, block it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/admin/brands/block/${brandId}?page=${currentPage}${searchTerm ? '&search=' + searchTerm : ''}`;
+            }
+        });
+    }
 
-        // Reset previous validation states
-        brandName.classList.remove('is-invalid');
-        brandImage.classList.remove('is-invalid');
+    function confirmUnblock(brandId, currentPage, searchTerm = '') {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You want to unblock this brand?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, unblock it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/admin/brands/unblock/${brandId}?page=${currentPage}${searchTerm ? '&search=' + searchTerm : ''}`;
+            }
+        });
+    }
 
-        if (!brandName.value.trim()) {
-            brandName.classList.add('is-invalid');
-            isValid = false;
+    // Add Brand Form Validation and Sweet Alert
+    document.getElementById('addBrandForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('brandName').value;
+        const image = document.getElementById('brandImage').files[0];
+        
+        if (!name || !image) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Both brand name and image are required!'
+            });
+            return;
         }
-
-        if (!brandImage.value) {
-            brandImage.classList.add('is-invalid');
-            isValid = false;
-        }
-
-        if (!isValid) {
-            return false;
-        }
-
-        // If form is valid, submit via AJAX
-        const form = document.getElementById('addBrandForm');
-        const formData = new FormData(form);
-
+        
+        const formData = new FormData(this);
+        
         fetch('/admin/addBrand', {
             method: 'POST',
             body: formData
@@ -438,98 +463,30 @@
         .then(data => {
             if (data.success) {
                 Swal.fire({
+                    icon: 'success',
                     title: 'Success!',
                     text: data.message,
-                    icon: 'success',
-                    confirmButtonColor: '#3498db'
+                    showConfirmButton: false,
+                    timer: 1500
                 }).then(() => {
                     window.location.reload();
                 });
             } else {
                 Swal.fire({
-                    title: 'Error!',
-                    text: data.message,
                     icon: 'error',
-                    confirmButtonColor: '#d33'
+                    title: 'Error!',
+                    text: data.message
                 });
             }
         })
         .catch(error => {
             console.error('Error:', error);
             Swal.fire({
-                title: 'Error!',
-                text: 'Something went wrong. Please try again.',
                 icon: 'error',
-                confirmButtonColor: '#d33'
+                title: 'Error!',
+                text: 'Something went wrong. Please try again.'
             });
         });
-
-        return false; // Prevent default form submission
-    }
-
-    function confirmBlock(brandId, currentPage) {
-        Swal.fire({
-            title: 'Block Brand?',
-            text: 'Are you sure you want to block this brand?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, block it!',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const searchParam = typeof searchTerm !== 'undefined' && searchTerm ? `&search=${searchTerm}` : '';
-                window.location.href = `/admin/blockBrand/${brandId}?page=${currentPage}${searchParam}`;
-            }
-        });
-    }
-
-    function confirmUnblock(brandId, currentPage) {
-        Swal.fire({
-            title: 'Unblock Brand?',
-            text: 'Are you sure you want to unblock this brand?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, unblock it!',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const searchParam = typeof searchTerm !== 'undefined' && searchTerm ? `&search=${searchTerm}` : '';
-                window.location.href = `/admin/unBlockBrand/${brandId}?page=${currentPage}${searchParam}`;
-            }
-        });
-    }
-
-    function confirmDelete(brandId, currentPage) {
-        Swal.fire({
-            title: 'Delete Brand?',
-            text: 'This action cannot be undone. Are you sure?',
-            icon: 'error',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const searchParam = typeof searchTerm !== 'undefined' && searchTerm ? `&search=${searchTerm}` : '';
-                window.location.href = `/admin/deleteBrand/${brandId}?page=${currentPage}${searchParam}`;
-            }
-        });
-    }
-
-    // Clear validation states when modal is hidden
-    document.getElementById('addBrandModal').addEventListener('hidden.bs.modal', function () {
-        const form = document.getElementById('addBrandForm');
-        const inputs = form.querySelectorAll('.form-control');
-        inputs.forEach(input => {
-            input.classList.remove('is-invalid');
-        });
-        document.getElementById('imagePreview').style.display = 'none';
-        form.reset();
     });
 </script>
 
