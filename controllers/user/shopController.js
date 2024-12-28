@@ -8,7 +8,7 @@ const loadShoppingPage = async (req, res) => {
     const user = req.session.user;
     const userData = await User.findById(user);
     const categories = await Category.find({ isListed: true });
-    const categoryIds = categories.map((category) => category._id);
+    const brands = await Brand.find({ isBlocked: false });
 
     const page = parseInt(req.query.page) || 1;
     const limit = 9;
@@ -17,24 +17,39 @@ const loadShoppingPage = async (req, res) => {
     // Base query
     let query = {
       isBlocked: false,
-      category: { $in: categoryIds },
     };
 
-    // Advanced filtering
-    if (req.query.category) {
-      query.category = req.query.category;
+    // Handle multiple category filters
+    if (req.query.categories && req.query.categories.length > 0) {
+      const categoryIds = Array.isArray(req.query.categories) 
+        ? req.query.categories 
+        : [req.query.categories];
+      query.category = { $in: categoryIds };
+    } else {
+      // If no categories selected, show products from all listed categories
+      query.category = { $in: categories.map(cat => cat._id) };
     }
-    if (req.query.brand) {
-      query.brand = req.query.brand;
+
+    // Handle multiple brand filters
+    if (req.query.brands && req.query.brands.length > 0) {
+      const brandIds = Array.isArray(req.query.brands) 
+        ? req.query.brands 
+        : [req.query.brands];
+      query.brand = { $in: brandIds };
     }
-    if (req.query.minPrice) {
-      query.regularPrice = query.regularPrice || {};
-      query.regularPrice.$gte = parseFloat(req.query.minPrice);
+
+    // Price range filter
+    if (req.query.minPrice || req.query.maxPrice) {
+      query.regularPrice = {};
+      if (req.query.minPrice) {
+        query.regularPrice.$gte = parseFloat(req.query.minPrice);
+      }
+      if (req.query.maxPrice) {
+        query.regularPrice.$lte = parseFloat(req.query.maxPrice);
+      }
     }
-    if (req.query.maxPrice) {
-      query.regularPrice = query.regularPrice || {};
-      query.regularPrice.$lte = parseFloat(req.query.maxPrice);
-    }
+
+    // Stock filter
     if (req.query.inStock === 'true') {
       query.quantity = { $gt: 0 };
     }
@@ -42,11 +57,7 @@ const loadShoppingPage = async (req, res) => {
     // Search functionality
     if (req.query.query) {
       const searchRegex = new RegExp(req.query.query, 'i');
-      query.$or = [
-        { productName: searchRegex },
-        { description: searchRegex },
-        { 'brand.brandName': searchRegex }
-      ];
+      query.productName = searchRegex;
     }
 
     // Default sort
@@ -56,18 +67,15 @@ const loadShoppingPage = async (req, res) => {
     const sortOption = req.query.sort;
     if (sortOption) {
       switch (sortOption) {
-        // case 'popularity':
-        //   sort = { salesCount: -1 };
-        //   break;
+        case 'popularity':
+          sort = { salesCount: -1 };
+          break;
         case 'price_asc':
           sort = { regularPrice: 1 };
           break;
         case 'price_desc':
           sort = { regularPrice: -1 };
           break;
-        // case 'rating':
-        //   sort = { averageRating: -1 };
-        //   break;
         case 'newest':
           sort = { createdOn: -1 };
           break;
@@ -80,7 +88,7 @@ const loadShoppingPage = async (req, res) => {
       }
     }
 
-    // Fetch products with aggregation for proper price sorting
+    // Fetch products with all filters applied
     const products = await Product.find(query)
       .collation({ locale: "en", strength: 2 })
       .populate('category')
@@ -93,9 +101,6 @@ const loadShoppingPage = async (req, res) => {
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);
 
-    // Fetch brands
-    const brands = await Brand.find({ isBlocked: false });
-
     res.render("shop", {
       user: userData,
       products,
@@ -104,12 +109,12 @@ const loadShoppingPage = async (req, res) => {
       totalProducts,
       currentPage: page,
       totalPages,
-      query: req.query,
+      query: req.query
     });
 
   } catch (error) {
-    console.error("Error loading shopping page:", error);
-    res.status(500).render("error", { message: "An error occurred while loading the shopping page." });
+    console.error('Error in loadShoppingPage:', error);
+    res.status(500).render("error", { message: "Internal server error" });
   }
 };
 

@@ -122,21 +122,39 @@ const resendOtp = async (req, res) => {
 
 const postNewPassword = async (req, res) => {
     try {
-        const { newPass1, newPass2 } = req.body;
+        const { password, confirmPassword } = req.body;
         const email = req.session.email;
+        
         if (!email) {
             return res.render("reset-password", { message: "Session expired. Please try again." });
         }
-        if (newPass1 === newPass2) {
-            const passwordHash = await securePassword(newPass1);
-            await User.updateOne(
-                { email: email },
-                { $set: { password: passwordHash } }
-            );
-            res.redirect("/login");
-        } else {
-            res.render("reset-password", { message: "Passwords do not match" });
+
+        // Find the user and their current password
+        const user = await User.findOne({ email: email });
+        if (!user) {
+            return res.render("reset-password", { message: "User not found. Please try again." });
         }
+
+        // Check if passwords match
+        if (password !== confirmPassword) {
+            return res.render("reset-password", { message: "Passwords do not match" });
+        }
+
+        // Check if new password is same as current password
+        const isSamePassword = await bcrypt.compare(password, user.password);
+        if (isSamePassword) {
+            return res.render("reset-password", { 
+                message: "New password must be different from your current password" 
+            });
+        }
+
+        // If all checks pass, update the password
+        const passwordHash = await securePassword(password);
+        await User.updateOne(
+            { email: email },
+            { $set: { password: passwordHash } }
+        );
+        res.redirect("/login");
     } catch (error) {
         console.log(error)
         res.redirect("/pageNotFound");
@@ -330,24 +348,33 @@ const ChangePassword = async (req, res) => {
 const changePasswordValid = async (req, res) => {
     try {
         const { email } = req.body;
-        const userExists = await User.findOne({ email });
-        if (userExists) {
-            const otp = generateOtp();
-            const emailSent = await sendVerificationEmail(email, otp);
-            if (emailSent) {
-                req.session.userOtp = otp;
-                req.session.email = email;
-                res.render("change-password-otp");
-                console.log("OTP", otp);
-            } else {
-                res.json({
-                    success:false,
-                    message:'Failed to send OTP. Please try again'
-                })
-            }
+        const userId = req.session.user;
+
+        // First check if the entered email matches the user's current email
+        const currentUser = await User.findById(userId);
+        if (!currentUser) {
+            return res.render("change-password", {
+                message: "User not found"
+            });
+        }
+
+        if (currentUser.email !== email) {
+            return res.render("change-password", {
+                message: "The email you entered does not match your current email"
+            });
+        }
+
+        // If email matches, proceed with OTP generation and sending
+        const otp = generateOtp();
+        const emailSent = await sendVerificationEmail(email, otp);
+        if (emailSent) {
+            req.session.userOtp = otp;
+            req.session.email = email;
+            res.render("change-password-otp");
+            console.log("OTP", otp);
         } else {
             res.render("change-password", {
-                message: "User with this email does not exist"
+                message: "Failed to send verification email. Please try again."
             });
         }
     } catch (error) {

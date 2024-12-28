@@ -30,88 +30,96 @@
                                 <button type="submit"><span class="icon_search"></span></button>
                             </form>
                         </div>
-                        <!-- <div class="shop__sidebar__accordion">
+                        <div class="shop__sidebar__accordion">
                             <div class="accordion" id="accordionExample">
-                                <div class="card">
-                                    <div class="card-heading">
-                                        <a data-toggle="collapse" data-target="#collapseOne">Categories</a>
-                                    </div>
-                                    <div id="collapseOne" class="collapse show" data-parent="#accordionExample">
-                                        <div class="card-body">
-                                            <div class="shop__sidebar__categories">
-                                                <ul class="nice-scroll">
+                                <form id="filterForm" action="/shop" method="GET">
+                                    <div class="card">
+                                        <div class="card-heading">
+                                            <a data-toggle="collapse" data-target="#collapseOne">Categories</a>
+                                        </div>
+                                        <div id="collapseOne" class="collapse show" data-parent="#accordionExample">
+                                            <div class="card-body">
+                                                <div class="shop__sidebar__categories">
                                                     <% categories.forEach(function(category) { %>
-                                                      <li class="filter-item">
-                                                        <a href="/shop?category=<%= category._id %>" class="<%= query.category === category._id.toString() ? 'active' : '' %>">
-                                                          <%= category.name %>
-                                                        </a>
-                                                      </li>
+                                                        <div class="form-check">
+                                                            <input type="checkbox" class="form-check-input" 
+                                                                name="categories[]" 
+                                                                value="<%= category._id %>"
+                                                                <%= (query.categories || []).includes(category._id.toString()) ? 'checked' : '' %>>
+                                                            <label class="form-check-label">
+                                                                <%= category.name %>
+                                                            </label>
+                                                        </div>
                                                     <% }); %>
-                                                  </ul>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="card">
-                                    <div class="card-heading">
-                                        <a data-toggle="collapse" data-target="#collapseTwo">Brands</a>
-                                    </div>
-                                    <div id="collapseTwo" class="collapse show" data-parent="#accordionExample">
-                                        <div class="card-body">
-                                            <div class="shop__sidebar__brand">
-                                                <ul>
+                                    
+                                    <div class="card">
+                                        <div class="card-heading">
+                                            <a data-toggle="collapse" data-target="#collapseTwo">Brands</a>
+                                        </div>
+                                        <div id="collapseTwo" class="collapse show" data-parent="#accordionExample">
+                                            <div class="card-body">
+                                                <div class="shop__sidebar__brand">
                                                     <% brands.forEach(function(brand) { %>
-                                                      <li class="filter-item">
-                                                        <a href="/shop?brand=<%= brand._id %>" class="<%= query.brand === brand._id.toString() ? 'active' : '' %>">
-                                                          <%= brand.brandName %>
-                                                        </a>
-                                                      </li>
+                                                        <div class="form-check">
+                                                            <input type="checkbox" class="form-check-input" 
+                                                                name="brands[]" 
+                                                                value="<%= brand._id %>"
+                                                                <%= (query.brands || []).includes(brand._id.toString()) ? 'checked' : '' %>>
+                                                            <label class="form-check-label">
+                                                                <%= brand.brandName %>
+                                                            </label>
+                                                        </div>
                                                     <% }); %>
-                                                  </ul>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="card">
-                                    <div class="card-heading">
-                                        <a data-toggle="collapse" data-target="#collapseThree">Price Range</a>
-                                    </div>
-                                    <div id="collapseThree" class="collapse show" data-parent="#accordionExample">
-                                        <div class="card-body">
-                                            <form action="/shop" method="GET" class="price-filter-form">
+
+                                    <div class="card">
+                                        <div class="card-heading">
+                                            <a data-toggle="collapse" data-target="#collapseThree">Price Range</a>
+                                        </div>
+                                        <div id="collapseThree" class="collapse show" data-parent="#accordionExample">
+                                            <div class="card-body">
                                                 <div class="price-range">
                                                     <input type="number" name="minPrice" placeholder="Min Price" 
-                                                           value="<%= query.minPrice || '' %>" class="form-control">
+                                                           value="<%= query.minPrice || '' %>" class="form-control mb-2">
                                                     <input type="number" name="maxPrice" placeholder="Max Price" 
-                                                           value="<%= query.maxPrice || '' %>" class="form-control">
-                                                    <button type="submit" class="btn btn-dark btn-sm w-100">Apply Filter</button>
+                                                           value="<%= query.maxPrice || '' %>" class="form-control mb-2">
                                                 </div>
-                                            </form>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="card">
-                                    <div class="card-heading">
-                                        <a data-toggle="collapse" data-target="#collapseFour">Availability</a>
-                                    </div>
-                                    <div id="collapseFour" class="collapse show" data-parent="#accordionExample">
-                                        <div class="card-body">
-                                            <div class="shop__sidebar__stock">
-                                                <form action="/shop" method="GET">
+
+                                    <div class="card">
+                                        <div class="card-heading">
+                                            <a data-toggle="collapse" data-target="#collapseFour">Availability</a>
+                                        </div>
+                                        <div id="collapseFour" class="collapse show" data-parent="#accordionExample">
+                                            <div class="card-body">
+                                                <div class="shop__sidebar__stock">
                                                     <div class="form-check">
                                                         <input type="checkbox" class="form-check-input" id="inStock" 
                                                                name="inStock" value="true" 
                                                                <%= query.inStock === 'true' ? 'checked' : '' %>>
                                                         <label class="form-check-label" for="inStock">In Stock Only</label>
                                                     </div>
-                                                    <button type="submit" class="btn btn-dark btn-sm mt-2">Apply</button>
-                                                </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+
+                                    <div class="filter-buttons mt-3">
+                                        <button type="submit" class="btn btn-dark btn-sm w-100 mb-2">Apply Filters</button>
+                                        <a href="/shop" class="btn btn-outline-dark btn-sm w-100">Clear Filters</a>
+                                    </div>
+                                </form>
                             </div>
-                        </div> -->
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-9">
@@ -131,8 +139,8 @@
                                             <option value="price_desc" <%= query.sort === 'price_desc' ? 'selected' : '' %>>Price: High to Low</option>
                                             <option value="name_asc" <%= query.sort === 'name_asc' ? 'selected' : '' %>>Name: A-Z</option>
                                             <option value="name_desc" <%= query.sort === 'name_desc' ? 'selected' : '' %>>Name: Z-A</option>
-                                            <!-- <option value="popularity" <%= query.sort === 'popularity' ? 'selected' : '' %>>Popularity</option>
-                                            <option value="rating" <%= query.sort === 'rating' ? 'selected' : '' %>>Rating</option> -->
+                                            <option value="popularity" <%= query.sort === 'popularity' ? 'selected' : '' %>>Popularity</option>
+                                            <!-- <option value="rating" <%= query.sort === 'rating' ? 'selected' : '' %>>Rating</option> --> -->
                                         </select>
                                     </form>
                                 </div>
