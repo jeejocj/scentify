@@ -9,9 +9,8 @@ const getCart = async (req, res) => {
     if (!userId) {
       return res.redirect("/login");
     }
-
     const user = await User.findById(userId);
-
+    
     // Fetch cart with populated product details
     const cartItems = await Cart.findOne({ userId }).populate({
       path: "items.productId",

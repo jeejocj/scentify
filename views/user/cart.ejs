@@ -416,13 +416,6 @@
                             <li>Subtotal <span>₹<%= totalAmount.toLocaleString() %></span></li>
                             <li>Total <span>₹<%= totalAmount.toLocaleString() %></span></li>
                         </ul>
-                        <div class="discount__content">
-                            <h6>Discount codes</h6>
-                            <form action="#">
-                                <input type="text" placeholder="Enter your coupon code">
-                                <button type="submit" class="site-btn">Apply</button>
-                            </form>
-                        </div>
                         <% if (products && products.length > 0) { %>
                             <a href="/checkout" class="primary-btn">Proceed to checkout</a>
                         <% } else { %>

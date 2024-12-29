@@ -1,18 +1,83 @@
-<%- include("../../views/partials/user/header.ejs") %>
-<main class="main" style="padding-top: 200px;">
-  <section class="mt-50 mb-50">
-    <div class="container">
-      <div class="row">
-        <div class="col-12">
-          <div class="text-center">
-            <h1 class="mb-4">Thank You for Your Order!</h1>
-            <p class="mb-4">Your order has been placed successfully.</p>
-            <a href="/shop" class="btn btn-success">
-              <i class="fi-rs-shopping-bag mr-10"></i>Continue Shopping
-            </a>
-          </div>
+<%- include("../../views/partials/user/header") %>
+
+<style>
+    .main {
+        min-height: 100vh;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .confirmation-section {
+        width: 100%;
+        padding: 40px 0;
+        background-color: white;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    }
+    .confirmation-content {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 30px;
+        text-align: center;
+    }
+    .confirmation-title {
+        font-size: 2.5rem;
+        color: #333;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+    }
+    .confirmation-message {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+    .btn-success {
+        color: #fff;
+        background-color: #28a745;
+        border-color: #28a745;
+        padding: 12px 25px;
+        border-radius: 5px;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+    .btn-success:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    .btn-success i {
+        margin-right: 10px;
+    }
+    @media (max-width: 768px) {
+        .confirmation-title {
+            font-size: 2rem;
+        }
+        .confirmation-message {
+            font-size: 1rem;
+        }
+        .confirmation-content {
+            padding: 20px;
+        }
+    }
+</style>
+
+<main class="main">
+    <section class="confirmation-section">
+        <div class="container">
+            <div class="confirmation-content">
+                <h1 class="confirmation-title">Thank You for Your Order!</h1>
+                <p class="confirmation-message">Your order has been placed successfully. We'll process it right away.</p>
+                <a href="/shop" class="btn btn-success">
+                    <i class="fi-rs-shopping-bag"></i>Continue Shopping
+                </a>
+            </div>
         </div>
-      </div>
-    </div>
-  </section>
-</main
+    </section>
+</main>
+
+<%- include("../../views/partials/user/footer") %>
