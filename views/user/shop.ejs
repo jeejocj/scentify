@@ -159,7 +159,7 @@
                                                 <div class="no-image">No Image Available</div>
                                             <% } %>
                                             <div class="product-action">
-                                                <a href="#" class="action-btn">
+                                                <a href="#" class="action-btn" onclick="addToWishlist('<%= product._id %>'); return false;">
                                                     <i class="fas fa-heart"></i>
                                                 </a>
                                                 <a href="/productDetails?id=<%= product._id %>" class="action-btn">
@@ -833,6 +833,28 @@
 
         function viewProductDetails(productId) {
             window.location.href = `/product-details/${productId}`;
+        }
+
+        async function addToWishlist(productId) {
+            try {
+                const response = await fetch('/addToWishlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    toastr.success('Product added to wishlist');
+                } else {
+                    toastr.error(data.message || 'Error adding to wishlist');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                toastr.error('Failed to add to wishlist');
+            }
         }
     </script>
 </body>

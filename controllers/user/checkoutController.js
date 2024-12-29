@@ -197,13 +197,15 @@ const removeCoupon = async (req, res) => {
 // Post Checkout
 const postCheckout = async (req, res) => {
     try {
-        const userId = req.session.user;
-        if (!userId) {
+        if (!req.session.user) {
             return res.status(401).json({ success: false, message: "Please login to continue" });
         }
 
         const { address, products, subtotal, total, paymentMethod } = req.body;
+        console.log('Checkout request:', { address, subtotal, total, paymentMethod });
+        
         const parsedProducts = JSON.parse(products);
+        console.log('Parsed products:', parsedProducts);
 
         if (!Array.isArray(parsedProducts) || parsedProducts.length === 0) {
             return res.status(400).json({ success: false, message: "No products provided" });
@@ -234,8 +236,11 @@ const postCheckout = async (req, res) => {
 
         // Handle online payment
         if (paymentMethod === 'onlinePayment') {
+            console.log('Creating Razorpay order for amount:', total);
             const order = await createRazorpayOrder(total);
-            const user = await User.findById(userId);
+            console.log('Razorpay order created:', order);
+            
+            const user = await User.findById(req.session.user._id);
             return res.status(200).json({
                 success: true,
                 order_id: order.id,
@@ -254,10 +259,13 @@ const postCheckout = async (req, res) => {
 
         // Create order for COD
         const activeCoupon = req.session.activeCoupon;
-        const order = await createOrder(userId, parsedProducts, address, subtotal, total, mappedPaymentMethod, activeCoupon);
+        console.log('Creating COD order with coupon:', activeCoupon);
+        
+        const order = await createOrder(req.session.user._id, parsedProducts, address, subtotal, total, mappedPaymentMethod, activeCoupon);
+        console.log('Order created:', order);
 
         // Clear cart and coupon
-        await Cart.findOneAndUpdate({ userId }, { $set: { items: [] } });
+        await Cart.findOneAndUpdate({ userId: req.session.user._id }, { $set: { items: [] } });
         delete req.session.activeCoupon;
 
         return res.status(200).json({
@@ -268,7 +276,11 @@ const postCheckout = async (req, res) => {
 
     } catch (error) {
         console.error("Error in checkout:", error);
-        return res.status(500).json({ success: false, message: error.message || "Internal server error" });
+        return res.status(500).json({ 
+            success: false, 
+            message: "Internal server error",
+            error: error.message 
+        });
     }
 };
 
@@ -301,13 +313,21 @@ const createOrder = async (userId, products, address, subtotal, total, paymentMe
             createdOn: new Date()
         });
 
+        // Save the order
+        const savedOrder = await order.save();
+
+        // Update user's orderHistory
+        await User.findByIdAndUpdate(userId, {
+            $push: { orderHistory: savedOrder._id }
+        });
+
         if (coupon) {
             await User.findByIdAndUpdate(userId, {
                 $push: { coupons: { couponName: coupon.name } }
             });
         }
 
-        return await order.save();
+        return savedOrder;
     } catch (error) {
         console.error("Error creating order:", error);
         throw new Error("Failed to create order: " + error.message);
@@ -318,6 +338,11 @@ const createOrder = async (userId, products, address, subtotal, total, paymentMe
 const verifyPayment = async (req, res) => {
     try {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderDetails } = req.body;
+        console.log('Payment verification request:', {
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature
+        });
 
         if (!req.session.user) {
             return res.status(401).json({ success: false, message: "Please login to continue" });
@@ -327,36 +352,51 @@ const verifyPayment = async (req, res) => {
         const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
         hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
         const generated_signature = hmac.digest('hex');
+        console.log('Signature verification:', {
+            generated: generated_signature,
+            received: razorpay_signature
+        });
 
         if (generated_signature !== razorpay_signature) {
+            console.error("Signature verification failed");
             return res.status(400).json({ success: false, message: "Invalid payment signature" });
         }
 
         // Verify payment status
+        console.log('Fetching payment details from Razorpay');
         const payment = await razorpay.payments.fetch(razorpay_payment_id);
+        console.log('Payment details:', payment);
+
         if (payment.status !== 'captured') {
+            console.error("Payment not captured:", payment.status);
             return res.status(400).json({ success: false, message: "Payment not captured" });
         }
 
-        // Create order
-        const { address, products, subtotal, total } = orderDetails;
+        // Parse order details
+        console.log('Parsing order details:', orderDetails);
+        const orderData = JSON.parse(orderDetails);
+        const { address, products, subtotal, total } = orderData;
         const parsedProducts = JSON.parse(products);
         const activeCoupon = req.session.activeCoupon;
 
+        // Create order
+        console.log('Creating order with payment');
         const order = await createOrder(
-            req.session.user,
+            req.session.user._id,
             parsedProducts,
             address,
             subtotal,
             total,
-            'online',
+            'Online Payment',
             activeCoupon
         );
+        console.log('Order created:', order);
 
         // Update order with payment details
         order.paymentId = razorpay_payment_id;
         order.paymentStatus = 'Completed';
         await order.save();
+        console.log('Order updated with payment details');
 
         // Clear cart and coupon
         await Cart.findOneAndUpdate(
@@ -364,6 +404,7 @@ const verifyPayment = async (req, res) => {
             { $set: { items: [] } }
         );
         delete req.session.activeCoupon;
+        console.log('Cart cleared and coupon removed');
 
         return res.status(200).json({
             success: true,
@@ -373,7 +414,11 @@ const verifyPayment = async (req, res) => {
 
     } catch (error) {
         console.error("Error in payment verification:", error);
-        return res.status(500).json({ success: false, message: "Internal server error" });
+        return res.status(500).json({ 
+            success: false, 
+            message: "Internal server error",
+            error: error.message 
+        });
     }
 };
 

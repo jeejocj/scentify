@@ -1,0 +1,391 @@
+<%- include("../../views/partials/user/header") %>
+
+<style>
+    /* Reset table styles */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    td, th {
+        padding: 15px;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    th {
+        background: #f8f9fa;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .product__wishlist__item {
+        width: 200px;
+        padding: 15px;
+        margin: 0 auto;
+    }
+
+    .product__wishlist__item__pic {
+        width: 120px;
+        height: 120px;
+        overflow: hidden;
+        border-radius: 8px;
+        margin: 0 auto 8px;
+        border: 1px solid #eee;
+        background: #fff;
+        padding: 5px;
+    }
+
+    .product__wishlist__item__pic img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+    }
+
+    .product__wishlist__item__text {
+        text-align: center;
+        margin-top: 8px;
+    }
+
+    .product__wishlist__item__text h6 {
+        margin: 0;
+        font-size: 15px;
+        color: #333;
+        line-height: 1.4;
+        font-weight: 500;
+    }
+
+    .product__wishlist__item__text .brand {
+        font-size: 13px;
+        color: #666;
+        margin-top: 4px;
+    }
+
+    .product__wishlist__item__text .category {
+        font-size: 12px;
+        color: #888;
+        margin-top: 2px;
+    }
+
+    .price {
+        font-size: 16px;
+        color: #111;
+        font-weight: 600;
+    }
+
+    .action-btn {
+        padding: 8px 15px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .btn-remove {
+        background-color: #ffebee;
+        color: #d32f2f;
+    }
+
+    .btn-remove:hover {
+        background-color: #d32f2f;
+        color: #fff;
+    }
+
+    .btn-cart {
+        background-color: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .btn-cart:hover {
+        background-color: #1976d2;
+        color: #fff;
+    }
+
+    .empty-wishlist {
+        text-align: center;
+        padding: 50px 20px;
+    }
+
+    .empty-wishlist h3 {
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+
+    .continue__btn {
+        text-align: left;
+        padding: 20px 0;
+    }
+
+    .continue__btn a {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #111;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .continue__btn a:hover {
+        color: #1976d2;
+    }
+
+    .continue__btn i {
+        font-size: 16px;
+    }
+</style>
+
+<!-- Breadcrumb Section Begin -->
+<section class="breadcrumb-option">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="breadcrumb__text">
+                    <h4>Wishlist</h4>
+                    <div class="breadcrumb__links">
+                        <a href="/">Home</a>
+                        <span>Wishlist</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Breadcrumb Section End -->
+
+<!-- Wishlist Section Begin -->
+<section class="shopping-cart spad">
+    <div class="container">
+        <% if (wishlist && wishlist.length > 0) { %>
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="shopping__cart__table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Details</th>
+                                    <th>Price</th>
+                                    <th>Stock Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% wishlist.forEach(item => { %>
+                                    <tr>
+                                        <td class="product__wishlist__item">
+                                            <div class="product__wishlist__item__pic">
+                                                <% if (item.productId.productImage && item.productId.productImage.length > 0) { %>
+                                                    <img src="/uploads/re-image/<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>">
+                                                <% } else { %>
+                                                    <img src="/uploads/re-image/default.png" alt="No Image Available">
+                                                <% } %>
+                                            </div>
+                                        </td>
+                                        <td class="product__wishlist__item__text">
+                                            <h6><%= item.productId.productName %></h6>
+                                            <p class="brand"><strong>Brand:</strong> <%= item.productId.brand?.brandName || 'N/A' %></p>
+                                            <p class="category"><strong>Category:</strong> <%= item.productId.category?.name || 'N/A' %></p>
+                                        </td>
+                                        <td class="price">
+                                            <% if (typeof item.productId.salePrice !== 'undefined' && item.productId.salePrice !== null) { %>
+                                                ₹<%= item.productId.salePrice %>
+                                            <% } else if (typeof item.productId.regularPrice !== 'undefined') { %>
+                                                ₹<%= item.productId.regularPrice %>
+                                            <% } else { %>
+                                                Price not available
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <% if (item.productId.quantity > 0) { %>
+                                                <span class="badge bg-success">In Stock</span>
+                                            <% } else { %>
+                                                <span class="badge bg-danger">Out of Stock</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <button class="action-btn btn-cart" 
+                                                        onclick="addToCart('<%= item.productId._id %>')"
+                                                        <%= item.productId.quantity === 0 ? 'disabled' : '' %>>
+                                                    <i class="fas fa-shopping-cart"></i> Add to Cart
+                                                </button>
+                                                <button class="action-btn btn-remove" onclick="removeFromWishlist('<%= item.productId._id %>')">
+                                                    <i class="fas fa-trash"></i> Remove
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6 col-sm-6">
+                            <div class="continue__btn">
+                                <a href="/shop">
+                                    <i class="fa fa-arrow-left"></i>
+                                    Continue shopping
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="empty-wishlist">
+                <h3>Your wishlist is empty</h3>
+                <div class="continue__btn">
+                    <a href="/shop">
+                        <i class="fa fa-arrow-left"></i>
+                        Continue shopping
+                    </a>
+                </div>
+            </div>
+        <% } %>
+    </div>
+</section>
+<!-- Wishlist Section End -->
+
+<script>
+async function removeFromWishlist(productId) {
+    try {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, remove it!",
+            cancelButtonText: "No, cancel!",
+            reverseButtons: true
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const response = await fetch(`/wishlist/remove/${productId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire({
+                        title: "Removed!",
+                        text: "Item has been removed from wishlist.",
+                        icon: "success",
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: data.message || "Error removing item from wishlist",
+                        icon: "error"
+                    });
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            title: "Error!",
+            text: "Failed to remove item from wishlist",
+            icon: "error"
+        });
+    }
+}
+
+async function addToCart(productId) {
+    try {
+        const response = await fetch('/addToCart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                productId: productId,
+                quantity: 1
+            })
+        });
+
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.message || 'Failed to add product to cart');
+            });
+        }
+        const data = await response.json();
+        
+        if (data.success) {
+            Swal.fire({
+                title: 'Success!',
+                text: data.message || 'Product added to cart successfully!',
+                icon: 'success',
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                if (data.cartCount !== undefined) {
+                    updateCartCount(data.cartCount);
+                }
+                
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            });
+        } else {
+            throw new Error(data.message || 'Failed to add product to cart');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        
+        if (error.message.includes('Please login')) {
+            Swal.fire({
+                title: 'Login Required',
+                text: 'Please login to add items to your cart',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Login',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/login';
+                }
+            });
+        } 
+        else if (error.message.includes('Maximum quantity')) {
+            Swal.fire({
+                title: 'Quantity Limit Reached',
+                text: error.message,
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            });
+        }
+        else if (error.message.includes('out of stock') || error.message.includes('available in stock')) {
+            Swal.fire({
+                title: 'Stock Limited',
+                text: error.message,
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            });
+        }
+        else {
+            Swal.fire({
+                title: 'Error!',
+                text: error.message || 'Something went wrong. Please try again.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    }
+}
+
+function updateCartCount(count) {
+    const cartCountElement = document.getElementById('cartCount');
+    if (cartCountElement) {
+        cartCountElement.textContent = count;
+    }
+}
+</script>
+
+<%- include("../../views/partials/user/footer") %>
