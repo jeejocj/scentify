@@ -289,6 +289,47 @@
         padding: 10px 0;
         color: #28a745;
     }
+
+    .available-coupons {
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+    }
+    
+    .coupon-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .coupon-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .coupon-item:hover {
+        border-color: #007bff;
+        background-color: #f8f9fa;
+    }
+    
+    .coupon-info {
+        flex: 1;
+    }
+    
+    .coupon-info p {
+        color: #28a745;
+        font-weight: 500;
+    }
+    
+    .coupon-info small {
+        display: block;
+        color: #6c757d;
+    }
 </style>
 
 <!-- Breadcrumb Section Begin -->
@@ -370,10 +411,37 @@
                                 <button type="button" onclick="applyCoupon()" class="btn btn-primary">Apply</button>
                             </div>
                             <div id="couponMessage" class="coupon-message mt-2"></div>
+                            
                             <% if (activeCoupon) { %>
                                 <div class="active-coupon mt-2">
                                     <span>Coupon "<%= activeCoupon.name %>" applied</span>
                                     <button onclick="removeCoupon()" class="btn btn-sm btn-danger">Remove</button>
+                                </div>
+                            <% } %>
+
+                            <% if (availableCoupons && availableCoupons.length > 0) { %>
+                                <div class="available-coupons mt-3">
+                                    <h6>Available Coupons</h6>
+                                    <div class="coupon-list">
+                                        <% availableCoupons.forEach(coupon => { %>
+                                            <div class="coupon-item" onclick="selectCoupon('<%= coupon.name %>')">
+                                                <div class="coupon-info">
+                                                    <strong><%= coupon.name %></strong>
+                                                    <p class="mb-0">
+                                                        <%= coupon.type === 'percentage' ? `${coupon.offerPrice}% off` : `₹${coupon.offerPrice} off` %>
+                                                    </p>
+                                                    <small>Min. Purchase: ₹<%= coupon.minimumPrice %></small>
+                                                    <small>Expires: <%= new Date(coupon.expireOn).toLocaleDateString() %></small>
+                                                    <% if (coupon.description) { %>
+                                                        <small class="text-muted"><%= coupon.description %></small>
+                                                    <% } %>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); applyCouponDirect('<%= coupon.name %>')">
+                                                    Apply
+                                                </button>
+                                            </div>
+                                        <% }); %>
+                                    </div>
                                 </div>
                             <% } %>
                         </div>
@@ -503,6 +571,15 @@
             document.getElementById('couponMessage').innerHTML = 
                 '<div class="alert alert-danger">Error removing coupon. Please try again.</div>';
         }
+    }
+
+    function selectCoupon(code) {
+        document.getElementById('couponCode').value = code;
+    }
+
+    function applyCouponDirect(code) {
+        document.getElementById('couponCode').value = code;
+        applyCoupon();
     }
 
     // Add keypress event listener for coupon input

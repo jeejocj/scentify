@@ -44,6 +44,16 @@ const getcheckoutPage = async (req, res) => {
         // Get active coupon from session
         const activeCoupon = req.session.activeCoupon;
 
+        // Get all available coupons
+        const currentDate = new Date();
+        const userDoc = await User.findById(user._id);
+        const usedCouponNames = userDoc.coupons.map(c => c.couponName);
+        
+        const availableCoupons = await Coupon.find({
+            expireOn: { $gt: currentDate },
+            name: { $nin: usedCouponNames }
+        }).select('name type offerPrice minimumPrice expireOn description');
+
         if (!productId) {
             // Cart checkout
             const cart = await Cart.findOne({ userId: user._id }).populate({
@@ -71,8 +81,8 @@ const getcheckoutPage = async (req, res) => {
             let discountAmount = 0;
 
             if (activeCoupon) {
-                discountAmount = Math.floor((activeCoupon.offerPrice / 100) * subtotal);
-                finalAmount = subtotal - discountAmount;
+                discountAmount = activeCoupon.calculatedDiscount || 0;
+                finalAmount = activeCoupon.finalAmount || (subtotal - discountAmount);
             }
 
             return res.render("checkout", { 
@@ -84,6 +94,7 @@ const getcheckoutPage = async (req, res) => {
                 quantity: null,
                 addressData,
                 activeCoupon,
+                availableCoupons,
                 razorpayKeyId: process.env.RAZORPAY_KEY_ID
             });
         }
@@ -108,8 +119,8 @@ const getcheckoutPage = async (req, res) => {
         let discountAmount = 0;
 
         if (activeCoupon) {
-            discountAmount = Math.floor((activeCoupon.offerPrice / 100) * subtotal);
-            finalAmount = subtotal - discountAmount;
+            discountAmount = activeCoupon.calculatedDiscount || 0;
+            finalAmount = activeCoupon.finalAmount || (subtotal - discountAmount);
         }
 
         return res.render("checkout", { 
@@ -121,6 +132,7 @@ const getcheckoutPage = async (req, res) => {
             quantity,
             addressData,
             activeCoupon,
+            availableCoupons,
             razorpayKeyId: process.env.RAZORPAY_KEY_ID
         });
 
@@ -170,27 +182,31 @@ const applyCoupon = async (req, res) => {
         // Calculate discount based on coupon type
         let discountAmount;
         if (coupon.type === 'percentage') {
-            // For percentage, calculate percentage of total amount
             discountAmount = (coupon.offerPrice / 100) * parseFloat(totalAmount);
-            // Ensure discount doesn't exceed the total amount
             discountAmount = Math.min(discountAmount, parseFloat(totalAmount));
         } else {
-            // For fixed amount, use the offer price directly
             discountAmount = Math.min(coupon.offerPrice, parseFloat(totalAmount));
         }
 
-        // Round discount to 2 decimal places
         discountAmount = Math.round(discountAmount * 100) / 100;
-
-        // Calculate final amount
         const finalAmount = parseFloat(totalAmount) - discountAmount;
 
-        // Store coupon and calculated values in session
+        // Store coupon in session
         req.session.activeCoupon = {
             ...coupon.toObject(),
             calculatedDiscount: discountAmount,
             finalAmount: finalAmount
         };
+
+        // Add coupon to user's used coupons
+        await User.findByIdAndUpdate(userId, {
+            $push: {
+                coupons: {
+                    couponName: couponCode,
+                    usedAt: new Date()
+                }
+            }
+        });
 
         return res.status(200).json({
             success: true,

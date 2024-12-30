@@ -8,6 +8,11 @@ const orderSchema = new Schema({
         default:()=>uuidv4(),
         unique:true
     },
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
     orderedItems:[{
         product:{
             type:Schema.Types.ObjectId,
@@ -22,7 +27,6 @@ const orderSchema = new Schema({
             type:Number,
             default:0
         }
-
     }],
     totalPrice:{
         type:Number,
@@ -63,7 +67,7 @@ const orderSchema = new Schema({
         type:Boolean,
         default:false
     }
-})
+});
 
 const Order = mongoose.model("Order",orderSchema);
 module.exports = Order;

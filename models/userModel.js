@@ -78,6 +78,16 @@ const userSchema = new Schema({
             type: Date,
             default: Date.now
         }
+    }],
+    coupons: [{
+        couponName: {
+            type: String,
+            required: true
+        },
+        usedAt: {
+            type: Date,
+            default: Date.now
+        }
     }]
    
 })

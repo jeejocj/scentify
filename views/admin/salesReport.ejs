@@ -1,16 +1,61 @@
 <%- include("../../views/partials/admin/header") %>
 
-<% if (typeof message !== 'undefined' && message) { %>
-<div class="alert alert-danger alert-dismissible fade show" role="alert">
-    <%= message %>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    <% if (typeof error !== 'undefined' && error.stack && process.env.NODE_ENV === 'development') { %>
-        <pre class="mt-2 mb-0 small"><%= error.stack %></pre>
-    <% } %>
-</div>
-<% } %>
+<style>
+.content-main {
+    padding: 20px;
+}
+
+.content-header {
+    margin-bottom: 30px;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: none;
+    margin-bottom: 1rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+.table td, .table th {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+.badge {
+    padding: 0.5em 0.75em;
+}
+
+.custom-dates {
+    transition: all 0.3s ease;
+}
+
+.stats-card {
+    transition: transform 0.2s;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+</style>
 
 <div class="content-main">
+    <div class="container-fluid">
+        <div class="row mb-3">
+            <div class="col-12">
+                <a href="/admin/dashboard" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
     <div class="content-header d-flex justify-content-between align-items-center">
         <h2 class="content-title">Sales Report</h2>
         <div class="btn-group">
@@ -26,42 +71,59 @@
     <!-- Summary Cards -->
     <div class="row mt-4">
         <div class="col-12 col-md-6 col-lg-3 mb-4">
-            <div class="card h-100 border-primary">
+            <div class="card stats-card h-100 border-primary">
                 <div class="card-body">
                     <h6 class="card-subtitle mb-2 text-muted">Total Sales</h6>
                     <h3 class="card-title text-primary">₹<%= totals.finalAmount.toFixed(2) %></h3>
-                    <p class="card-text small">After all discounts & deductions</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-md-6 col-lg-3 mb-4">
-            <div class="card h-100 border-success">
-                <div class="card-body">
-                    <h6 class="card-subtitle mb-2 text-muted">Total Orders</h6>
-                    <h3 class="card-title text-success"><%= totals.count %></h3>
                     <p class="card-text small">
-                        Active: <%= totals.count - totals.cancelledCount - totals.returnedCount %> |
-                        Cancelled: <%= totals.cancelledCount %> |
-                        Returned: <%= totals.returnedCount %>
+                        Original: ₹<%= totals.totalPrice.toFixed(2) %><br>
+                        Discount: ₹<%= totals.discount.toFixed(2) %>
                     </p>
                 </div>
             </div>
         </div>
         <div class="col-12 col-md-6 col-lg-3 mb-4">
-            <div class="card h-100 border-info">
+            <div class="card stats-card h-100 border-success">
                 <div class="card-body">
-                    <h6 class="card-subtitle mb-2 text-muted">Regular Discounts</h6>
-                    <h3 class="card-title text-info">₹<%= totals.regularDiscount.toFixed(2) %></h3>
-                    <p class="card-text small">Non-coupon discounts</p>
+                    <h6 class="card-subtitle mb-2 text-muted">Order Status</h6>
+                    <h3 class="card-title text-success"><%= totals.count %> Total</h3>
+                    <p class="card-text small">
+                        Pending: <%= totals.pendingCount %><br>
+                        Processing: <%= totals.processingCount %><br>
+                        Shipped: <%= totals.shippedCount %><br>
+                        Delivered: <%= totals.deliveredCount %><br>
+                        Return Request: <%= totals.returnRequestCount %><br>
+                        Returned: <%= totals.returnedCount %><br>
+                        Cancelled: <%= totals.cancelledCount %>
+                    </p>
                 </div>
             </div>
         </div>
         <div class="col-12 col-md-6 col-lg-3 mb-4">
-            <div class="card h-100 border-warning">
+            <div class="card stats-card h-100 border-info">
                 <div class="card-body">
-                    <h6 class="card-subtitle mb-2 text-muted">Coupon Discounts</h6>
-                    <h3 class="card-title text-warning">₹<%= totals.couponDiscount.toFixed(2) %></h3>
-                    <p class="card-text small">Discounts from coupons</p>
+                    <h6 class="card-subtitle mb-2 text-muted">Payment Methods</h6>
+                    <div class="mt-3">
+                        <% Object.entries(paymentStats).forEach(([method, count]) => { %>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span><%= method %>:</span>
+                                <span class="badge bg-info"><%= count %></span>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3 mb-4">
+            <div class="card stats-card h-100 border-warning">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Daily Average</h6>
+                    <h3 class="card-title text-warning">
+                        ₹<%= (totals.finalAmount / Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)))).toFixed(2) %>
+                    </h3>
+                    <p class="card-text small">
+                        Orders per day: <%= (totals.count / Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)))).toFixed(1) %>
+                    </p>
                 </div>
             </div>
         </div>
@@ -82,19 +144,29 @@
                     </select>
                 </div>
                 
-                <div class="col-12 col-md-3 custom-dates" style="display: none;">
+                <div class="col-12 col-md-3">
+                    <label for="status" class="form-label">Order Status</label>
+                    <select id="status" name="status" class="form-select">
+                        <option value="all" <%= status === 'all' ? 'selected' : '' %>>All Status</option>
+                        <% uniqueStatuses.forEach(function(s) { %>
+                            <option value="<%= s %>" <%= status === s ? 'selected' : '' %>><%= s %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                
+                <div class="col-12 col-md-2 custom-dates" style="display: none;">
                     <label for="startDate" class="form-label">Start Date</label>
                     <input type="date" id="startDate" name="startDate" class="form-control" 
                            value="<%= startDate || '' %>">
                 </div>
                 
-                <div class="col-12 col-md-3 custom-dates" style="display: none;">
+                <div class="col-12 col-md-2 custom-dates" style="display: none;">
                     <label for="endDate" class="form-label">End Date</label>
                     <input type="date" id="endDate" name="endDate" class="form-control" 
                            value="<%= endDate || '' %>">
                 </div>
                 
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-2">
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="fas fa-sync-alt"></i> Update Report
                     </button>
@@ -111,35 +183,37 @@
                     <thead class="table-light">
                         <tr>
                             <th>Order ID</th>
-                            <th>Customer</th>
                             <th>Date</th>
-                            <th>Items</th>
-                            <th class="text-end">Amount</th>
+                            <th>Customer</th>
+                            <th class="text-end">Original</th>
                             <th class="text-end">Discount</th>
-                            <th class="text-end">Final Amount</th>
+                            <th class="text-end">Final</th>
                             <th>Status</th>
+                            <th>Payment</th>
                         </tr>
                     </thead>
                     <tbody>
                         <% orders.forEach(order => { %>
                         <tr>
                             <td><%= order.orderId %></td>
-                            <td><%= order.userName %></td>
-                            <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
-                            <td><%= order.itemsCount %> items</td>
-                            <td>₹<%= order.totalPrice.toFixed(2) %></td>
-                            <td>₹<%= (order.discount || 0).toFixed(2) %></td>
-                            <td>₹<%= order.finalAmount.toFixed(2) %></td>
+                            <td><%= new Date(order.createdOn).toLocaleDateString() %></td>
+                            <td><%= order.userId?.name || 'N/A' %></td>
+                            <td class="text-end">₹<%= order.totalPrice.toFixed(2) %></td>
+                            <td class="text-end">₹<%= (order.totalPrice - order.finalAmount).toFixed(2) %></td>
+                            <td class="text-end">₹<%= order.finalAmount.toFixed(2) %></td>
                             <td>
-                                <span class="badge bg-<%= 
-                                    order.status === 'Delivered' ? 'success' : 
-                                    order.status === 'Cancelled' ? 'danger' : 
-                                    order.status === 'Returned' ? 'warning' : 
-                                    'primary' 
-                                %>">
-                                    <%= order.status %>
-                                </span>
+                                <% const statusClass = {
+                                    'Pending': 'secondary',
+                                    'Processing': 'primary',
+                                    'Shipped': 'info',
+                                    'Delivered': 'success',
+                                    'Cancelled': 'danger',
+                                    'Return Request': 'warning',
+                                    'Returned': 'dark'
+                                }[order.status] || 'secondary' %>
+                                <span class="badge bg-<%= statusClass %>"><%= order.status %></span>
                             </td>
+                            <td><span class="badge bg-secondary"><%= order.paymentMethod %></span></td>
                         </tr>
                         <% }); %>
                     </tbody>
@@ -167,10 +241,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function downloadReport(format) {
     const period = document.getElementById('period').value;
+    const status = document.getElementById('status').value;
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     
-    let url = `/admin/sales-report/download?format=${format}&period=${period}`;
+    let url = `/admin/sales-report/download?format=${format}&period=${period}&status=${status}`;
     if (period === 'custom' && startDate && endDate) {
         url += `&startDate=${startDate}&endDate=${endDate}`;
     }
@@ -178,4 +253,5 @@ function downloadReport(format) {
     window.location.href = url;
 }
 </script>
+
 <%- include("../../views/partials/admin/footer") %>
