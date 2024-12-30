@@ -153,23 +153,51 @@ const applyCoupon = async (req, res) => {
             return res.status(400).json({ success: false, message: "Coupon has expired" });
         }
 
+        // Check minimum purchase amount
+        if (parseFloat(totalAmount) < coupon.minimumPrice) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `Minimum purchase amount of ₹${coupon.minimumPrice} required for this coupon` 
+            });
+        }
+
         const user = await User.findById(userId);
         const isCouponUsed = user.coupons?.some(c => c.couponName === couponCode);
         if (isCouponUsed) {
             return res.status(400).json({ success: false, message: "Coupon already used" });
         }
 
-        // Store coupon in session
-        req.session.activeCoupon = coupon;
+        // Calculate discount based on coupon type
+        let discountAmount;
+        if (coupon.type === 'percentage') {
+            // For percentage, calculate percentage of total amount
+            discountAmount = (coupon.offerPrice / 100) * parseFloat(totalAmount);
+            // Ensure discount doesn't exceed the total amount
+            discountAmount = Math.min(discountAmount, parseFloat(totalAmount));
+        } else {
+            // For fixed amount, use the offer price directly
+            discountAmount = Math.min(coupon.offerPrice, parseFloat(totalAmount));
+        }
 
-        const discountAmount = Math.floor((coupon.offerPrice / 100) * parseFloat(totalAmount));
+        // Round discount to 2 decimal places
+        discountAmount = Math.round(discountAmount * 100) / 100;
+
+        // Calculate final amount
         const finalAmount = parseFloat(totalAmount) - discountAmount;
+
+        // Store coupon and calculated values in session
+        req.session.activeCoupon = {
+            ...coupon.toObject(),
+            calculatedDiscount: discountAmount,
+            finalAmount: finalAmount
+        };
 
         return res.status(200).json({
             success: true,
             message: "Coupon applied successfully",
             discountAmount: discountAmount.toFixed(2),
-            finalAmount: finalAmount.toFixed(2)
+            finalAmount: finalAmount.toFixed(2),
+            couponType: coupon.type
         });
     } catch (error) {
         console.error("Error applying coupon:", error);
@@ -180,9 +208,11 @@ const applyCoupon = async (req, res) => {
 // Remove Coupon
 const removeCoupon = async (req, res) => {
     try {
-        delete req.session.activeCoupon;
         const { totalAmount } = req.body;
-
+        
+        // Clear coupon from session
+        delete req.session.activeCoupon;
+        
         return res.status(200).json({
             success: true,
             message: "Coupon removed successfully",
@@ -305,7 +335,7 @@ const createOrder = async (userId, products, address, subtotal, total, paymentMe
             orderedItems,
             address,
             totalPrice: subtotal,
-            discount: coupon ? Math.floor((coupon.offerPrice / 100) * subtotal) : 0,
+            discount: coupon ? coupon.calculatedDiscount : 0,
             finalAmount: total,
             status: "Pending",
             paymentMethod,

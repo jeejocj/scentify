@@ -8,6 +8,11 @@ const couponSchema = new mongoose.Schema({
         required:true,
         unique:true
     },
+    type: {
+        type: String,
+        enum: ['percentage', 'fixed'],
+        required: true
+    },
     createdOn :{
         type:Date,
         default:Date.now,

@@ -255,6 +255,40 @@
     .active-coupon button:hover {
         text-decoration: underline;
     }
+
+    .coupon-form {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .coupon-form input {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .coupon-message {
+        margin-top: 10px;
+    }
+    
+    .active-coupon {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+    
+    .checkout__order__discount {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        color: #28a745;
+    }
 </style>
 
 <!-- Breadcrumb Section Begin -->
@@ -333,27 +367,27 @@
                             <h6>Discount codes</h6>
                             <div class="coupon-form">
                                 <input type="text" id="couponCode" placeholder="Enter your coupon code">
-                                <button type="button" class="site-btn" onclick="applyCoupon()">Apply</button>
+                                <button type="button" onclick="applyCoupon()" class="btn btn-primary">Apply</button>
                             </div>
-                            <div id="couponMessage" class="coupon-message"></div>
+                            <div id="couponMessage" class="coupon-message mt-2"></div>
                             <% if (activeCoupon) { %>
-                                <div class="active-coupon">
-                                    <span>Coupon "<%= activeCoupon.name %>" applied (<%= activeCoupon.offerPrice %>% off)</span>
-                                    <button onclick="removeCoupon()">Remove</button>
+                                <div class="active-coupon mt-2">
+                                    <span>Coupon "<%= activeCoupon.name %>" applied</span>
+                                    <button onclick="removeCoupon()" class="btn btn-sm btn-danger">Remove</button>
                                 </div>
                             <% } %>
                         </div>
 
                         <div class="checkout__order__subtotal">
-                            Subtotal <span>₹<%= subtotal.toLocaleString('en-IN') %></span>
+                            Subtotal <span id="subtotal">₹<%= subtotal.toLocaleString('en-IN') %></span>
                         </div>
-                        <% if (discountAmount > 0) { %>
-                            <div id="discountRow" class="checkout__order__discount">
-                                Discount <span>-₹<%= discountAmount.toLocaleString('en-IN') %></span>
-                            </div>
-                        <% } %>
+                        
+                        <div id="discountRow" class="checkout__order__discount" style="display: <%= discountAmount > 0 ? 'flex' : 'none' %>;">
+                            Discount <span id="discountAmount">-₹<%= discountAmount.toLocaleString('en-IN') %></span>
+                        </div>
+                        
                         <div class="checkout__order__total">
-                            Total <span>₹<%= finalAmount.toLocaleString('en-IN') %></span>
+                            Total <span id="finalAmount">₹<%= finalAmount.toLocaleString('en-IN') %></span>
                         </div>
 
                         <button type="button" class="site-btn" onclick="placeOrder()">PLACE ORDER</button>
@@ -375,56 +409,99 @@
         const couponCode = document.getElementById('couponCode').value;
         if (!couponCode.trim()) {
             document.getElementById('couponMessage').innerHTML = 
-                '<div class="error">Please enter a coupon code</div>';
+                '<div class="alert alert-danger">Please enter a coupon code</div>';
             return;
         }
 
-        const totalAmount = <%= subtotal %>;
+        const subtotalElement = document.getElementById('subtotal');
+        const totalAmount = subtotalElement.textContent.replace(/[₹,]/g, '').trim();
         
         try {
             const response = await fetch('/checkout/apply-coupon', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ couponCode, totalAmount })
+                body: JSON.stringify({ 
+                    couponCode: couponCode,
+                    totalAmount: parseFloat(totalAmount)
+                })
             });
             
             const data = await response.json();
             const messageDiv = document.getElementById('couponMessage');
             
             if (data.success) {
-                messageDiv.innerHTML = '<div class="success">' + data.message + '</div>';
-                document.getElementById('discountRow').style.display = 'block';
-                document.getElementById('discountAmount').textContent = data.discount.toLocaleString();
-                document.getElementById('finalAmount').textContent = data.finalAmount.toLocaleString();
-                location.reload(); // Reload to update the session data
+                messageDiv.innerHTML = '<div class="alert alert-success">' + data.message + '</div>';
+                
+                // Show discount row
+                const discountRow = document.getElementById('discountRow');
+                discountRow.style.display = 'flex';
+                
+                // Update discount amount with proper symbol
+                const discountAmount = document.getElementById('discountAmount');
+                discountAmount.textContent = data.couponType === 'percentage' 
+                    ? `-${data.discountAmount}%` 
+                    : `-₹${parseFloat(data.discountAmount).toLocaleString('en-IN')}`;
+                
+                // Update final amount
+                const finalAmount = document.getElementById('finalAmount');
+                finalAmount.textContent = `₹${parseFloat(data.finalAmount).toLocaleString('en-IN')}`;
+                
+                // Show active coupon section
+                const activeCouponHtml = `
+                    <div class="active-coupon mt-2">
+                        <span>Coupon "${couponCode}" applied</span>
+                        <button onclick="removeCoupon()" class="btn btn-sm btn-danger">Remove</button>
+                    </div>
+                `;
+                messageDiv.insertAdjacentHTML('afterend', activeCouponHtml);
             } else {
-                messageDiv.innerHTML = '<div class="error">' + data.message + '</div>';
+                messageDiv.innerHTML = '<div class="alert alert-danger">' + data.message + '</div>';
             }
         } catch (error) {
             console.error('Error applying coupon:', error);
             document.getElementById('couponMessage').innerHTML = 
-                '<div class="error">Error applying coupon. Please try again.</div>';
+                '<div class="alert alert-danger">Error applying coupon. Please try again.</div>';
         }
     }
 
     async function removeCoupon() {
         try {
+            const subtotalElement = document.getElementById('subtotal');
+            const totalAmount = subtotalElement.textContent.replace(/[₹,]/g, '').trim();
+            
             const response = await fetch('/checkout/remove-coupon', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ totalAmount: parseFloat(totalAmount) })
             });
             
             const data = await response.json();
             if (data.success) {
-                location.reload(); // Reload to update the session data
+                // Reset coupon code input
+                document.getElementById('couponCode').value = '';
+                
+                // Hide discount row
+                document.getElementById('discountRow').style.display = 'none';
+                
+                // Reset final amount to original subtotal
+                document.getElementById('finalAmount').textContent = `₹${parseFloat(totalAmount).toLocaleString('en-IN')}`;
+                
+                // Remove active coupon section
+                const activeCoupon = document.querySelector('.active-coupon');
+                if (activeCoupon) {
+                    activeCoupon.remove();
+                }
+                
+                // Clear any messages
+                document.getElementById('couponMessage').innerHTML = '';
             } else {
                 document.getElementById('couponMessage').innerHTML = 
-                    '<div class="error">' + data.message + '</div>';
+                    '<div class="alert alert-danger">' + data.message + '</div>';
             }
         } catch (error) {
             console.error('Error removing coupon:', error);
             document.getElementById('couponMessage').innerHTML = 
-                '<div class="error">Error removing coupon. Please try again.</div>';
+                '<div class="alert alert-danger">Error removing coupon. Please try again.</div>';
         }
     }
 

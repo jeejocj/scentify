@@ -14,7 +14,7 @@ const loadcoupon = async (req, res) => {
 const createCoupon = async (req, res) => {
     try {
         if (!req.body.couponName || !req.body.startDate || !req.body.endDate || 
-            !req.body.offerPrice || !req.body.minimumPrice) {
+            !req.body.offerPrice || !req.body.minimumPrice || !req.body.type) {
             return res.status(400).send("Invalid input: All fields are required.");
         }
 
@@ -26,8 +26,14 @@ const createCoupon = async (req, res) => {
             return res.status(400).send("Offer price and minimum price must be valid numbers.");
         }
 
+        // Validate offer price based on type
+        if (req.body.type === 'percentage' && (req.body.offerPrice < 0 || req.body.offerPrice > 100)) {
+            return res.status(400).send("Percentage discount must be between 0 and 100.");
+        }
+
         const data = {
             couponName: req.body.couponName,
+            type: req.body.type,
             startDate: new Date(req.body.startDate + "T00:00:00"),
             endDate: new Date(req.body.endDate + "T00:00:00"),
             offerPrice: parseInt(req.body.offerPrice),
@@ -45,6 +51,7 @@ const createCoupon = async (req, res) => {
 
         const newCoupon = new Coupon({
             name: data.couponName,
+            type: data.type,
             createdOn: data.startDate,
             expireOn: data.endDate,
             offerPrice: data.offerPrice,
@@ -89,14 +96,15 @@ const updateCoupon = async (req, res) => {
       }
   
       // Validate required fields
-      const { couponName, startDate, endDate, offerPrice, minimumPrice } = req.body;
-      if (!couponName || !startDate || !endDate || !offerPrice || !minimumPrice) {
-        return res.status(400).send("All fields (couponName, startDate, endDate, offerPrice, minimumPrice) are required.");
+      const { couponName, startDate, endDate, offerPrice, minimumPrice, type } = req.body;
+      if (!couponName || !startDate || !endDate || !offerPrice || !minimumPrice || !type) {
+        return res.status(400).send("All fields (couponName, startDate, endDate, offerPrice, minimumPrice, type) are required.");
       }
   
       // Prepare data for update
       const updateData = {
         name: couponName,
+        type: type,
         createdOn: new Date(startDate),
         expireOn: new Date(endDate),
         offerPrice: parseInt(offerPrice),

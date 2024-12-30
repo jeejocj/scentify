@@ -175,11 +175,6 @@
                    </a>
                  </li>
                  <li class="nav-item">
-                   <a class="nav-link" id="track-orders-tab" data-bs-toggle="tab" href="#wallet-history" role="tab" aria-controls="track-orders" aria-selected="false">
-                     <i class="fi-rs-shopping-cart-check mr-10"></i>Wallet History
-                   </a>
-                 </li>
-                 <li class="nav-item">
                    <a class="nav-link" id="track-orders-tab" data-bs-toggle="tab" href="#referal" role="tab" aria-controls="track-orders" aria-selected="false">
                      <i class="fi-rs-shopping-cart-check mr-10"></i>Referals
                    </a>
@@ -261,29 +256,29 @@
                      <h5 class="mb-0">Your Orders</h5>
                    </div>
                    <div class="card-body">
-                     <% if (typeof orders !== 'undefined' && orders && orders.length > 0) { %>
-                       <div class="table-responsive">
-                         <table class="table">
-                           <thead>
-                             <tr>
-                               <th>Order ID</th>
-                               <th>Date</th>
-                               <th>Status</th>
-                               <th>Total</th>
-                               <th>Actions</th>
-                             </tr>
-                           </thead>
-                           <tbody>
+                     <div class="table-responsive">
+                       <table class="table">
+                         <thead>
+                           <tr>
+                             <th>Order</th>
+                             <th>Date</th>
+                             <th>Status</th>
+                             <th>Total</th>
+                             <th>Actions</th>
+                           </tr>
+                         </thead>
+                         <tbody>
+                           <% if (orders && orders.length > 0) { %>
                              <% orders.forEach(order => { %>
                                <tr>
                                  <td>#<%= order.orderId %></td>
                                  <td><%= new Date(order.createdOn).toLocaleDateString() %></td>
                                  <td><%= order.status %></td>
-                                 <td>₹<%= order.finalAmount ? order.finalAmount.toFixed(2) : '0.00' %></td>
+                                 <td>₹<%= order.finalAmount %></td>
                                  <td>
                                    <button type="button" 
-                                          class="btn btn-sm btn-info view-order-btn" 
-                                          data-order-id="<%= order._id %>">
+                                     class="btn btn-sm btn-info view-order-btn" 
+                                     data-order-id="<%= order._id %>">
                                      View
                                    </button>
                                    
@@ -295,28 +290,17 @@
                                        Cancel
                                      </button>
                                    <% } %>
-
-                                   <% if(order.status === 'Delivered') { %>
-                                     <button 
-                                       type="button" 
-                                       class="btn btn-sm btn-warning return-order-btn" 
-                                       data-order-id="<%= order._id %>">
-                                       Return
-                                     </button>
-                                   <% } %>
                                  </td>
                                </tr>
                              <% }); %>
-                           </tbody>
-                         </table>
-                       </div>
-                     <% } else { %>
-                       <div class="text-center py-4">
-                         <div class="alert alert-info">
-                           No orders found
-                         </div>
-                       </div>
-                     <% } %>
+                           <% } else { %>
+                             <tr>
+                               <td colspan="5">No orders found</td>
+                             </tr>
+                           <% } %>
+                         </tbody>
+                       </table>
+                     </div>
                    </div>
                  </div>
                </div>
@@ -379,35 +363,6 @@
                              </div>
                            </div>
                        </div>
-                     </div>
-                   </div>
-                 </div>
-               </div>
-
-
-               <div class="tab-pane fade" id="wallet-history" role="tabpanel" aria-labelledby="orders-tab">
-                 <div class="card">
-                   <div class="card-header">
-                     <h5 class="mb-0">Wallet History</h5>
-                   </div>
-                   <div class="card-body">
-                     <div class="table-responsive">
-                       <table class="table">
-                         <thead>
-                           <tr>
-                             <th>Date</th>
-                             <th>Status</th>
-                             <th>Amount</th>
-                           </tr>
-                         </thead>
-                         <tbody>
-                           <tr>
-                             <td></td>
-                             <td></td>
-                             <td></td>
-                           </tr>
-                         </tbody>
-                       </table>
                      </div>
                    </div>
                  </div>
