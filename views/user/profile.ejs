@@ -330,13 +330,54 @@
                    <div class="card-body contact-from-area">
                      <div class="row">
                        <div class="col-lg-8 mx-auto text-center mt-90">
-                         <form>
-                           <div class="form-group">
+                         <div class="mb-3">
                              <label for="walletAmount" class="h4">Amount</label>
-                             <div class="h3"></div>
+                             <div class="h3" id="walletBalance">₹<%= user.wallet?.balance || 0 %></div>
                            </div>
-                           <button type="button" class="btn btn-success" onclick="">Add Money</button>
-                         </form>
+                           <button type="button" class="btn btn-success" onclick="addMoneyToWallet()">Add Money</button>
+                           <div class="mt-4">
+                             <h5>Transaction History</h5>
+                             <div class="table-responsive">
+                               <table class="table">
+                                 <thead>
+                                   <tr>
+                                     <th>Date</th>
+                                     <th>Description</th>
+                                     <th>Amount</th>
+                                     <th>Type</th>
+                                   </tr>
+                                 </thead>
+                                 <tbody>
+                                   <% if (user.wallet?.transactions && user.wallet.transactions.length > 0) { %>
+                                     <% user.wallet.transactions.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(transaction => { %>
+                                       <tr>
+                                         <td><%= new Date(transaction.date).toLocaleString('en-IN', { 
+                                           year: 'numeric', 
+                                           month: 'short', 
+                                           day: 'numeric',
+                                           hour: '2-digit',
+                                           minute: '2-digit'
+                                         }) %></td>
+                                         <td><%= transaction.description %></td>
+                                         <td class="<%= transaction.type === 'credit' ? 'text-success' : 'text-danger' %>">
+                                           <%= transaction.type === 'credit' ? '+' : '-' %>₹<%= transaction.amount %>
+                                         </td>
+                                         <td>
+                                           <span class="badge <%= transaction.type === 'credit' ? 'bg-success' : 'bg-danger' %>">
+                                             <%= transaction.type %>
+                                           </span>
+                                         </td>
+                                       </tr>
+                                     <% }); %>
+                                   <% } else { %>
+                                     <tr>
+                                       <td colspan="4" class="text-center">No transactions found</td>
+                                     </tr>
+                                   <% } %>
+                                 </tbody>
+                               </table>
+                             </div>
+                           </div>
                        </div>
                      </div>
                    </div>
@@ -384,7 +425,6 @@
                      <p>Earned: ₹</p>
                    </div>
                  </div>
-               </div>
        </div>
      </div>
    </div>
@@ -450,6 +490,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
     // Address Functions
     function editAddress(addressId) {
@@ -484,6 +525,116 @@
                 window.location.href = `/deleteAddress?id=${addressId}`;
             }
         });
+    }
+
+    async function addMoneyToWallet() {
+        try {
+            const { value: amount } = await Swal.fire({
+                title: 'Enter amount to add',
+                input: 'number',
+                inputLabel: 'Amount (₹)',
+                inputPlaceholder: 'Enter amount',
+                inputAttributes: {
+                    min: '1',
+                    step: '1'
+                },
+                showCancelButton: true,
+                inputValidator: (value) => {
+                    if (!value || value < 1) {
+                        return 'Please enter a valid amount greater than 0'
+                    }
+                }
+            });
+
+            if (amount) {
+                // Create Razorpay order
+                const response = await fetch('/wallet/recharge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ amount: amount })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.message || 'Error creating order');
+                }
+
+                // Configure Razorpay options
+                const options = {
+                    key: data.key_id,
+                    amount: data.order.amount,
+                    currency: data.order.currency,
+                    name: 'Scentify',
+                    description: 'Wallet Recharge',
+                    order_id: data.order.id,
+                    handler: async function (response) {
+                        try {
+                            // Verify payment
+                            const verifyResponse = await fetch('/wallet/verify', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    amount: amount
+                                })
+                            });
+
+                            const verifyData = await verifyResponse.json();
+
+                            if (verifyData.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: 'Money added to wallet successfully!',
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                }).then(() => {
+                                    // Update wallet balance display
+                                    const walletBalanceElement = document.getElementById('walletBalance');
+                                    if (walletBalanceElement) {
+                                        walletBalanceElement.textContent = `₹${verifyData.newBalance}`;
+                                    }
+                                });
+                            } else {
+                                throw new Error(verifyData.message || 'Payment verification failed');
+                            }
+                        } catch (error) {
+                            console.error('Payment verification error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: error.message || 'Error verifying payment'
+                            });
+                        }
+                    },
+                    prefill: {
+                        name: '<%= user.name %>',
+                        email: '<%= user.email %>',
+                    },
+                    theme: {
+                        color: '#3399cc'
+                    }
+                };
+
+                // Create Razorpay instance and open payment modal
+                const rzp = new Razorpay(options);
+                rzp.open();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: error.message || 'Something went wrong'
+            });
+        }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -575,54 +726,69 @@
         cancelButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const orderId = this.getAttribute('data-order-id');
-                Swal.fire({
-                    title: 'Cancel Order?',
-                    text: 'Are you sure you want to cancel this order?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#dc3545',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, cancel it!',
-                    cancelButtonText: 'No, keep it'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch('/orders/cancel', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ orderId: orderId })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire(
-                                    'Cancelled!',
-                                    'Your order has been cancelled.',
-                                    'success'
-                                ).then(() => {
-                                    window.location.reload();
-                                });
-                            } else {
-                                Swal.fire(
-                                    'Error!',
-                                    data.message || 'Could not cancel the order.',
-                                    'error'
-                                );
-                            }
-                        })
-                        .catch(error => {
-                            Swal.fire(
-                                'Error!',
-                                'There was a problem cancelling your order.',
-                                'error'
-                            );
-                        });
-                    }
-                });
+                cancelOrder(orderId);
             });
         });
     });
+
+    function cancelOrder(orderId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, cancel it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/orders/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ orderId: orderId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        let message = data.message;
+                        if (data.refundAmount) {
+                            message += `. ₹${data.refundAmount} has been refunded to your wallet. New wallet balance: ₹${data.newWalletBalance}`;
+                            // Update wallet balance display if it exists
+                            const walletBalanceElement = document.getElementById('walletBalance');
+                            if (walletBalanceElement) {
+                                walletBalanceElement.textContent = `₹${data.newWalletBalance}`;
+                            }
+                        }
+                        Swal.fire({
+                            title: 'Cancelled!',
+                            text: message,
+                            icon: 'success',
+                            showConfirmButton: false,
+                            timer: 2500
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire(
+                            'Error!',
+                            data.message,
+                            'error'
+                        );
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire(
+                        'Error!',
+                        'Failed to cancel order',
+                        'error'
+                    );
+                });
+            }
+        });
+    }
 </script>
 
 <style>

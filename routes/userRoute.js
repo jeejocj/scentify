@@ -10,6 +10,7 @@ const cartController = require("../controllers/user/cartController");
 const checkoutController = require("../controllers/user/checkoutController");
 const orderController = require("../controllers/user/orderController");
 const wishlistController = require("../controllers/user/wishlistController");
+const walletController = require("../controllers/user/walletController");
 
 const passport = require("passport");
 const { userAuth,googleAuth } = require("../middlewares/auth");
@@ -92,16 +93,18 @@ router.get("/checkout/confirmation", userAuth, checkoutController.orderConfirm);
 // Profile and Order Routes
 router.get("/profile", profileController.userProfile);
 router.get("/orders/:orderId", profileController.getOrderDetails);
-router.post("/orders/cancel", profileController.cancelOrder);
+router.post("/orders/cancel", userAuth, orderController.cancelOrder);
 
 // Order Routes
 router.get('/orders/get-details/:orderId', userAuth, orderController.getOrderDetailsJson);
-
-
 // router.get('/orders/view/:orderId', userAuth, orderController.getOrderDetails);
 router.post('/orders/update-status', userAuth, orderController.updateOrderStatus);
 // router.get('/return-reason', userAuth, orderController.showReturnReasonPage);
 // router.post('/submit-return-reason', userAuth, orderController.submitReturnReason);
 
+// Wallet Routes
+router.get('/wallet/details', userAuth, walletController.getWalletDetails);
+router.post('/wallet/recharge', userAuth, walletController.createWalletRechargeOrder);
+router.post('/wallet/verify', userAuth, walletController.verifyWalletRecharge);
 
 module.exports = router

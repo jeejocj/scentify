@@ -165,7 +165,7 @@ const userProfile = async (req, res) => {
     try {
         const userId = req.session.user._id;
         
-        // Fetch user with populated orderHistory
+        // Fetch user with populated orderHistory and wallet
         const user = await User.findById(userId)
             .populate({
                 path: 'orderHistory',
@@ -175,6 +175,13 @@ const userProfile = async (req, res) => {
                     select: 'productName productImage salesPrice'
                 },
                 options: { sort: { createdOn: -1 } }
+            })
+            .populate({
+                path: 'wallet',
+                model: 'Wallet',
+                options: { 
+                    sort: { 'transactions.date': -1 } 
+                }
             });
 
         const address = await Address.findOne({ userId: userId });

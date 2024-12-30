@@ -3,6 +3,7 @@ const Product = require("../../models/productModel");
 const Cart = require("../../models/cartModel");
 const Address = require('../../models/addressModel');
 const Order = require('../../models/orderModel');
+const { addRefundToWallet } = require('./walletController');
 
 const getOrderHistory = async (req, res) => {
     try {
@@ -58,22 +59,108 @@ const getOrderHistory = async (req, res) => {
 const cancelOrder = async (req, res) => {
     try {
         const { orderId } = req.body;
+        const userId = req.session.user._id;
 
-        // Find the order and update its status
-        const order = await Order.findOneAndUpdate(
-            { _id: orderId, status: 'Pending' }, // Allow cancellation only for 'Pending' orders
-            { status: 'Cancelled' },
-            { new: true }
-        );
+        console.log('Cancelling order:', orderId, 'for user:', userId);
+
+        // Find the order and ensure it's still cancellable
+        const order = await Order.findOne({ 
+            _id: orderId, 
+            status: { $in: ['Pending', 'Processing'] } 
+        }).populate('orderedItems.product');
 
         if (!order) {
-            return res.status(400).json({ success: false, message: 'Order cannot be cancelled' });
+            console.log('Order not found or not cancellable');
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Order cannot be cancelled' 
+            });
         }
 
-        res.status(200).json({ success: true, message: 'Order cancelled successfully' });
+        console.log('Found order:', order);
+
+        // Revert product quantities
+        for (const item of order.orderedItems) {
+            try {
+                const product = await Product.findById(item.product._id);
+                if (product) {
+                    const oldQuantity = product.quantity;
+                    product.quantity = oldQuantity + item.quantity;
+                    await product.save();
+                    console.log(`Product ${product._id}: Quantity updated from ${oldQuantity} to ${product.quantity}`);
+                }
+            } catch (error) {
+                console.error(`Error reverting quantity for product ${item.product._id}:`, error);
+            }
+        }
+
+        // Handle refund for online payments
+        if (order.paymentMethod === 'Online Payment' || order.paymentMethod === 'razorpay') {
+            try {
+                // Calculate refund amount
+                const refundAmount = order.finalAmount;
+                console.log('Processing refund of amount:', refundAmount);
+
+                // Add refund to wallet with order reference
+                const refundResult = await addRefundToWallet(
+                    userId, 
+                    refundAmount, 
+                    order._id, 
+                    `Refund for Order #${order.orderId}`
+                );
+
+                console.log('Refund processed:', refundResult);
+
+                // Update order status
+                order.status = 'Cancelled';
+                order.cancellationReason = 'Cancelled by user';
+                order.refundStatus = 'Refunded to wallet';
+                await order.save();
+
+                return res.status(200).json({ 
+                    success: true, 
+                    message: 'Order cancelled and amount refunded to wallet',
+                    refundAmount: refundAmount,
+                    newWalletBalance: refundResult.newBalance
+                });
+            } catch (refundError) {
+                console.error('Error processing refund:', refundError);
+                
+                // Revert product quantity changes if refund fails
+                for (const item of order.orderedItems) {
+                    try {
+                        const product = await Product.findById(item.product._id);
+                        if (product) {
+                            product.quantity -= item.quantity;
+                            await product.save();
+                        }
+                    } catch (error) {
+                        console.error(`Error reverting quantity for product ${item.product._id}:`, error);
+                    }
+                }
+
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error processing refund'
+                });
+            }
+        }
+
+        // For COD orders, just cancel the order
+        order.status = 'Cancelled';
+        order.cancellationReason = 'Cancelled by user';
+        await order.save();
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Order cancelled successfully' 
+        });
     } catch (error) {
         console.error('Error cancelling order:', error);
-        res.status(500).json({ success: false, message: 'Failed to cancel order' });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to cancel order' 
+        });
     }
 };
 
