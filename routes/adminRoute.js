@@ -45,10 +45,8 @@ router.post("/brands/edit/:id",adminAuth,uploads.single("image"),brandController
 router.get("/addProducts",adminAuth,productController.getProductAddPage)
 router.post("/addProducts",adminAuth,uploads.array("images",4),productController.addProducts);
 router.get("/Products",adminAuth,productController.getAllProducts)
-router.get("/addProductOffer/:id/:amount",adminAuth,productController.addProductOffer)
-router.get("/removeProductOffer/:id",adminAuth,productController.removeProductOffer)
-router.get('/blockProduct/:id', adminAuth, productController.blockProduct);
-router.get("/unblockProduct/:id", adminAuth, productController.unblockProduct);
+router.put('/blockProduct/:id', adminAuth, productController.blockProduct);
+router.put("/unblockProduct/:id", adminAuth, productController.unblockProduct);
 router.get("/editProduct/:id", adminAuth, productController.getEditProduct);
 router.post('/product/edit/:id', 
     uploads.array('productImage', 4),

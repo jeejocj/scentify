@@ -1,25 +1,14 @@
 const User = require('../../models/userModel');
 const Address = require('../../models/addressModel');
 const Order = require('../../models/orderModel');
+const Product = require('../../models/productModel');
 
-// Define valid status transitions for admin
-const validStatusTransitions = {
-    'Pending': ['Processing', 'Cancelled'],
-    'Processing': ['Shipped', 'Cancelled'],
-    'Shipped': ['Delivered', 'Cancelled'],
-    'Delivered': [], // Admin can't initiate return request
-    'Return Request': ['Returned', 'Cancelled'], // Admin can only approve or cancel return requests
-    'Returned': [], // No further transitions allowed
-    'Cancelled': [] // No further transitions allowed
-};
-
-// Define allowed status transitions based on payment method
 const paymentMethodTransitions = {
     'COD': {
         'Pending': ['Processing', 'Cancelled'],
         'Processing': ['Shipped', 'Cancelled'],
         'Shipped': ['Delivered', 'Cancelled'],
-        'Delivered': [], // Only user can initiate return
+        'Delivered': ['Return Request'],
         'Return Request': ['Returned', 'Cancelled'],
         'Returned': [],
         'Cancelled': []
@@ -28,7 +17,7 @@ const paymentMethodTransitions = {
         'Pending': ['Processing', 'Cancelled'],
         'Processing': ['Shipped', 'Cancelled'],
         'Shipped': ['Delivered', 'Cancelled'],
-        'Delivered': [], // Only user can initiate return
+        'Delivered': ['Return Request'],
         'Return Request': ['Returned', 'Cancelled'],
         'Returned': [],
         'Cancelled': []
@@ -37,7 +26,7 @@ const paymentMethodTransitions = {
         'Pending': ['Processing', 'Cancelled'],
         'Processing': ['Shipped', 'Cancelled'],
         'Shipped': ['Delivered', 'Cancelled'],
-        'Delivered': [], // Only user can initiate return
+        'Delivered': ['Return Request'],
         'Return Request': ['Returned', 'Cancelled'],
         'Returned': [],
         'Cancelled': []
@@ -143,7 +132,7 @@ const getAdminOrderDetails = async (req, res) => {
                 populate: [
                     {
                         path: 'orderedItems.product',
-                        select: 'productName productImage salesPrice'
+                        select: 'productName productImage salePrice regularPrice'
                     }
                 ]
             });
@@ -155,6 +144,22 @@ const getAdminOrderDetails = async (req, res) => {
 
         const order = user.orderHistory.find(o => o._id.toString() === orderId);
         const orderObj = order.toObject();
+
+        // Calculate totals and add prices to ordered items
+        let totalAmount = 0;
+        orderObj.orderedItems = orderObj.orderedItems.map(item => {
+            const price = item.product.salePrice || item.product.regularPrice || 0;
+            const itemTotal = price * item.quantity;
+            totalAmount += itemTotal;
+            return {
+                ...item,
+                price: price,
+                total: itemTotal
+            };
+        });
+
+        orderObj.totalAmount = totalAmount;
+        orderObj.finalAmount = totalAmount - (orderObj.discount || 0);
 
         console.log('Order found:', orderObj);
         console.log('Address ID in order:', orderObj.address);
@@ -222,7 +227,8 @@ const updateOrderStatus = async (req, res) => {
         }
 
         // Find the order
-        const order = await Order.findById(orderId);
+        const order = await Order.findById(orderId)
+            .populate('orderedItems.product');
         
         if (!order) {
             console.log('Order not found:', orderId);
@@ -249,6 +255,62 @@ const updateOrderStatus = async (req, res) => {
                 success: false, 
                 message: `Cannot change order status from ${order.status} to ${status}. Allowed next statuses are: ${allowedNextStatuses.join(', ')}` 
             });
+        }
+
+        // Handle return process
+        if (status === 'Returned') {
+            try {
+                // Find the user
+                const user = await User.findById(order.userId);
+                if (!user) {
+                    throw new Error('User not found');
+                }
+
+                // Calculate refund amount (final amount including any discounts)
+                const refundAmount = order.finalAmount || 0;
+
+                // Initialize wallet if undefined
+                user.wallet = (user.wallet || 0) + refundAmount;
+
+                // Initialize walletHistory array if undefined
+                if (!Array.isArray(user.walletHistory)) {
+                    user.walletHistory = [];
+                }
+
+                // Add wallet transaction history
+                user.walletHistory.push({
+                    type: 'credit',
+                    amount: refundAmount,
+                    description: `Refund for order ${order._id}`,
+                    date: new Date()
+                });
+
+                // Update product stock
+                for (const item of order.orderedItems) {
+                    const product = await Product.findById(item.product._id);
+                    if (product) {
+                        product.quantity += item.quantity;
+                        await product.save();
+                    }
+                }
+
+                // Save user changes
+                await user.save();
+                
+                console.log('Return processed successfully:', {
+                    orderId,
+                    refundAmount,
+                    userId: user._id,
+                    newWalletBalance: user.wallet
+                });
+            } catch (error) {
+                console.error('Error processing return:', error);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error processing return',
+                    error: error.message
+                });
+            }
         }
 
         // Update the order status

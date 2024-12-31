@@ -188,7 +188,7 @@ const loadSalesReport = async (req, res) => {
     const { period = 'daily', startDate: customStartDate, endDate: customEndDate, status = 'all' } = req.query;
     
     // Calculate date range based on period
-    const endDate = new Date();
+    let endDate = new Date();
     let startDate = new Date();
     
     switch(period) {

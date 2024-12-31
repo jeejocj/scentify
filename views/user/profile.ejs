@@ -319,57 +319,83 @@
                    <div class="card-header">
                      <h5 class="mb-0">Wallet</h5>
                    </div>
-                   <div class="card-body contact-from-area">
+                   <div class="card-body">
                      <div class="row">
-                       <div class="col-lg-8 mx-auto text-center mt-90">
-                         <div class="mb-3">
-                             <label for="walletAmount" class="h4">Amount</label>
-                             <div class="h3" id="walletBalance">₹<%= user.wallet?.balance || 0 %></div>
+                       <div class="col-lg-12">
+                         <!-- Wallet Balance Card -->
+                         <div class="card mb-4 bg-light">
+                           <div class="card-body text-center">
+                             <h4 class="text-muted mb-3">Current Balance</h4>
+                             <h2 class="text-success mb-4">₹<%= user.wallet || 0 %></h2>
+                             <button type="button" class="btn btn-success btn-lg px-4" onclick="addMoneyToWallet()">
+                               <i class="fas fa-plus-circle me-2"></i>Add Money
+                             </button>
                            </div>
-                           <button type="button" class="btn btn-success" onclick="addMoneyToWallet()">Add Money</button>
-                           <div class="mt-4">
-                             <h5>Transaction History</h5>
+                         </div>
+
+                         <!-- Transaction History -->
+                         <div class="card">
+                           <div class="card-header bg-light">
+                             <h5 class="mb-0">Transaction History</h5>
+                           </div>
+                           <div class="card-body p-0">
                              <div class="table-responsive">
-                               <table class="table">
-                                 <thead>
+                               <table class="table table-hover mb-0">
+                                 <thead class="bg-light">
                                    <tr>
-                                     <th>Date</th>
+                                     <th>Date & Time</th>
                                      <th>Description</th>
-                                     <th>Amount</th>
-                                     <th>Type</th>
+                                     <th class="text-end">Amount</th>
+                                     <th class="text-center">Type</th>
                                    </tr>
                                  </thead>
                                  <tbody>
-                                   <% if (user.wallet?.transactions && user.wallet.transactions.length > 0) { %>
-                                     <% user.wallet.transactions.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(transaction => { %>
+                                   <% if (Array.isArray(user.walletHistory) && user.walletHistory.length > 0) { %>
+                                     <% user.walletHistory.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(transaction => { %>
                                        <tr>
-                                         <td><%= new Date(transaction.date).toLocaleString('en-IN', { 
-                                           year: 'numeric', 
-                                           month: 'short', 
-                                           day: 'numeric',
-                                           hour: '2-digit',
-                                           minute: '2-digit'
-                                         }) %></td>
-                                         <td><%= transaction.description %></td>
-                                         <td class="<%= transaction.type === 'credit' ? 'text-success' : 'text-danger' %>">
-                                           <%= transaction.type === 'credit' ? '+' : '-' %>₹<%= transaction.amount %>
+                                         <td class="align-middle">
+                                           <div><%= new Date(transaction.date).toLocaleDateString('en-IN', { 
+                                             year: 'numeric', 
+                                             month: 'short', 
+                                             day: 'numeric'
+                                           }) %></div>
+                                           <small class="text-muted"><%= new Date(transaction.date).toLocaleTimeString('en-IN', {
+                                             hour: '2-digit',
+                                             minute: '2-digit'
+                                           }) %></small>
                                          </td>
-                                         <td>
-                                           <span class="badge <%= transaction.type === 'credit' ? 'bg-success' : 'bg-danger' %>">
-                                             <%= transaction.type %>
+                                         <td class="align-middle">
+                                           <%= transaction.description %>
+                                           <% if (transaction.orderId) { %>
+                                             <small class="text-muted d-block">Order: #<%= transaction.orderId %></small>
+                                           <% } %>
+                                           <% if (transaction.paymentId) { %>
+                                             <small class="text-muted d-block">Payment: <%= transaction.paymentId %></small>
+                                           <% } %>
+                                         </td>
+                                         <td class="align-middle text-end <%= transaction.type === 'credit' ? 'text-success' : 'text-danger' %> fw-bold">
+                                           <%= transaction.type === 'credit' ? '+' : '-' %>₹<%= transaction.amount.toLocaleString('en-IN') %>
+                                         </td>
+                                         <td class="align-middle text-center">
+                                           <span class="badge rounded-pill <%= transaction.type === 'credit' ? 'bg-success' : 'bg-danger' %>">
+                                             <%= transaction.type.toUpperCase() %>
                                            </span>
                                          </td>
                                        </tr>
                                      <% }); %>
                                    <% } else { %>
                                      <tr>
-                                       <td colspan="4" class="text-center">No transactions found</td>
+                                       <td colspan="4" class="text-center py-4 text-muted">
+                                         <i class="fas fa-inbox fa-2x mb-3 d-block"></i>
+                                         No transactions found
+                                       </td>
                                      </tr>
                                    <% } %>
                                  </tbody>
                                </table>
                              </div>
                            </div>
+                         </div>
                        </div>
                      </div>
                    </div>
@@ -409,6 +435,11 @@
             <p><strong>Order ID:</strong> <span id="modalOrderId"></span></p>
             <p><strong>Date:</strong> <span id="modalOrderDate"></span></p>
             <p><strong>Status:</strong> <span id="modalOrderStatus"></span></p>
+            <p>
+              <strong>Payment Method:</strong> 
+              <span id="modalPaymentMethodIcon"></span>
+              <span id="modalPaymentMethod"></span>
+            </p>
             <p><strong>Total Amount:</strong> ₹<span id="modalOrderTotal"></span></p>
             <p id="modalOrderDiscount" style="display: none;">
               <strong>Discount Applied:</strong> ₹<span id="modalDiscountAmount"></span>
@@ -659,6 +690,25 @@
             document.getElementById('modalOrderId').textContent = order.orderId;
             document.getElementById('modalOrderDate').textContent = new Date(order.createdOn).toLocaleDateString();
             document.getElementById('modalOrderStatus').textContent = order.status;
+            
+            // Set payment method with icon
+            const paymentMethodIcon = document.getElementById('modalPaymentMethodIcon');
+            const paymentMethod = order.paymentMethod.toLowerCase();
+            let icon = '';
+            
+            if (paymentMethod.includes('cod') || paymentMethod.includes('cash')) {
+                icon = '<i class="fas fa-money-bill-wave text-success me-2"></i>';
+            } else if (paymentMethod.includes('online') || paymentMethod.includes('razorpay')) {
+                icon = '<i class="fas fa-credit-card text-primary me-2"></i>';
+            } else if (paymentMethod.includes('wallet')) {
+                icon = '<i class="fas fa-wallet text-info me-2"></i>';
+            } else {
+                icon = '<i class="fas fa-question-circle text-secondary me-2"></i>';
+            }
+            
+            paymentMethodIcon.innerHTML = icon;
+            document.getElementById('modalPaymentMethod').textContent = order.paymentMethod;
+            
             document.getElementById('modalOrderTotal').textContent = order.finalAmount.toLocaleString();
 
             // Discount Information

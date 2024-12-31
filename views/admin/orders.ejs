@@ -51,16 +51,9 @@
                                                 <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
                                                 <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                                                 <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-                                                <% if (order.status === 'Return Request') { %>
-                                                    <option value="Return Request" selected>Return Request</option>
-                                                    <option value="Returned">Returned</option>
-                                                <% } %>
+                                                <option value="Return Request" <%= order.status === 'Return Request' ? 'selected' : '' %>>Return Request</option>
+                                                <option value="Returned" <%= order.status === 'Returned' ? 'selected' : '' %>>Returned</option>
                                             </select>
-                                            <% if (order.status === 'Return Request') { %>
-                                                <small class="text-muted d-block mt-1">
-                                                    <i class="fas fa-info-circle"></i> Return requested by customer
-                                                </small>
-                                            <% } %>
                                         </td>
                                         <td>₹<%= order.finalAmount ? order.finalAmount.toLocaleString('en-IN', {
                                             minimumFractionDigits: 2,

@@ -336,7 +336,7 @@ const getOrderDetailsJson = async (req, res) => {
             .populate({
                 path: 'orderedItems.product',
                 model: 'Product',
-                select: 'productName productImage salesPrice'
+                select: 'productName productImage salePrice regularPrice'
             });
 
         if (!order) {
@@ -350,9 +350,15 @@ const getOrderDetailsJson = async (req, res) => {
         const address = await Address.findOne({ userId: userId });
         const addressDetails = address?.address.find(addr => addr._id.toString() === order.address.toString()) || {};
 
-        // Calculate totals
-        const totalPrice = order.orderedItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-        const finalAmount = totalPrice - (order.discount || 0);
+        // Calculate totals using product's salePrice
+        const totalPrice = order.orderedItems.reduce((total, item) => {
+            const itemPrice = item.product.salePrice || item.product.regularPrice || 0;
+            return total + (itemPrice * item.quantity);
+        }, 0);
+
+        // Ensure discount doesn't exceed total price
+        const discount = Math.min(order.discount || 0, totalPrice);
+        const finalAmount = Math.max(totalPrice - discount, 0);
 
         res.json({
             success: true,
@@ -360,11 +366,15 @@ const getOrderDetailsJson = async (req, res) => {
                 orderId: order._id,
                 createdOn: order.createdOn,
                 status: order.status,
-                orderedItems: order.orderedItems,
+                orderedItems: order.orderedItems.map(item => ({
+                    ...item.toObject(),
+                    price: item.product.salePrice || item.product.regularPrice || 0
+                })),
                 address: addressDetails,
                 totalPrice: totalPrice,
-                discount: order.discount || 0,
-                finalAmount: finalAmount
+                discount: discount,
+                finalAmount: finalAmount,
+                paymentMethod: order.paymentMethod || 'Not specified'
             }
         });
     } catch (error) {

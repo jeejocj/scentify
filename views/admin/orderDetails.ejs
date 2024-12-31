@@ -75,49 +75,47 @@
 
                     <h5 class="mb-3">Order Items</h5>
                     <div class="table-responsive">
-                        <table class="table table-bordered">
+                        <table class="table">
                             <thead>
                                 <tr>
                                     <th>Product</th>
+                                    <th>Image</th>
                                     <th>Price</th>
                                     <th>Quantity</th>
-                                    <th class="text-end">Total</th>
+                                    <th>Total</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <% order.orderedItems.forEach(item => { %>
                                     <tr>
+                                        <td><%= item.product.productName %></td>
                                         <td>
-                                            <div class="d-flex align-items-center">
+                                            <% if (item.product.productImage && item.product.productImage.length > 0) { %>
                                                 <img src="/uploads/re-image/<%= item.product.productImage[0] %>" 
-                                                     alt="<%= item.product.productName %>"
-                                                     class="me-3"
-                                                     style="width: 50px; height: 50px; object-fit: cover;">
-                                                <div>
-                                                    <h6 class="mb-0"><%= item.product.productName %></h6>
-                                                </div>
-                                            </div>
+                                                    alt="<%= item.product.productName %>"
+                                                    style="width: 50px; height: 50px; object-fit: cover;">
+                                            <% } %>
                                         </td>
                                         <td>₹<%= item.price.toLocaleString() %></td>
                                         <td><%= item.quantity %></td>
-                                        <td class="text-end">₹<%= (item.price * item.quantity).toLocaleString() %></td>
+                                        <td>₹<%= item.total.toLocaleString() %></td>
                                     </tr>
                                 <% }); %>
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
-                                    <td class="text-end">₹<%= order.totalPrice.toLocaleString() %></td>
+                                    <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+                                    <td>₹<%= order.totalAmount.toLocaleString() %></td>
                                 </tr>
-                                <% if(order.discount > 0) { %>
+                                <% if (order.discount && order.discount > 0) { %>
                                     <tr>
-                                        <td colspan="3" class="text-end"><strong>Discount:</strong></td>
-                                        <td class="text-end text-success">-₹<%= order.discount.toLocaleString() %></td>
+                                        <td colspan="4" class="text-end"><strong>Discount:</strong></td>
+                                        <td class="text-success">-₹<%= order.discount.toLocaleString() %></td>
                                     </tr>
                                 <% } %>
                                 <tr>
-                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                    <td class="text-end"><strong>₹<%= order.finalAmount.toLocaleString() %></strong></td>
+                                    <td colspan="4" class="text-end"><strong>Final Total:</strong></td>
+                                    <td><strong>₹<%= order.finalAmount.toLocaleString() %></strong></td>
                                 </tr>
                             </tfoot>
                         </table>

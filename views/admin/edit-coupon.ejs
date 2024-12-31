@@ -71,15 +71,6 @@
               />
             </div>
 
-            <!-- Coupon Type -->
-            <div class="mb-4">
-              <label for="coupon-type" class="form-label">Coupon Type</label>
-              <select id="coupon-type" name="type" class="form-control" required>
-                <option value="percentage" <%= coupon.type === 'percentage' ? 'selected' : '' %>>Percentage</option>
-                <option value="fixed" <%= coupon.type === 'fixed' ? 'selected' : '' %>>Fixed Amount</option>
-              </select>
-            </div>
-
             <!-- Start Date -->
             <div class="mb-4">
               <label for="start-date" class="form-label">Start Date</label>
@@ -108,35 +99,38 @@
 
             <!-- Offer Price -->
             <div class="mb-4">
-              <label for="offer-price" class="form-label">Offer Price</label>
-              <input
-                type="number"
-                id="offer-price"
-                name="offerPrice"
-                value="<%= coupon.offerPrice %>"
-                placeholder="Enter offer price"
-                class="form-control"
-                required
-                min="0"
-              />
-              <small class="text-muted" id="offer-price-help">
-                <%= coupon.type === 'percentage' ? 'Enter percentage between 0-100' : 'Enter amount in Rupees' %>
-              </small>
+              <label for="offer-price" class="form-label">Discount Amount (₹)</label>
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                <input
+                  type="number"
+                  id="offer-price"
+                  name="offerPrice"
+                  value="<%= coupon.offerPrice %>"
+                  placeholder="Enter discount amount"
+                  class="form-control"
+                  required
+                  min="0"
+                />
+              </div>
             </div>
 
             <!-- Minimum Price -->
             <div class="mb-4">
-              <label for="minimum-price" class="form-label">Minimum Price</label>
-              <input
-                type="number"
-                id="minimum-price"
-                name="minimumPrice"
-                value="<%= coupon.minimumPrice %>"
-                placeholder="Enter minimum purchase price"
-                class="form-control"
-                required
-                min="0"
-              />
+              <label for="minimum-price" class="form-label">Minimum Purchase Amount</label>
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                <input
+                  type="number"
+                  id="minimum-price"
+                  name="minimumPrice"
+                  value="<%= coupon.minimumPrice %>"
+                  placeholder="Enter minimum purchase amount"
+                  class="form-control"
+                  required
+                  min="0"
+                />
+              </div>
             </div>
 
             <!-- Submit Button -->
@@ -148,13 +142,6 @@
           <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
           <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
           <script>
-            document.getElementById('coupon-type').addEventListener('change', function() {
-              const offerPriceHelp = document.getElementById('offer-price-help');
-              offerPriceHelp.textContent = this.value === 'percentage' ? 
-                'Enter percentage between 0-100' : 
-                'Enter amount in Rupees';
-            });
-
             async function updateCoupon() {
               try {
                 const form = document.getElementById('coupon-form');
@@ -163,12 +150,11 @@
 
                 // Basic validation
                 const offerPrice = parseFloat(formData.get('offerPrice'));
-                const type = formData.get('type');
-                if (type === 'percentage' && (offerPrice < 0 || offerPrice > 100)) {
+                if (offerPrice <= 0) {
                   Swal.fire({
                     icon: 'error',
-                    title: 'Invalid Offer Price',
-                    text: 'Percentage discount must be between 0 and 100'
+                    title: 'Invalid Discount Amount',
+                    text: 'Discount amount must be greater than 0'
                   });
                   return;
                 }
@@ -191,7 +177,6 @@
                   },
                   body: JSON.stringify({
                     couponName: formData.get('couponName'),
-                    type: formData.get('type'),
                     startDate: formData.get('startDate'),
                     endDate: formData.get('endDate'),
                     offerPrice: formData.get('offerPrice'),

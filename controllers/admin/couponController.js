@@ -151,15 +151,14 @@ const updateCoupon = async (req, res) => {
       }
   
       // Validate required fields
-      const { couponName, startDate, endDate, offerPrice, minimumPrice, type } = req.body;
-      if (!couponName || !startDate || !endDate || !offerPrice || !minimumPrice || !type) {
-        return res.status(400).send("All fields (couponName, startDate, endDate, offerPrice, minimumPrice, type) are required.");
+      const { couponName, startDate, endDate, offerPrice, minimumPrice } = req.body;
+      if (!couponName || !startDate || !endDate || !offerPrice || !minimumPrice) {
+        return res.status(400).send("All fields (couponName, startDate, endDate, offerPrice, minimumPrice) are required.");
       }
   
       // Prepare data for update
       const updateData = {
         name: couponName,
-        type: type,
         createdOn: new Date(startDate),
         expireOn: new Date(endDate),
         offerPrice: parseInt(offerPrice),

@@ -256,9 +256,9 @@
                             <th>Product Name</th>
                             <th>Brand</th>
                             <th>Category</th>
-                            <th>Sale Price</th>
-                            <th>Offer</th>
-                            <th>Actions</th>
+                            <th>Regular Price</th>
+                            <th>Offer Price</th>
+                            <th>Discount %</th>
                             <th>Quantity</th>
                             <th>Status</th>
                             <th>Block/Unblock</th>
@@ -272,23 +272,19 @@
                                 <td><%= product.productName %></td>
                                 <td><%= product.brand.brandName %></td>
                                 <td><%= product.category.name %></td>
+                                <td>₹<%= product.regularPrice %></td>
                                 <td>₹<%= product.salePrice %></td>
                                 <td>
-                                    <% if(product.productOffer) { %>
-                                        <%= product.productOffer %>%
+                                    <% 
+                                        const regularPrice = parseFloat(product.regularPrice);
+                                        const salePrice = parseFloat(product.salePrice);
+                                        const discountPercentage = ((regularPrice - salePrice) / regularPrice) * 100;
+                                        const roundedDiscount = Math.round(discountPercentage);
+                                    %>
+                                    <% if (roundedDiscount > 0) { %>
+                                        <span class="badge bg-success"><%= roundedDiscount %>% OFF</span>
                                     <% } else { %>
-                                        0%
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <% if (!product.productOffer) { %>
-                                        <button class="btn btn-info" style="width: 100px" onclick="addOffer('<%=product._id%>')">
-                                            <span class="text-white">Add Offer</span>
-                                        </button>
-                                    <% } else { %>
-                                        <button class="btn btn-info" style="width: 100px" onclick="removeOffer('<%=product._id%>')">
-                                            <span class="text-white">Remove</span>
-                                        </button>
+                                        <span class="badge bg-secondary">No Discount</span>
                                     <% } %>
                                 </td>
                                 <td><%= product.quantity %></td>
@@ -358,93 +354,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script>
-    async function addOffer(productId) {
-        try {
-            const { value: amount } = await Swal.fire({
-                title: 'Add Product Offer',
-                input: 'number',
-                inputLabel: 'Enter offer percentage',
-                inputPlaceholder: 'Enter a number between 1 and 99',
-                showCancelButton: true,
-                confirmButtonText: 'Add Offer',
-                cancelButtonText: 'Cancel',
-                inputValidator: (value) => {
-                    if (!value) {
-                        return 'Please enter a value';
-                    }
-                    if (value < 1 || value > 99) {
-                        return 'Offer must be between 1% and 99%';
-                    }
-                }
-            });
-
-            if (amount) {
-                const response = await fetch(`/admin/addProductOffer/${productId}/${amount}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: 'Offer added successfully',
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
-                    location.reload();
-                } else {
-                    throw new Error(data.message || 'Failed to add offer');
-                }
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: error.message || 'Failed to add offer'
-            });
-        }
-    }
-
-    async function removeOffer(productId) {
-        try {
-            const result = await Swal.fire({
-                title: 'Remove Offer',
-                text: 'Are you sure you want to remove this offer?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, remove it',
-                cancelButtonText: 'Cancel',
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6'
-            });
-
-            if (result.isConfirmed) {
-                const response = await fetch(`/admin/removeProductOffer/${productId}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: 'Offer removed successfully',
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
-                    location.reload();
-                } else {
-                    throw new Error(data.message || 'Failed to remove offer');
-                }
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: error.message || 'Failed to remove offer'
-            });
-        }
-    }
-
     async function blockProduct(productId) {
         try {
             const result = await Swal.fire({
@@ -452,35 +361,36 @@
                 text: 'Are you sure you want to block this product?',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, block it',
-                cancelButtonText: 'Cancel',
                 confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6'
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, block it!'
             });
 
             if (result.isConfirmed) {
-                const response = await fetch(`/admin/blockProduct/${productId}`);
-                const data = await response.json();
+                const response = await fetch(`/admin/blockProduct/${productId}`, {
+                    method: 'PUT'
+                });
 
-                if (data.success) {
-                    await Swal.fire({
+                if (response.ok) {
+                    Swal.fire({
+                        title: 'Blocked!',
+                        text: 'Product has been blocked.',
                         icon: 'success',
-                        title: 'Success!',
-                        text: 'Product blocked successfully',
                         showConfirmButton: false,
                         timer: 1500
+                    }).then(() => {
+                        location.reload();
                     });
-                    location.reload();
                 } else {
-                    throw new Error(data.message || 'Failed to block product');
+                    throw new Error('Failed to block product');
                 }
             }
         } catch (error) {
             console.error('Error:', error);
             Swal.fire({
                 icon: 'error',
-                title: 'Oops...',
-                text: error.message || 'Failed to block product'
+                title: 'Error',
+                text: 'Failed to block product'
             });
         }
     }
@@ -492,35 +402,36 @@
                 text: 'Are you sure you want to unblock this product?',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, unblock it',
-                cancelButtonText: 'Cancel',
-                confirmButtonColor: '#28a745',
-                cancelButtonColor: '#3085d6'
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, unblock it!'
             });
 
             if (result.isConfirmed) {
-                const response = await fetch(`/admin/unblockProduct/${productId}`);
-                const data = await response.json();
+                const response = await fetch(`/admin/unblockProduct/${productId}`, {
+                    method: 'PUT'
+                });
 
-                if (data.success) {
-                    await Swal.fire({
+                if (response.ok) {
+                    Swal.fire({
+                        title: 'Unblocked!',
+                        text: 'Product has been unblocked.',
                         icon: 'success',
-                        title: 'Success!',
-                        text: 'Product unblocked successfully',
                         showConfirmButton: false,
                         timer: 1500
+                    }).then(() => {
+                        location.reload();
                     });
-                    location.reload();
                 } else {
-                    throw new Error(data.message || 'Failed to unblock product');
+                    throw new Error('Failed to unblock product');
                 }
             }
         } catch (error) {
             console.error('Error:', error);
             Swal.fire({
                 icon: 'error',
-                title: 'Oops...',
-                text: error.message || 'Failed to unblock product'
+                title: 'Error',
+                text: 'Failed to unblock product'
             });
         }
     }

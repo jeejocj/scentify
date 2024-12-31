@@ -91,9 +91,9 @@
                     <thead>
                         <tr>
                             <th>Coupon Code</th>
-                            <th>Type</th>
                             <th>Discount</th>
                             <th>Min Purchase</th>
+                            <th>Created On</th>
                             <th>Expiry Date</th>
                             <th>Status</th>
                             <th>Actions</th>
@@ -103,14 +103,36 @@
                         <% coupons.forEach(coupon => { %>
                         <tr>
                             <td><%= coupon.name %></td>
-                            <td><%= coupon.type === 'percentage' ? 'Percentage' : 'Fixed Amount' %></td>
-                            <td><%= coupon.offerPrice %><%= coupon.type === 'percentage' ? '%' : '₹' %></td>
+                            <td>₹<%= coupon.offerPrice %></td>
                             <td>₹<%= coupon.minimumPrice %></td>
+                            <td><%= new Date(coupon.createdOn).toLocaleDateString() %></td>
                             <td><%= new Date(coupon.expireOn).toLocaleDateString() %></td>
                             <td>
-                                <% const isActive = new Date() <= new Date(coupon.expireOn) %>
-                                <span class="badge bg-<%= isActive ? 'success' : 'danger' %>">
-                                    <%= isActive ? 'Active' : 'Expired' %>
+                                <% 
+                                    const now = new Date();
+                                    const startDate = new Date(coupon.createdOn);
+                                    const expiryDate = new Date(coupon.expireOn);
+                                    
+                                    // Reset time parts to compare only dates
+                                    now.setHours(0, 0, 0, 0);
+                                    startDate.setHours(0, 0, 0, 0);
+                                    expiryDate.setHours(0, 0, 0, 0);
+                                    
+                                    let status, badgeClass;
+                                    
+                                    if (now < startDate) {
+                                        status = 'Upcoming';
+                                        badgeClass = 'warning';
+                                    } else if (now > expiryDate) {
+                                        status = 'Expired';
+                                        badgeClass = 'danger';
+                                    } else {
+                                        status = 'Active';
+                                        badgeClass = 'success';
+                                    }
+                                %>
+                                <span class="badge bg-<%= badgeClass %>">
+                                    <%= status %>
                                 </span>
                             </td>
                             <td>
@@ -140,30 +162,22 @@
                 <h5 class="modal-title" id="addCouponModalLabel">Add New Coupon</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="addCouponForm" method="post" action="/admin/createcoupon" onsubmit="return validateForm()">
+            <form id="addCouponForm" onsubmit="handleFormSubmit(event)">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="coupon-name" class="form-label">Coupon Code</label>
-                        <input type="text" id="coupon-name" name="couponName" class="form-control" required />
+                        <input type="text" id="coupon-name" name="couponName" class="form-control" 
+                            placeholder="e.g., SUMMER2024" required />
                         <div id="error-coupon-name" class="error-message"></div>
                     </div>
 
                     <div class="mb-3">
-                        <label for="type" class="form-label">Coupon Type</label>
-                        <select id="type" name="type" class="form-control" required>
-                            <option value="percentage">Percentage Discount</option>
-                            <option value="fixed">Fixed Amount Discount</option>
-                        </select>
-                        <div id="error-type" class="error-message"></div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="offerPrice" class="form-label">Discount Amount</label>
+                        <label for="offerPrice" class="form-label">Discount Amount (₹)</label>
                         <div class="input-group">
-                            <input type="number" id="offerPrice" name="offerPrice" class="form-control" min="0" required />
-                            <span class="input-group-text" id="discount-symbol">%</span>
+                            <span class="input-group-text">₹</span>
+                            <input type="number" id="offerPrice" name="offerPrice" class="form-control" 
+                                min="0" placeholder="e.g., 500" required />
                         </div>
-                        <small class="form-text text-muted" id="discount-help">For percentage: 0-100, For fixed amount: any value</small>
                         <div id="error-discount" class="error-message"></div>
                     </div>
 
@@ -171,20 +185,23 @@
                         <label for="minimumPrice" class="form-label">Minimum Purchase Amount</label>
                         <div class="input-group">
                             <span class="input-group-text">₹</span>
-                            <input type="number" id="minimumPrice" name="minimumPrice" class="form-control" min="0" required />
+                            <input type="number" id="minimumPrice" name="minimumPrice" class="form-control" 
+                                min="0" placeholder="e.g., 1000" required />
                         </div>
                         <div id="error-min-amount" class="error-message"></div>
                     </div>
 
                     <div class="mb-3">
                         <label for="startDate" class="form-label">Start Date</label>
-                        <input type="date" id="startDate" name="startDate" class="form-control" required />
+                        <input type="date" id="startDate" name="startDate" class="form-control" 
+                            placeholder="Select start date" required />
                         <div id="error-start-date" class="error-message"></div>
                     </div>
 
                     <div class="mb-3">
                         <label for="endDate" class="form-label">Expiry Date</label>
-                        <input type="date" id="endDate" name="endDate" class="form-control" required />
+                        <input type="date" id="endDate" name="endDate" class="form-control" 
+                            placeholder="Select expiry date" required />
                         <div id="error-end-date" class="error-message"></div>
                     </div>
                 </div>
@@ -198,67 +215,42 @@
 </div>
 
 <script>
-    // Update discount symbol based on coupon type
-    document.getElementById('type').addEventListener('change', function() {
-        const symbol = this.value === 'percentage' ? '%' : '₹';
-        document.getElementById('discount-symbol').textContent = symbol;
-        
-        // Update validation rules
-        const offerPriceInput = document.getElementById('offerPrice');
-        if (this.value === 'percentage') {
-            offerPriceInput.max = "100";
-            document.getElementById('discount-help').textContent = 'Enter a value between 0 and 100';
-        } else {
-            offerPriceInput.removeAttribute('max');
-            document.getElementById('discount-help').textContent = 'Enter the fixed discount amount';
-        }
-    });
-
     function validateForm() {
         let isValid = true;
         const couponName = document.getElementById('coupon-name').value;
-        const type = document.getElementById('type').value;
         const offerPrice = document.getElementById('offerPrice').value;
         const minimumPrice = document.getElementById('minimumPrice').value;
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
 
         // Reset error messages
-        document.querySelectorAll('.error-message').forEach(el => {
-            el.style.display = 'none';
-            el.textContent = '';
-        });
+        document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
 
-        // Validate coupon code
-        if (!couponName || couponName.trim().length < 3) {
-            document.getElementById('error-coupon-name').textContent = 'Coupon code must be at least 3 characters';
+        // Validate coupon name
+        if (!/^[A-Z0-9]+$/.test(couponName)) {
+            document.getElementById('error-coupon-name').textContent = 'Coupon code must contain only uppercase letters and numbers';
             document.getElementById('error-coupon-name').style.display = 'block';
             isValid = false;
         }
 
-        // Validate offer price based on type
-        if (type === 'percentage' && (offerPrice < 0 || offerPrice > 100)) {
-            document.getElementById('error-discount').textContent = 'Percentage discount must be between 0 and 100';
-            document.getElementById('error-discount').style.display = 'block';
-            isValid = false;
-        } else if (type === 'fixed' && offerPrice < 0) {
-            document.getElementById('error-discount').textContent = 'Fixed discount cannot be negative';
+        // Validate discount amount
+        if (offerPrice <= 0) {
+            document.getElementById('error-discount').textContent = 'Discount amount must be greater than 0';
             document.getElementById('error-discount').style.display = 'block';
             isValid = false;
         }
 
-        // Validate minimum price
-        if (minimumPrice < 0) {
-            document.getElementById('error-min-amount').textContent = 'Minimum amount cannot be negative';
+        // Validate minimum purchase amount
+        if (minimumPrice <= 0) {
+            document.getElementById('error-min-amount').textContent = 'Minimum purchase amount must be greater than 0';
             document.getElementById('error-min-amount').style.display = 'block';
             isValid = false;
         }
 
         // Validate dates
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
         const start = new Date(startDate);
         const end = new Date(endDate);
+        const today = new Date();
 
         if (start < today) {
             document.getElementById('error-start-date').textContent = 'Start date cannot be in the past';
@@ -267,12 +259,83 @@
         }
 
         if (end <= start) {
-            document.getElementById('error-end-date').textContent = 'Expiry date must be after start date';
+            document.getElementById('error-end-date').textContent = 'End date must be after start date';
             document.getElementById('error-end-date').style.display = 'block';
             isValid = false;
         }
 
         return isValid;
+    }
+
+    async function handleFormSubmit(event) {
+        event.preventDefault();
+        
+        if (!validateForm()) {
+            return;
+        }
+
+        // Show loading animation
+        Swal.fire({
+            title: 'Creating Coupon...',
+            html: 'Please wait while we process your request',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const formData = new FormData(event.target);
+        const formDataObject = {};
+        formData.forEach((value, key) => {
+            formDataObject[key] = value;
+        });
+
+        try {
+            const response = await fetch('/admin/createcoupon', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formDataObject)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Success notification
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Coupon created successfully',
+                    icon: 'success',
+                    showConfirmButton: false,
+                    timer: 1500,
+                    timerProgressBar: true,
+                    didClose: () => {
+                        // Reset form and close modal
+                        document.getElementById('addCouponForm').reset();
+                        bootstrap.Modal.getInstance(document.getElementById('addCouponModal')).hide();
+                        // Reload page
+                        window.location.reload();
+                    }
+                });
+            } else {
+                throw new Error(data.message || 'Failed to create coupon');
+            }
+        } catch (error) {
+            // Error notification
+            Swal.fire({
+                title: 'Oops...',
+                text: error.message || 'Something went wrong!',
+                icon: 'error',
+                confirmButtonText: 'Try Again',
+                showClass: {
+                    popup: 'animate__animated animate__shakeX'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOut'
+                }
+            });
+        }
     }
 
     function setDefaultStartDate() {
@@ -330,4 +393,5 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 <%- include("../../views/partials/admin/footer") %>

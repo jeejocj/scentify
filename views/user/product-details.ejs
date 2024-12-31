@@ -135,14 +135,6 @@
             font-size: 16px;
         }
 
-        .discount-badge {
-            background-color: #e53637;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
         .stock-status {
             font-size: 16px;
             padding: 5px 10px;
@@ -163,25 +155,6 @@
         .out-of-stock {
             color: #dc3545;
             background-color: rgba(220, 53, 69, 0.1);
-        }
-
-        .offer-details {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-        }
-
-        .offer-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            color: #666;
-        }
-
-        .offer-icon {
-            color: #e53637;
         }
 
         .product-description {
@@ -575,6 +548,47 @@
             color: #333;
             margin-bottom: 40px;
         }
+
+        .price-box {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .price-box .regular-price,
+        .price-box .offer-price,
+        .price-box .category-offer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .price-box .final-price {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+
+        .savings-badge {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            box-shadow: 0 2px 4px rgba(40,167,69,0.2);
+        }
+
+        .badge {
+            font-weight: 500;
+            padding: 0.4em 0.8em;
+        }
+
+        .price-box .text-muted {
+            font-size: 0.9rem;
+        }
+
+        .final-price .h3 {
+            margin: 0;
+            line-height: 1.2;
+        }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -623,70 +637,46 @@
                 <!-- Product Info -->
                 <div class="col-lg-6">
                     <div class="product-info">
-                        <h1 class="product-title">
-                            <%= product.productName %>
-                        </h1>
-
-                        <div class="star-rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="far fa-star"></i>
-                            <span class="rating-count">(4.0)</span>
-                        </div>
-
+                        <h1 class="product-title mb-3"><%= product.productName %></h1>
+                        
+                        <!-- Price Information -->
                         <div class="product-price">
-                            <% 
-                                const categoryOffer = product.category?.categoryOffer || 0;
-                                const productOffer = product.productOffer || 0;
-                                const totalOffer = categoryOffer + productOffer;
-                                const salePrice = product.salePrice || Math.round(product.regularPrice - (product.regularPrice * totalOffer / 100));
-                            %>
-                            <% if (totalOffer > 0 || product.salePrice) { %>
-                                <span class="old-price">₹<%= product.regularPrice %></span>
-                                <span class="current-price">₹<%= salePrice %></span>
-                            <% } else { %>
-                                <span class="current-price">₹<%= product.regularPrice %></span>
-                            <% } %>
-                        </div>
+                            <!-- Regular Price -->
+                            <div class="mb-2">
+                                <span class="text-muted">M.R.P: </span>
+                                <span class="h5 text-decoration-line-through text-muted">₹<%= product.regularPrice.toLocaleString('en-IN') %></span>
+                            </div>
 
+                            <!-- Best Price -->
+                            <div class="best-price mt-2">
+                                <div class="d-flex align-items-center">
+                                    <div>
+                                        <div class="h3 text-primary mb-0">₹<%= product.finalPrice.toLocaleString('en-IN') %></div>
+                                    </div>
+                                    <% if (product.savings > 0) { %>
+                                        <div class="ms-3">
+                                            <small class="text-success">
+                                                You Save: ₹<%= product.savings.toLocaleString('en-IN') %>
+                                            </small>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="stock-status <%= product.quantity > 10 ? 'in-stock' : product.quantity > 0 ? 'low-stock' : 'out-of-stock' %>">
                             <% if (product.quantity > 10) { %>
                                 <i class="fas fa-check-circle"></i> In Stock
                             <% } else if (product.quantity > 0) { %>
-                                <i class="fas fa-exclamation-circle"></i> Low Stock (Only <%= product.quantity %> left)
+                                <i class="fas fa-exclamation-circle"></i> Only <%= product.quantity %> left
                             <% } else { %>
                                 <i class="fas fa-times-circle"></i> Out of Stock
                             <% } %>
                         </div>
 
-                        <div class="offer-details">
-                            <% if (product.category?.categoryOffer > 0) { %>
-                                <div class="offer-item">
-                                    <i class="fa fa-tag offer-icon"></i>
-                                    <span>Category Offer: <%= product.category.categoryOffer %>% off</span>
-                                </div>
-                            <% } %>
-                            <% if (product.productOffer > 0) { %>
-                                <div class="offer-item">
-                                    <i class="fa fa-gift offer-icon"></i>
-                                    <span>Product Offer: <%= product.productOffer %>% off</span>
-                                </div>
-                            <% } %>
-                            <div class="offer-item">
-                                <i class="fa fa-truck offer-icon"></i>
-                                <span>Free Delivery</span>
-                            </div>
-                            <div class="offer-item">
-                                <i class="fa fa-shield offer-icon"></i>
-                                <span>100% Authentic Products</span>
-                            </div>
-                        </div>
-
-                        <p class="product-description">
+                        <div class="product-description">
                             <%= product.description %>
-                        </p>
+                        </div>
 
                         <div class="quantity-selector">
                             <button type="button" class="quantity-btn minus" onclick="updateQuantity(-1)"
@@ -697,10 +687,11 @@
                                 aria-label="Increase quantity"></button>
                         </div>
 
-                        <button class="add-to-cart" onclick="addToCart('<%= product._id %>')">
-                            <i class="fa fa-shopping-cart"></i>
-                            Add to Cart
-                        </button>
+                        <% if (product.quantity > 0) { %>
+                            <button class="add-to-cart" onclick="addToCart('<%= product._id %>')">
+                                <i class="fa fa-shopping-cart"></i> Add to Cart
+                            </button>
+                        <% } %>
 
                         <div class="product-meta">
                             <div class="meta-item">
@@ -727,50 +718,24 @@
                 </div>
             </div>
             <div class="row">
-                <% relatedProducts.forEach(function(product) { %>
-                    <div class="col-lg-3 col-md-4 col-sm-6">
-                        <div class="product-card">
-                            <div class="product-card-img">
-                                <% if (product.productImage && product.productImage.length > 0) { %>
-                                    <img src="/uploads/re-image/<%= product.productImage[0] %>" alt="<%= product.productName %>">
-                                <% } else { %>
-                                    <div class="no-image">No Image Available</div>
-                                <% } %>
-                                <div class="product-action">
-                                    <a href="#" class="action-btn">
-                                        <i class="fas fa-heart"></i>
-                                    </a>
-                                    <a href="/productDetails?id=<%= product._id %>" class="action-btn">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="product-card-content">
-                                <h3 class="product-title"><%= product.productName %></h3>
-                                <div class="product-rating">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="far fa-star"></i>
-                                </div>
+                <% relatedProducts.forEach(function(relProduct) { %>
+                    <div class="col-md-4 mb-4">
+                        <div class="card product-card h-100">
+                            <img src="/uploads/products/<%= relProduct.productImage[0] %>" class="card-img-top" alt="<%= relProduct.productName %>">
+                            <div class="card-body">
+                                <h5 class="card-title"><%= relProduct.productName %></h5>
                                 <div class="product-price">
-                                    <% 
-                                        const categoryOffer = product.category?.categoryOffer || 0;
-                                        const productOffer = product.productOffer || 0;
-                                        const totalOffer = categoryOffer + productOffer;
-                                        const finalPrice = product.salePrice || (totalOffer > 0 ? 
-                                            Math.round(product.regularPrice - (product.regularPrice * totalOffer / 100)) : 
-                                            product.regularPrice);
-                                    %>
-                                    <% if (product.salePrice || totalOffer > 0) { %>
-                                        <span class="old-price">₹<%= product.regularPrice %></span>
-                                        <span class="current-price">₹<%= finalPrice %></span>
-                                    <% } else { %>
-                                        <span class="current-price">₹<%= product.regularPrice %></span>
+                                    <% if (relProduct.regularPrice > relProduct.finalPrice) { %>
+                                        <div class="text-muted">
+                                            <small>M.R.P: </small>
+                                            <span class="text-decoration-line-through">₹<%= relProduct.regularPrice.toLocaleString('en-IN') %></span>
+                                        </div>
                                     <% } %>
+                                    <div class="d-flex align-items-center mt-1">
+                                        <div class="h5 mb-0 text-primary">₹<%= relProduct.finalPrice.toLocaleString('en-IN') %></div>
+                                    </div>
                                 </div>
-                                <a href="#" class="add-cart" data-product-id="<%= product._id %>">+ Add To Cart</a>
+                                <a href="/product-details?id=<%= relProduct._id %>" class="btn btn-outline-primary mt-3">View Details</a>
                             </div>
                         </div>
                     </div>

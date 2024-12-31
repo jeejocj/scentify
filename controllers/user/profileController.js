@@ -1,6 +1,7 @@
 const User=require("../../models/userModel");
 const Address=require("../../models/addressModel")
 const Order = require("../../models/orderModel");
+const Wallet = require("../../models/walletModel");
 const nodemailer = require("nodemailer");
 const bcrypt =require("bcrypt");
 const env = require("dotenv").config();
@@ -165,7 +166,7 @@ const userProfile = async (req, res) => {
     try {
         const userId = req.session.user._id;
         
-        // Fetch user with populated orderHistory and wallet
+        // Fetch user with populated orderHistory
         const user = await User.findById(userId)
             .populate({
                 path: 'orderHistory',
@@ -176,14 +177,12 @@ const userProfile = async (req, res) => {
                 },
                 options: { sort: { createdOn: -1 } }
             })
-            .populate({
-                path: 'wallet',
-                model: 'Wallet',
-                options: { 
-                    sort: { 'transactions.date': -1 } 
-                }
-            });
+            .select('name email phone orderHistory');
 
+        // Fetch wallet data
+        const wallet = await Wallet.findOne({ userId: userId });
+        
+        // Get address data
         const address = await Address.findOne({ userId: userId });
         
         // Map through orders to find matching address from address array
@@ -194,9 +193,21 @@ const userProfile = async (req, res) => {
                 address: addressDetails || {}
             };
         });
-        console.log("ordersWithAddress",ordersWithAddress);
+
+        console.log("User wallet data:", {
+            balance: wallet?.balance || 0,
+            transactionCount: wallet?.transactions?.length || 0
+        });
+
+        // Prepare user data with wallet information
+        const userData = {
+            ...user.toObject(),
+            wallet: wallet?.balance || 0,
+            walletHistory: wallet?.transactions || []
+        };
+
         res.render('profile', {
-            user: user,
+            user: userData,
             addressData: address || { address: [] },
             orders: ordersWithAddress || []
         });
