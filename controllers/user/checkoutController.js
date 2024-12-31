@@ -58,23 +58,47 @@ const getcheckoutPage = async (req, res) => {
             // Cart checkout
             const cart = await Cart.findOne({ userId: user._id }).populate({
                 path: "items.productId",
-                select: "productName productImage salesPrice quantity"
+                select: "productName productImage regularPrice salesPrice quantity category",
+                populate: {
+                    path: "category",
+                    select: "categoryOffer"
+                }
             });
 
             if (!cart || !cart.items || cart.items.length === 0) {
                 return res.redirect("/cart");
             }
 
-            const products = cart.items.map(item => ({
-                _id: item.productId._id,
-                productName: item.productId.productName,
-                productImage: item.productId.productImage?.length > 0 ? item.productId.productImage : ["default-image.jpg"],
-                salesPrice: item.productId.salesPrice || 0,
-                price: item.price || item.productId.salesPrice || 0,
-                quantity: item.quantity || 1,
-                stock: item.productId.quantity,
-                totalPrice: item.totalPrice || (item.price * item.quantity) || (item.productId.salesPrice * item.quantity)
-            }));
+            const products = cart.items.map(item => {
+                const product = item.productId;
+                
+                // Calculate category offer price
+                let categoryOfferPrice = product.regularPrice;
+                if (product.category && product.category.categoryOffer > 0) {
+                    categoryOfferPrice = product.regularPrice - (product.regularPrice * (product.category.categoryOffer / 100));
+                }
+
+                // Get best price (minimum of sales price and category offer price)
+                const finalPrice = Math.min(product.salesPrice || product.regularPrice, categoryOfferPrice);
+                
+                // Calculate savings and discount
+                const savings = product.regularPrice - finalPrice;
+                const discountPercentage = Math.round((savings / product.regularPrice) * 100);
+
+                return {
+                    _id: product._id,
+                    productName: product.productName,
+                    productImage: product.productImage?.length > 0 ? product.productImage : ["default-image.jpg"],
+                    regularPrice: product.regularPrice,
+                    salesPrice: product.salesPrice,
+                    finalPrice: finalPrice,
+                    savings: savings,
+                    discountPercentage: discountPercentage,
+                    quantity: item.quantity || 1,
+                    stock: product.quantity,
+                    totalPrice: finalPrice * item.quantity
+                };
+            });
 
             const subtotal = products.reduce((sum, item) => sum + item.totalPrice, 0);
             let finalAmount = subtotal;
@@ -100,21 +124,39 @@ const getcheckoutPage = async (req, res) => {
         }
 
         // Single product checkout
-        const product = await Product.findById(productId);
+        const product = await Product.findById(productId).populate('category', 'categoryOffer');
         if (!product) {
             return res.redirect("/pageNotFound");
         }
+
+        // Calculate category offer price
+        let categoryOfferPrice = product.regularPrice;
+        if (product.category && product.category.categoryOffer > 0) {
+            categoryOfferPrice = product.regularPrice - (product.regularPrice * (product.category.categoryOffer / 100));
+        }
+
+        // Get best price (minimum of sales price and category offer price)
+        const finalPrice = Math.min(product.salesPrice || product.regularPrice, categoryOfferPrice);
+        
+        // Calculate savings and discount
+        const savings = product.regularPrice - finalPrice;
+        const discountPercentage = Math.round((savings / product.regularPrice) * 100);
 
         const products = [{
             _id: product._id,
             productName: product.productName,
             productImage: product.productImage?.length > 0 ? product.productImage : ["default-image.jpg"],
-            salesPrice: product.salesPrice || 0,
+            regularPrice: product.regularPrice,
+            salesPrice: product.salesPrice,
+            finalPrice: finalPrice,
+            savings: savings,
+            discountPercentage: discountPercentage,
             quantity: quantity,
-            stock: product.quantity
+            stock: product.quantity,
+            totalPrice: finalPrice * quantity
         }];
 
-        const subtotal = products[0].salesPrice * quantity;
+        const subtotal = products[0].totalPrice;
         let finalAmount = subtotal;
         let discountAmount = 0;
 

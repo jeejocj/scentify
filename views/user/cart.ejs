@@ -355,7 +355,15 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td class="cart__price">₹<%= item.price %></td>
+                                            <td class="cart__price">
+                                                <div class="price-details">
+                                                    <span class="regular-price text-muted text-decoration-line-through">₹<%= item.regularPrice.toLocaleString('en-IN') %></span>
+                                                    <div class="final-price text-primary">₹<%= item.finalPrice.toLocaleString('en-IN') %></div>
+                                                    <% if (item.discountPercentage > 0) { %>
+                                                        <small class="text-success"><%= item.discountPercentage %>% OFF</small>
+                                                    <% } %>
+                                                </div>
+                                            </td>
                                             <td class="quantity__item">
                                                 <div class="quantity-control" data-stock="<%= item.productId.quantity %>">
                                                     <button type="button" 
@@ -373,7 +381,7 @@
                                                             aria-label="Increase quantity"></button>
                                                 </div>
                                             </td>
-                                            <td class="cart__price">₹<%= item.totalPrice %></td>
+                                            <td class="cart__price">₹<%= item.totalPrice.toLocaleString('en-IN') %></td>
                                             <td class="cart__close">
                                                 <button onclick="removeFromCart('<%= item.productId._id %>', this)" class="btn">
                                                     <i class="fa fa-close"></i>

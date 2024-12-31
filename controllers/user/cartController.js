@@ -14,8 +14,11 @@ const getCart = async (req, res) => {
     // Fetch cart with populated product details
     const cartItems = await Cart.findOne({ userId }).populate({
       path: "items.productId",
-      select: "productName productImage price quantity",
-      model: "Product",
+      select: "productName productImage regularPrice salesPrice quantity category",
+      populate: {
+        path: "category",
+        select: "categoryOffer"
+      }
     });
 
     if (!cartItems) {
@@ -27,15 +30,36 @@ const getCart = async (req, res) => {
       });
     }
 
-    // Filter valid items
+    // Filter valid items and calculate prices
     const validItems = cartItems.items
       .filter((item) => item.productId != null)
-      .map((item) => ({
-        ...item.toObject(),
-        totalPrice: item.price * item.quantity,
-      }));
+      .map((item) => {
+        const product = item.productId;
+        
+        // Calculate category offer price
+        let categoryOfferPrice = product.regularPrice;
+        if (product.category && product.category.categoryOffer > 0) {
+          categoryOfferPrice = product.regularPrice - (product.regularPrice * (product.category.categoryOffer / 100));
+        }
 
-    // Calculate total amount
+        // Get best price (minimum of sales price and category offer price)
+        const finalPrice = Math.min(product.salesPrice || product.regularPrice, categoryOfferPrice);
+        
+        // Calculate savings
+        const savings = product.regularPrice - finalPrice;
+        const discountPercentage = Math.round((savings / product.regularPrice) * 100);
+
+        return {
+          ...item.toObject(),
+          regularPrice: product.regularPrice,
+          finalPrice: finalPrice,
+          savings: savings,
+          discountPercentage: discountPercentage,
+          totalPrice: finalPrice * item.quantity
+        };
+      });
+
+    // Calculate total amount with offer prices
     const totalAmount = validItems.reduce(
       (sum, item) => sum + item.totalPrice,
       0
