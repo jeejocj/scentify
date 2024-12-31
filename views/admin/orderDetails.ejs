@@ -141,18 +141,6 @@
                             </div>
                         </div>
                     <% } %>
-
-                    <% if(order.status === 'Return Request') { %>
-                        <div class="mt-4">
-                            <h5 class="mb-3">Return Request Details</h5>
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <p><strong>Return Reason:</strong> <%= order.returnReason %></p>
-                                    <p><strong>Request Date:</strong> <%= new Date(order.returnRequestDate).toLocaleDateString() %></p>
-                                </div>
-                            </div>
-                        </div>
-                    <% } %>
                 </div>
             </div>
         </div>

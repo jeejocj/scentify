@@ -13,6 +13,37 @@ const validStatusTransitions = {
     'Cancelled': [] // No further transitions allowed
 };
 
+// Define allowed status transitions based on payment method
+const paymentMethodTransitions = {
+    'COD': {
+        'Pending': ['Processing', 'Cancelled'],
+        'Processing': ['Shipped', 'Cancelled'],
+        'Shipped': ['Delivered', 'Cancelled'],
+        'Delivered': [], // Only user can initiate return
+        'Return Request': ['Returned', 'Cancelled'],
+        'Returned': [],
+        'Cancelled': []
+    },
+    'Online Payment': {
+        'Pending': ['Processing', 'Cancelled'],
+        'Processing': ['Shipped', 'Cancelled'],
+        'Shipped': ['Delivered', 'Cancelled'],
+        'Delivered': [], // Only user can initiate return
+        'Return Request': ['Returned', 'Cancelled'],
+        'Returned': [],
+        'Cancelled': []
+    },
+    'Wallet': {
+        'Pending': ['Processing', 'Cancelled'],
+        'Processing': ['Shipped', 'Cancelled'],
+        'Shipped': ['Delivered', 'Cancelled'],
+        'Delivered': [], // Only user can initiate return
+        'Return Request': ['Returned', 'Cancelled'],
+        'Returned': [],
+        'Cancelled': []
+    }
+};
+
 const listOrders = async (req, res) => {
     try {
         // Find all users and populate their order history
@@ -201,8 +232,18 @@ const updateOrderStatus = async (req, res) => {
             });
         }
 
-        // Check if the status transition is valid
-        const allowedNextStatuses = validStatusTransitions[order.status] || [];
+        // Get allowed transitions based on payment method
+        const paymentMethod = order.paymentMethod || 'COD';
+        const transitionsForPaymentMethod = paymentMethodTransitions[paymentMethod] || paymentMethodTransitions['COD'];
+        const allowedNextStatuses = transitionsForPaymentMethod[order.status] || [];
+
+        console.log('Status transition check:', {
+            currentStatus: order.status,
+            requestedStatus: status,
+            paymentMethod: paymentMethod,
+            allowedStatuses: allowedNextStatuses
+        });
+
         if (!allowedNextStatuses.includes(status)) {
             return res.status(400).json({ 
                 success: false, 
@@ -214,7 +255,13 @@ const updateOrderStatus = async (req, res) => {
         order.status = status;
         await order.save();
 
-        console.log('Order status updated successfully:', { orderId, status });
+        console.log('Order status updated successfully:', { 
+            orderId, 
+            oldStatus: order.status,
+            newStatus: status,
+            paymentMethod: order.paymentMethod
+        });
+
         res.json({ 
             success: true, 
             message: 'Order status updated successfully'

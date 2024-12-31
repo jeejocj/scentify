@@ -5,7 +5,8 @@ const Order = require("../../models/orderModel");
 const env = require("dotenv").config();
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
-const mongoose = require('mongoose');
+
+
 
 const loadHomepage = async (req, res) => {
   try {
@@ -243,11 +244,25 @@ async function sendVerificationEmail(email,otp) {
 
   const submitReturnRequest = async (req, res) => {
     try {
-        console.log('Return request body:', req.body);
-        console.log('User ID:', req.session.user_id);
-        
         const { orderId, returnReason } = req.body;
-        const userId = req.session.user_id;
+        
+        // Check if user is logged in
+        if (!req.session || !req.session.user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Please login to submit a return request'
+            });
+        }
+
+        const sessionUser = req.session.user;
+        const userId = sessionUser._id; // Get the user ID from the session user object
+
+        console.log('Return Request Data:', {
+            orderId,
+            returnReason,
+            sessionUser,
+            userId
+        });
 
         if (!orderId || !returnReason) {
             return res.status(400).json({
@@ -256,25 +271,40 @@ async function sendVerificationEmail(email,otp) {
             });
         }
 
-        if (!mongoose.Types.ObjectId.isValid(orderId)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid order ID format'
-            });
-        }
-
         // Find the order and validate ownership
         const order = await Order.findOne({
-            _id: orderId,
-            userId: userId
+            orderId: orderId
+        }).populate('userId');
+
+        console.log('Found Order:', {
+            orderDetails: {
+                orderId: order?.orderId,
+                status: order?.status,
+                userId: order?.userId?._id || order?.userId
+            },
+            sessionUserId: userId
         });
 
-        console.log('Found order:', order);
-
         if (!order) {
+            console.log('Order not found with criteria:', {
+                orderId: orderId
+            });
             return res.status(404).json({
                 success: false,
                 message: 'Order not found'
+            });
+        }
+
+        // Validate order ownership after finding the order
+        const orderUserId = order.userId._id || order.userId;
+        if (orderUserId.toString() !== userId.toString()) {
+            console.log('Order ownership validation failed:', {
+                orderUserId: orderUserId.toString(),
+                sessionUserId: userId.toString()
+            });
+            return res.status(403).json({
+                success: false,
+                message: 'You are not authorized to return this order'
             });
         }
 
@@ -286,26 +316,12 @@ async function sendVerificationEmail(email,otp) {
         }
 
         // Update order status and add return details
-        const updatedOrder = await Order.findByIdAndUpdate(
-            orderId,
-            {
-                $set: {
-                    status: 'Return Request',
-                    returnReason: returnReason,
-                    returnRequestDate: new Date()
-                }
-            },
-            { new: true }
-        );
+        order.status = 'Return Request';
+        order.returnReason = returnReason;
+        order.returnRequestDate = new Date();
 
-        console.log('Updated order:', updatedOrder);
-
-        if (!updatedOrder) {
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to update order'
-            });
-        }
+        const savedOrder = await order.save();
+        console.log('Saved order:', savedOrder);
 
         res.status(200).json({
             success: true,
@@ -321,9 +337,41 @@ async function sendVerificationEmail(email,otp) {
     }
   };
 
+  const loadProfile = async (req, res) => {
+    try {
+        const userId = req.session.user;
+        const user = await User.findById(userId);
+        const addresses = await Address.find({ userId: userId });
+        const orders = await Order.find({ userId: userId })
+            .populate('orderedItems.product')
+            .populate('address')
+            .sort({ createdOn: -1 });
 
+        console.log('Loading profile for user:', userId);
+        console.log('Found orders:', orders.map(order => ({
+            id: order._id,
+            orderId: order.orderId,
+            status: order.status,
+            userId: order.userId
+        })));
 
-
+        res.render('user/profile', { 
+            user, 
+            addresses, 
+            orders,
+            messages: {
+                success: req.flash('success'),
+                error: req.flash('error')
+            }
+        });
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        res.status(500).render('error', { 
+            message: 'Error loading profile', 
+            error 
+        });
+    }
+  };
 
   module.exports = {
     loadHomepage,
@@ -338,5 +386,6 @@ async function sendVerificationEmail(email,otp) {
     logout,
     securePassword,
     generateOtp,
-    submitReturnRequest
+    submitReturnRequest,
+    loadProfile
   };

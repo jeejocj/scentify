@@ -50,10 +50,22 @@ const orderSchema = new Schema({
         enum: ['COD', 'Online Payment', 'Wallet'],
         default: 'COD'
     },
-    status: {
-        type: String,
-        enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Request', 'Returned'],
-        default: 'Pending'
+    invoiceDate:{
+        type:Date
+    },
+    status:{
+        type:String,
+        required:true,
+        enum:['Pending','Processing','Shipped','Delivered','Cancelled','Return Request','Returned']
+    },
+    createdOn :{
+        type:Date,
+        default:Date.now,
+        required:true
+    },
+    couponApplied:{
+        type:Boolean,
+        default:false
     },
     returnReason: {
         type: String,
@@ -62,11 +74,8 @@ const orderSchema = new Schema({
     returnRequestDate: {
         type: Date,
         default: null
-    },
-    orderDate: {
-        type: Date,
-        default: Date.now
     }
-}, { timestamps: true });
+});
 
-module.exports = mongoose.model('Order', orderSchema);
+const Order = mongoose.model("Order",orderSchema);
+module.exports = Order;

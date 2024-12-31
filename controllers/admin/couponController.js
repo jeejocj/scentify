@@ -13,56 +13,111 @@ const loadcoupon = async (req, res) => {
 
 const createCoupon = async (req, res) => {
     try {
-        if (!req.body.couponName || !req.body.startDate || !req.body.endDate || 
-            !req.body.offerPrice || !req.body.minimumPrice || !req.body.type) {
-            return res.status(400).send("Invalid input: All fields are required.");
+        // 1. Destructure all required fields from req.body
+        const {
+            couponName,
+            startDate,
+            endDate,
+            offerPrice,
+            minimumPrice
+        } = req.body;
+
+        // 2. Log the received data
+        console.log('Received Coupon Data:', {
+            couponName,
+            startDate,
+            endDate,
+            offerPrice,
+            minimumPrice
+        });
+
+        // 3. Validate all required fields are present
+        if (!couponName || !startDate || !endDate || !offerPrice || !minimumPrice) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid input: All fields are required."
+            });
         }
 
-        if (isNaN(new Date(req.body.startDate)) || isNaN(new Date(req.body.endDate))) {
-            return res.status(400).send("Invalid dates provided.");
+        // 4. Convert and validate dates
+        const parsedStartDate = new Date(startDate + "T00:00:00");
+        const parsedEndDate = new Date(endDate + "T00:00:00");
+
+        if (isNaN(parsedStartDate) || isNaN(parsedEndDate)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid dates provided."
+            });
         }
 
-        if (isNaN(req.body.offerPrice) || isNaN(req.body.minimumPrice)) {
-            return res.status(400).send("Offer price and minimum price must be valid numbers.");
+        if (parsedStartDate >= parsedEndDate) {
+            return res.status(400).json({
+                success: false,
+                message: "End date must be after start date."
+            });
         }
 
-        // Validate offer price based on type
-        if (req.body.type === 'percentage' && (req.body.offerPrice < 0 || req.body.offerPrice > 100)) {
-            return res.status(400).send("Percentage discount must be between 0 and 100.");
+        // 5. Validate price fields
+        const parsedOfferPrice = parseInt(offerPrice);
+        const parsedMinimumPrice = parseInt(minimumPrice);
+
+        if (isNaN(parsedOfferPrice) || isNaN(parsedMinimumPrice)) {
+            return res.status(400).json({
+                success: false,
+                message: "Offer price and minimum price must be valid numbers."
+            });
         }
 
-        const data = {
-            couponName: req.body.couponName,
-            type: req.body.type,
-            startDate: new Date(req.body.startDate + "T00:00:00"),
-            endDate: new Date(req.body.endDate + "T00:00:00"),
-            offerPrice: parseInt(req.body.offerPrice),
-            minimumPrice: parseInt(req.body.minimumPrice)
-        };
+        if (parsedOfferPrice <= 0 || parsedMinimumPrice <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Prices must be greater than 0."
+            });
+        }
 
+        if (parsedOfferPrice >= parsedMinimumPrice) {
+            return res.status(400).json({
+                success: false,
+                message: "Offer price must be less than minimum price."
+            });
+        }
+
+        // 6. Check for existing coupon with same name
         const existingCoupon = await Coupon.findOne({
-            createdOn: { $lte: data.endDate },
-            expireOn: { $gte: data.startDate }
+            name: { $regex: new RegExp(`^${couponName}$`, 'i') } // Case-insensitive name check
         });
 
         if (existingCoupon) {
-            return res.status(400).send("A coupon with overlapping dates already exists.");
+            return res.status(400).json({
+                success: false,
+                message: "A coupon with this name already exists."
+            });
         }
 
+        // 7. Create and save the new coupon
         const newCoupon = new Coupon({
-            name: data.couponName,
-            type: data.type,
-            createdOn: data.startDate,
-            expireOn: data.endDate,
-            offerPrice: data.offerPrice,
-            minimumPrice: data.minimumPrice,
+            name: couponName,
+            createdOn: parsedStartDate,
+            expireOn: parsedEndDate,
+            offerPrice: parsedOfferPrice,
+            minimumPrice: parsedMinimumPrice,
         });
 
         await newCoupon.save();
-        res.status(201).send("Coupon created successfully.");
+        console.log('Coupon created successfully:', newCoupon);
+        
+        res.status(201).json({
+            success: true,
+            message: "Coupon created successfully",
+            coupon: newCoupon
+        });
     } catch (error) {
         console.error("Error creating coupon:", error);
-        res.redirect("pageerror");
+        res.status(500).json({
+            success: false,
+            message: "Error creating coupon. Please try again.",
+            error: error.message
+        });
     }
 };
 
