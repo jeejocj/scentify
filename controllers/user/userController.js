@@ -1,11 +1,11 @@
 const User = require("../../models/userModel");
 const Category = require("../../models/categoryModel");
 const Product = require("../../models/productModel");
+const Order = require("../../models/orderModel");
 const env = require("dotenv").config();
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
-
-
+const mongoose = require('mongoose');
 
 const loadHomepage = async (req, res) => {
   try {
@@ -241,6 +241,86 @@ async function sendVerificationEmail(email,otp) {
     }
   };
 
+  const submitReturnRequest = async (req, res) => {
+    try {
+        console.log('Return request body:', req.body);
+        console.log('User ID:', req.session.user_id);
+        
+        const { orderId, returnReason } = req.body;
+        const userId = req.session.user_id;
+
+        if (!orderId || !returnReason) {
+            return res.status(400).json({
+                success: false,
+                message: 'Order ID and return reason are required'
+            });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid order ID format'
+            });
+        }
+
+        // Find the order and validate ownership
+        const order = await Order.findOne({
+            _id: orderId,
+            userId: userId
+        });
+
+        console.log('Found order:', order);
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
+        }
+
+        if (order.status !== 'Delivered') {
+            return res.status(400).json({
+                success: false,
+                message: 'Only delivered orders can be returned'
+            });
+        }
+
+        // Update order status and add return details
+        const updatedOrder = await Order.findByIdAndUpdate(
+            orderId,
+            {
+                $set: {
+                    status: 'Return Request',
+                    returnReason: returnReason,
+                    returnRequestDate: new Date()
+                }
+            },
+            { new: true }
+        );
+
+        console.log('Updated order:', updatedOrder);
+
+        if (!updatedOrder) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to update order'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Return request submitted successfully'
+        });
+
+    } catch (error) {
+        console.error('Error in submitReturnRequest:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Internal server error'
+        });
+    }
+  };
+
 
 
 
@@ -257,6 +337,6 @@ async function sendVerificationEmail(email,otp) {
     login,
     logout,
     securePassword,
-    generateOtp
+    generateOtp,
+    submitReturnRequest
   };
-  

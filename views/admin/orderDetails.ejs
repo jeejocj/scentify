@@ -123,6 +123,25 @@
                         </table>
                     </div>
 
+                    <% if(order.status === 'Return Request' || order.status === 'Returned') { %>
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h5 class="mb-0">Return Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Return Request Date:</strong> <%= new Date(order.returnRequestDate).toLocaleString() %></p>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <p><strong>Return Reason:</strong></p>
+                                        <p class="text-muted"><%= order.returnReason %></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% } %>
+
                     <% if(order.status === 'Return Request') { %>
                         <div class="mt-4">
                             <h5 class="mb-3">Return Request Details</h5>

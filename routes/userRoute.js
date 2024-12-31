@@ -107,4 +107,7 @@ router.get('/wallet/details', userAuth, walletController.getWalletDetails);
 router.post('/wallet/recharge', userAuth, walletController.createWalletRechargeOrder);
 router.post('/wallet/verify', userAuth, walletController.verifyWalletRecharge);
 
+// Return request route
+router.post('/submit-return-request', userAuth, userController.submitReturnRequest);
+
 module.exports = router

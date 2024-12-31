@@ -290,6 +290,14 @@
                                        Cancel
                                      </button>
                                    <% } %>
+                                   <% if(order.status === 'Delivered')  { %>
+                                     <button 
+                                       type="button" 
+                                       class="btn btn-sm btn-warning return-order-btn" 
+                                       onclick="showReturnModal('<%= order._id %>')">
+                                       Return Order
+                                     </button>
+                                   <% } %>
                                  </td>
                                </tr>
                              <% }); %>
@@ -442,6 +450,31 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- Return Modal -->
+<div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="returnModalLabel">Return Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="returnForm">
+                    <input type="hidden" id="returnOrderId" name="orderId">
+                    <div class="mb-3">
+                        <label for="returnReason" class="form-label">Please explain the reason for return</label>
+                        <textarea class="form-control" id="returnReason" name="returnReason" rows="3" required placeholder="Enter your reason for returning the order"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitReturn()">Submit Return Request</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -742,6 +775,77 @@
                     );
                 });
             }
+        });
+    }
+
+    function showReturnModal(orderId) {
+        document.getElementById('returnOrderId').value = orderId;
+        document.getElementById('returnReason').value = ''; // Clear previous input
+        new bootstrap.Modal(document.getElementById('returnModal')).show();
+    }
+
+    function submitReturn() {
+        const orderId = document.getElementById('returnOrderId').value;
+        const returnReason = document.getElementById('returnReason').value.trim();
+
+        if (!returnReason) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please provide a reason for return'
+            });
+            return;
+        }
+
+        // Show loading state
+        Swal.fire({
+            title: 'Submitting Return Request...',
+            text: 'Please wait while we process your request',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch('/submit-return-request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                orderId,
+                returnReason
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close the modal first
+                const modal = bootstrap.Modal.getInstance(document.getElementById('returnModal'));
+                if (modal) {
+                    modal.hide();
+                }
+
+                // Show success message and reload
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Return request submitted successfully',
+                    confirmButtonText: 'OK'
+                }).then((result) => {
+                    location.reload();
+                });
+            } else {
+                throw new Error(data.message || 'Failed to submit return request');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Failed to submit return request'
+            });
         });
     }
 </script>
