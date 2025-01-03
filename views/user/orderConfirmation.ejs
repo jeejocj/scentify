@@ -4,33 +4,96 @@
     .main {
         min-height: 100vh;
         background-color: #f8f9fa;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        padding: 40px 0;
     }
     .confirmation-section {
         width: 100%;
-        padding: 40px 0;
         background-color: white;
         box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        overflow: hidden;
     }
-    .confirmation-content {
-        max-width: 600px;
-        margin: 0 auto;
+    .confirmation-header {
+        background-color: #28a745;
+        color: white;
         padding: 30px;
         text-align: center;
     }
+    .confirmation-content {
+        padding: 30px;
+    }
     .confirmation-title {
-        font-size: 2.5rem;
-        color: #333;
-        margin-bottom: 1.5rem;
+        font-size: 2rem;
+        margin-bottom: 1rem;
         font-weight: 600;
     }
-    .confirmation-message {
+    .confirmation-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+    .order-details {
+        margin-top: 30px;
+    }
+    .order-section {
+        margin-bottom: 30px;
+    }
+    .section-title {
         font-size: 1.2rem;
+        color: #333;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #eee;
+    }
+    .product-card {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    .product-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-right: 15px;
+    }
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .product-info {
+        flex-grow: 1;
+    }
+    .product-name {
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+    .product-price {
         color: #666;
-        margin-bottom: 2rem;
-        line-height: 1.6;
+    }
+    .price-details {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+    }
+    .price-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    .price-row.total {
+        border-top: 2px solid #ddd;
+        padding-top: 10px;
+        margin-top: 10px;
+        font-weight: 600;
+    }
+    .shipping-info {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
     }
     .btn-success {
         color: #fff;
@@ -43,6 +106,7 @@
         transition: all 0.3s ease;
         font-size: 1.1rem;
         font-weight: 500;
+        margin-top: 20px;
     }
     .btn-success:hover {
         background-color: #218838;
@@ -53,31 +117,119 @@
     .btn-success i {
         margin-right: 10px;
     }
-    @media (max-width: 768px) {
-        .confirmation-title {
-            font-size: 2rem;
-        }
-        .confirmation-message {
-            font-size: 1rem;
-        }
-        .confirmation-content {
-            padding: 20px;
-        }
-    }
+    .text-success { color: #28a745; }
+    .text-danger { color: #dc3545; }
 </style>
 
 <main class="main">
-    <section class="confirmation-section">
-        <div class="container">
-            <div class="confirmation-content">
+    <div class="container">
+        <div class="confirmation-section">
+            <div class="confirmation-header">
                 <h1 class="confirmation-title">Thank You for Your Order!</h1>
-                <p class="confirmation-message">Your order has been placed successfully. We'll process it right away.</p>
-                <a href="/shop" class="btn btn-success">
-                    <i class="fi-rs-shopping-bag"></i>Continue Shopping
-                </a>
+                <p class="confirmation-subtitle">Order #<%= order._id %></p>
+            </div>
+            
+            <div class="confirmation-content">
+                <div class="order-details">
+                    <!-- Order Status -->
+                    <div class="order-section">
+                        <h2 class="section-title">Order Status</h2>
+                        <div class="status-info">
+                            <p><strong>Status:</strong> <span class="badge bg-<%= 
+                                order.status === 'Delivered' ? 'success' :
+                                order.status === 'Cancelled' ? 'danger' :
+                                order.status === 'Processing' ? 'primary' :
+                                order.status === 'Shipped' ? 'info' :
+                                'warning'
+                            %>"><%= order.status %></span></p>
+                            <p><strong>Order Date:</strong> <%= new Date(order.createdOn).toLocaleString() %></p>
+                            <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
+                        </div>
+                    </div>
+
+                    <!-- Shipping Information -->
+                    <div class="order-section">
+                        <h2 class="section-title">Shipping Information</h2>
+                        <div class="shipping-info">
+                            <% if (order.address && typeof order.address === 'object') { %>
+                                <p><strong><%= order.address.name %></strong></p>
+                                <p><%= order.address.landMark %></p>
+                                <p><%= order.address.city %>, <%= order.address.state %> <%= order.address.pincode %></p>
+                                <p>Phone: <%= order.address.phone %></p>
+                                <% if (order.address.altPhone) { %>
+                                    <p>Alt Phone: <%= order.address.altPhone %></p>
+                                <% } %>
+                            <% } else { %>
+                                <p>Address information not available</p>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="order-section">
+                        <h2 class="section-title">Order Items</h2>
+                        <% order.orderedItems.forEach(item => { %>
+                            <div class="product-card">
+                                <div class="product-image">
+                                    <% if (item.product && item.product.productImage && item.product.productImage.length > 0) { %>
+                                        <img src="/uploads/re-image/<%= item.product.productImage[0] %>" 
+                                             alt="<%= item.product.productName %>">
+                                    <% } else { %>
+                                        <img src="/uploads/re-image/default.png" alt="Product Image">
+                                    <% } %>
+                                </div>
+                                <div class="product-info">
+                                    <h3 class="product-name"><%= item.product ? item.product.productName : 'Product Name Not Available' %></h3>
+                                    <p class="product-price">
+                                        <% if (item.discountPercentage > 0) { %>
+                                            <span class="text-muted text-decoration-line-through">₹<%= item.regularPrice.toLocaleString() %></span>
+                                            <span class="text-success">
+                                                (<%= item.discountPercentage %>% OFF - 
+                                                <%= item.offerType === 'category' ? 'Category Offer' : 
+                                                   item.offerType === 'product' ? 'Product Offer' : 
+                                                   item.offerType === 'sale' ? 'Sale Price' : '' %>)
+                                            </span><br>
+                                        <% } %>
+                                        <strong>₹<%= item.finalPrice.toLocaleString() %></strong> × <%= item.quantity %>
+                                    </p>
+                                </div>
+                                <div class="product-total">
+                                    <strong>₹<%= (item.finalPrice * item.quantity).toLocaleString() %></strong>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+
+                    <!-- Price Details -->
+                    <div class="order-section">
+                        <h2 class="section-title">Price Details</h2>
+                        <div class="price-details">
+                            <div class="price-row">
+                                <span>Subtotal</span>
+                                <span>₹<%= (order.subtotal || 0).toLocaleString() %></span>
+                            </div>
+                            <% if (order.discount && order.discount > 0) { %>
+                                <div class="price-row text-success">
+                                    <span>Discount</span>
+                                    <span>-₹<%= order.discount.toLocaleString() %></span>
+                                </div>
+                            <% } %>
+                            <div class="price-row total">
+                                <span>Total Amount</span>
+                                <span>₹<%= (order.finalAmount || 0).toLocaleString() %></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <a href="/shop" class="btn btn-success">
+                        <i class="fi-rs-shopping-bag"></i>Continue Shopping
+                    </a>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
 </main>
 
 <%- include("../../views/partials/user/footer") %>

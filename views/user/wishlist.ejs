@@ -191,12 +191,17 @@
                                             <p class="category"><strong>Category:</strong> <%= item.productId.category?.name || 'N/A' %></p>
                                         </td>
                                         <td class="price">
-                                            <% if (typeof item.productId.salePrice !== 'undefined' && item.productId.salePrice !== null) { %>
-                                                ₹<%= item.productId.salePrice %>
-                                            <% } else if (typeof item.productId.regularPrice !== 'undefined') { %>
-                                                ₹<%= item.productId.regularPrice %>
+                                            <% if (item.discountPercentage > 0) { %>
+                                                <span class="text-muted text-decoration-line-through">₹<%= item.regularPrice.toLocaleString() %></span><br>
+                                                <span class="text-success">
+                                                    (<%= item.discountPercentage %>% OFF - 
+                                                    <%= item.offerType === 'category' ? 'Category Offer' : 
+                                                       item.offerType === 'product' ? 'Product Offer' : 
+                                                       item.offerType === 'sale' ? 'Sale Price' : '' %>)
+                                                </span><br>
+                                                <span class="text-primary">₹<%= item.finalPrice.toLocaleString() %></span>
                                             <% } else { %>
-                                                Price not available
+                                                ₹<%= item.regularPrice.toLocaleString() %>
                                             <% } %>
                                         </td>
                                         <td>

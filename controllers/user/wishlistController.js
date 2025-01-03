@@ -11,11 +11,11 @@ const loadWishlist = async (req, res) => {
         let wishlist = await Wishlist.findOne({ userId }).populate({
             path: 'products.productId',
             model: 'Product',
-            select: 'productName productImage salePrice regularPrice quantity brand category',
+            select: 'productName productImage regularPrice salesPrice quantity brand category productOffer',
             populate: [{
                 path: 'category',
                 model: 'Category',
-                select: 'name'
+                select: 'name categoryOffer'
             }, {
                 path: 'brand',
                 model: 'Brand',
@@ -28,11 +28,56 @@ const loadWishlist = async (req, res) => {
             await wishlist.save();
         }
 
-        console.log('Wishlist products:', JSON.stringify(wishlist.products, null, 2));
+        // Calculate best offer for each product
+        const processedWishlist = wishlist.products.map(item => {
+            const product = item.productId;
+            
+            // Calculate category offer price
+            let categoryOfferPrice = product.regularPrice;
+            let categoryOffer = 0;
+            if (product.category && product.category.categoryOffer > 0) {
+                categoryOffer = product.category.categoryOffer;
+                categoryOfferPrice = product.regularPrice - (product.regularPrice * (categoryOffer / 100));
+            }
+
+            // Calculate product offer price
+            let productOfferPrice = product.regularPrice;
+            let productOffer = product.productOffer || 0;
+            if (productOffer > 0) {
+                productOfferPrice = product.regularPrice - (product.regularPrice * (productOffer / 100));
+            }
+
+            // Get sale price
+            const salePrice = product.salesPrice || product.regularPrice;
+
+            // Find the best offer
+            const prices = [
+                { type: 'regular', price: product.regularPrice, discount: 0, percentage: 0 },
+                { type: 'sale', price: salePrice, discount: product.regularPrice - salePrice, percentage: Math.round(((product.regularPrice - salePrice) / product.regularPrice) * 100) },
+                { type: 'category', price: categoryOfferPrice, discount: product.regularPrice - categoryOfferPrice, percentage: categoryOffer },
+                { type: 'product', price: productOfferPrice, discount: product.regularPrice - productOfferPrice, percentage: productOffer }
+            ];
+
+            // Get the offer with lowest price
+            const bestOffer = prices.reduce((best, current) => 
+                current.price < best.price ? current : best
+            );
+
+            return {
+                ...item.toObject(),
+                regularPrice: product.regularPrice,
+                finalPrice: bestOffer.price,
+                discountPercentage: bestOffer.percentage,
+                offerType: bestOffer.type,
+                savings: bestOffer.discount
+            };
+        });
+
+        console.log('Processed wishlist products:', JSON.stringify(processedWishlist, null, 2));
 
         res.render('wishlist', {
             user: req.session.user,
-            wishlist: wishlist.products
+            wishlist: processedWishlist
         });
     } catch (error) {
         console.error('Error loading wishlist:', error);

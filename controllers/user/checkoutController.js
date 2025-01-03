@@ -541,22 +541,57 @@ const orderConfirm = async (req, res) => {
             return res.redirect("/pageNotFound");
         }
 
+        // Find the order and populate necessary fields
         const order = await Order.findById(orderId)
-            .populate('orderedItems.product')
-            .populate('address');
+            .populate({
+                path: 'orderedItems.product',
+                select: 'productName productImage'
+            })
+            .lean();
 
         if (!order) {
             console.error("Order not found:", orderId);
             return res.redirect("/pageNotFound");
         }
 
+        // Get address details
+        const addressDoc = await Address.findOne({ 
+            userId: req.session.user._id,
+            'address._id': order.address 
+        });
+
+        if (addressDoc && addressDoc.address) {
+            const selectedAddress = addressDoc.address.find(addr => 
+                addr._id.toString() === order.address.toString()
+            );
+            if (selectedAddress) {
+                order.address = selectedAddress;
+            }
+        }
+
+        // Calculate totals from ordered items
+        let subtotal = 0;
+        order.orderedItems.forEach(item => {
+            subtotal += item.finalPrice * item.quantity;
+        });
+        order.subtotal = subtotal;
+        order.finalAmount = subtotal - (order.discount || 0);
+
+        console.log('Order details:', {
+            orderId: order._id,
+            subtotal: order.subtotal,
+            discount: order.discount,
+            finalAmount: order.finalAmount,
+            items: order.orderedItems
+        });
+
         return res.render("orderConfirmation", {
             order,
             user: req.session.user
         });
     } catch (error) {
-        console.error("Error in order confirmation:", error);
-        return res.redirect("/pageNotFound");
+        console.error("Error in orderConfirm:", error);
+        return res.redirect("/error");
     }
 };
 
