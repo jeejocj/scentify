@@ -336,7 +336,7 @@ const getOrderDetailsJson = async (req, res) => {
             .populate({
                 path: 'orderedItems.product',
                 model: 'Product',
-                select: 'productName productImage salePrice regularPrice'
+                select: 'productName productImage'
             });
 
         if (!order) {
@@ -350,15 +350,10 @@ const getOrderDetailsJson = async (req, res) => {
         const address = await Address.findOne({ userId: userId });
         const addressDetails = address?.address.find(addr => addr._id.toString() === order.address.toString()) || {};
 
-        // Calculate totals using product's salePrice
-        const totalPrice = order.orderedItems.reduce((total, item) => {
-            const itemPrice = item.product.salePrice || item.product.regularPrice || 0;
-            return total + (itemPrice * item.quantity);
+        // Calculate totals
+        const subtotal = order.orderedItems.reduce((total, item) => {
+            return total + (item.finalPrice * item.quantity);
         }, 0);
-
-        // Ensure discount doesn't exceed total price
-        const discount = Math.min(order.discount || 0, totalPrice);
-        const finalAmount = Math.max(totalPrice - discount, 0);
 
         res.json({
             success: true,
@@ -366,14 +361,24 @@ const getOrderDetailsJson = async (req, res) => {
                 orderId: order._id,
                 createdOn: order.createdOn,
                 status: order.status,
-                orderedItems: order.orderedItems.map(item => ({
-                    ...item.toObject(),
-                    price: item.product.salePrice || item.product.regularPrice || 0
-                })),
+                orderedItems: order.orderedItems.map(item => {
+                    return {
+                        product: {
+                            productName: item.product.productName,
+                            productImage: item.product.productImage
+                        },
+                        quantity: item.quantity,
+                        regularPrice: item.regularPrice,
+                        finalPrice: item.finalPrice,
+                        discountPercentage: item.discountPercentage,
+                        offerType: item.offerType,
+                        totalItemPrice: item.finalPrice * item.quantity
+                    };
+                }),
                 address: addressDetails,
-                totalPrice: totalPrice,
-                discount: discount,
-                finalAmount: finalAmount,
+                subtotal: subtotal,
+                discount: order.discount || 0,
+                finalAmount: order.finalAmount,
                 paymentMethod: order.paymentMethod || 'Not specified'
             }
         });

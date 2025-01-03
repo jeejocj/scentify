@@ -503,7 +503,6 @@
         .old-price {
             text-decoration: line-through;
             color: #999;
-            margin-right: 10px;
             font-size: 14px;
         }
 
@@ -588,6 +587,28 @@
         .final-price .h3 {
             margin: 0;
             line-height: 1.2;
+        }
+
+        .out-of-stock-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: #dc3545;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .out-of-stock-btn {
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: not-allowed;
+            opacity: 0.7;
         }
     </style>
 
@@ -718,24 +739,57 @@
                 </div>
             </div>
             <div class="row">
-                <% relatedProducts.forEach(function(relProduct) { %>
-                    <div class="col-md-4 mb-4">
-                        <div class="card product-card h-100">
-                            <img src="/uploads/products/<%= relProduct.productImage[0] %>" class="card-img-top" alt="<%= relProduct.productName %>">
-                            <div class="card-body">
-                                <h5 class="card-title"><%= relProduct.productName %></h5>
-                                <div class="product-price">
-                                    <% if (relProduct.regularPrice > relProduct.finalPrice) { %>
-                                        <div class="text-muted">
-                                            <small>M.R.P: </small>
-                                            <span class="text-decoration-line-through">₹<%= relProduct.regularPrice.toLocaleString('en-IN') %></span>
-                                        </div>
-                                    <% } %>
-                                    <div class="d-flex align-items-center mt-1">
-                                        <div class="h5 mb-0 text-primary">₹<%= relProduct.finalPrice.toLocaleString('en-IN') %></div>
-                                    </div>
+                <% relatedProducts.forEach(function(product) { %>
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="product-card">
+                            <div class="product-card-img">
+                                <% if (product.productImage && product.productImage.length > 0) { %>
+                                    <img src="/uploads/re-image/<%= product.productImage[0] %>" alt="<%= product.productName %>">
+                                <% } else { %>
+                                    <div class="no-image">No Image Available</div>
+                                <% } %>
+                                <% if (product.quantity <= 0 || product.status === 'out of stock') { %>
+                                    <div class="out-of-stock-badge">Out of Stock</div>
+                                <% } %>
+                                <div class="product-action">
+                                    <a href="#" class="action-btn">
+                                        <i class="fas fa-heart"></i>
+                                    </a>
+                                    <a href="/productDetails?id=<%= product._id %>" class="action-btn">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
                                 </div>
-                                <a href="/product-details?id=<%= relProduct._id %>" class="btn btn-outline-primary mt-3">View Details</a>
+                            </div>
+                            <div class="product-card-content">
+                                <h3 class="product-title"><%= product.productName %></h3>
+                                <div class="product-rating">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                </div>
+                                <div class="product-price">
+                                    <% 
+                                        const categoryOffer = product.category?.categoryOffer || 0;
+                                        const productOffer = product.productOffer || 0;
+                                        const totalOffer = categoryOffer + productOffer;
+                                        const finalPrice = product.salePrice || (totalOffer > 0 ? 
+                                            Math.round(product.regularPrice - (product.regularPrice * totalOffer / 100)) : 
+                                            product.regularPrice);
+                                    %>
+                                    <% if (product.salePrice || totalOffer > 0) { %>
+                                        <span class="old-price">₹<%= product.regularPrice %></span>
+                                        <span class="current-price">₹<%= finalPrice %></span>
+                                    <% } else { %>
+                                        <span class="current-price">₹<%= product.regularPrice %></span>
+                                    <% } %>
+                                </div>
+                                <% if (product.quantity > 0 && product.status !== 'out of stock') { %>
+                                    <a href="#" class="add-cart" data-product-id="<%= product._id %>">+ Add To Cart</a>
+                                <% } else { %>
+                                    <button class="out-of-stock-btn" disabled>Out of Stock</button>
+                                <% } %>
                             </div>
                         </div>
                     </div>

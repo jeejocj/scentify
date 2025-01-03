@@ -96,16 +96,27 @@
                                                     style="width: 50px; height: 50px; object-fit: cover;">
                                             <% } %>
                                         </td>
-                                        <td>₹<%= item.price.toLocaleString() %></td>
+                                        <td>
+                                            <% if (item.discountPercentage > 0) { %>
+                                                <span class="text-muted text-decoration-line-through">₹<%= item.regularPrice.toLocaleString() %></span><br>
+                                                <span class="text-success">
+                                                    (<%= item.discountPercentage %>% OFF - 
+                                                    <%= item.offerType === 'category' ? 'Category Offer' : 
+                                                       item.offerType === 'product' ? 'Product Offer' : 
+                                                       item.offerType === 'sale' ? 'Sale Price' : '' %>)
+                                                </span><br>
+                                            <% } %>
+                                            <span class="text-primary">₹<%= item.finalPrice.toLocaleString() %></span>
+                                        </td>
                                         <td><%= item.quantity %></td>
-                                        <td>₹<%= item.total.toLocaleString() %></td>
+                                        <td>₹<%= item.totalItemPrice.toLocaleString() %></td>
                                     </tr>
                                 <% }); %>
                             </tbody>
                             <tfoot>
                                 <tr>
                                     <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
-                                    <td>₹<%= order.totalAmount.toLocaleString() %></td>
+                                    <td>₹<%= order.subtotal.toLocaleString() %></td>
                                 </tr>
                                 <% if (order.discount && order.discount > 0) { %>
                                     <tr>

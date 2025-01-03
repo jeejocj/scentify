@@ -58,7 +58,7 @@ const getcheckoutPage = async (req, res) => {
             // Cart checkout
             const cart = await Cart.findOne({ userId: user._id }).populate({
                 path: "items.productId",
-                select: "productName productImage regularPrice salesPrice quantity category",
+                select: "productName productImage regularPrice salePrice quantity category productOffer",
                 populate: {
                     path: "category",
                     select: "categoryOffer"
@@ -72,16 +72,27 @@ const getcheckoutPage = async (req, res) => {
             const products = cart.items.map(item => {
                 const product = item.productId;
                 
-                // Calculate category offer price
+                // Calculate category offer price if category has an offer
                 let categoryOfferPrice = product.regularPrice;
                 if (product.category && product.category.categoryOffer > 0) {
                     categoryOfferPrice = product.regularPrice - (product.regularPrice * (product.category.categoryOffer / 100));
                 }
 
-                // Get best price (minimum of sales price and category offer price)
-                const finalPrice = Math.min(product.salesPrice || product.regularPrice, categoryOfferPrice);
+                // Calculate product offer price if product has an offer
+                let productOfferPrice = product.regularPrice;
+                if (product.productOffer && product.productOffer > 0) {
+                    productOfferPrice = product.regularPrice - (product.regularPrice * (product.productOffer / 100));
+                }
+
+                // Compare with product's sale price and get the best offer
+                const finalPrice = Math.min(
+                    product.regularPrice,
+                    product.salePrice || product.regularPrice,
+                    categoryOfferPrice,
+                    productOfferPrice
+                );
                 
-                // Calculate savings and discount
+                // Calculate total savings and discount percentage
                 const savings = product.regularPrice - finalPrice;
                 const discountPercentage = Math.round((savings / product.regularPrice) * 100);
 
@@ -90,7 +101,9 @@ const getcheckoutPage = async (req, res) => {
                     productName: product.productName,
                     productImage: product.productImage?.length > 0 ? product.productImage : ["default-image.jpg"],
                     regularPrice: product.regularPrice,
-                    salesPrice: product.salesPrice,
+                    salePrice: product.salePrice,
+                    categoryOfferPrice: categoryOfferPrice,
+                    productOfferPrice: productOfferPrice,
                     finalPrice: finalPrice,
                     savings: savings,
                     discountPercentage: discountPercentage,
@@ -385,7 +398,12 @@ const createOrder = async (userId, products, address, subtotal, total, paymentMe
         const orderedItems = products.map(product => ({
             product: product._id,
             quantity: product.quantity,
-            price: product.salesPrice
+            regularPrice: product.regularPrice,
+            finalPrice: product.finalPrice,
+            discountPercentage: product.discountPercentage,
+            offerType: product.discountPercentage > 0 ? 
+                (product.categoryOfferPrice < product.productOfferPrice && product.categoryOfferPrice < (product.salePrice || Infinity) ? 'category' :
+                 product.productOfferPrice < (product.salePrice || Infinity) ? 'product' : 'sale') : 'regular'
         }));
 
         const order = new Order({

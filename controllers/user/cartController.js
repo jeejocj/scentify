@@ -14,7 +14,7 @@ const getCart = async (req, res) => {
     // Fetch cart with populated product details
     const cartItems = await Cart.findOne({ userId }).populate({
       path: "items.productId",
-      select: "productName productImage regularPrice salesPrice quantity category",
+      select: "productName productImage regularPrice salePrice quantity category productOffer",
       populate: {
         path: "category",
         select: "categoryOffer"
@@ -36,23 +36,37 @@ const getCart = async (req, res) => {
       .map((item) => {
         const product = item.productId;
         
-        // Calculate category offer price
+        // Calculate category offer price if category has an offer
         let categoryOfferPrice = product.regularPrice;
         if (product.category && product.category.categoryOffer > 0) {
           categoryOfferPrice = product.regularPrice - (product.regularPrice * (product.category.categoryOffer / 100));
         }
 
-        // Get best price (minimum of sales price and category offer price)
-        const finalPrice = Math.min(product.salesPrice || product.regularPrice, categoryOfferPrice);
+        // Calculate product offer price if product has an offer
+        let productOfferPrice = product.regularPrice;
+        if (product.productOffer && product.productOffer > 0) {
+          productOfferPrice = product.regularPrice - (product.regularPrice * (product.productOffer / 100));
+        }
+
+        // Compare with product's sale price and get the best offer
+        const finalPrice = Math.min(
+          product.regularPrice,
+          product.salePrice || product.regularPrice,
+          categoryOfferPrice,
+          productOfferPrice
+        );
         
-        // Calculate savings
+        // Calculate total savings and discount percentage
         const savings = product.regularPrice - finalPrice;
         const discountPercentage = Math.round((savings / product.regularPrice) * 100);
 
         return {
           ...item.toObject(),
           regularPrice: product.regularPrice,
+          salePrice: product.salePrice,
           finalPrice: finalPrice,
+          categoryOfferPrice: categoryOfferPrice,
+          productOfferPrice: productOfferPrice,
           savings: savings,
           discountPercentage: discountPercentage,
           totalPrice: finalPrice * item.quantity

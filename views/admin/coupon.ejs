@@ -251,9 +251,14 @@
         const start = new Date(startDate);
         const end = new Date(endDate);
         const today = new Date();
+        
+        // Reset time part for accurate date comparison
+        today.setHours(0, 0, 0, 0);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
 
         if (start < today) {
-            document.getElementById('error-start-date').textContent = 'Start date cannot be in the past';
+            document.getElementById('error-start-date').textContent = 'Start date must be today or a future date';
             document.getElementById('error-start-date').style.display = 'block';
             isValid = false;
         }

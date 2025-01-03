@@ -125,92 +125,55 @@ const getAdminOrderDetails = async (req, res) => {
         const orderId = req.params.orderId;
         console.log('Finding order with ID:', orderId);
 
-        const users = await User.find()
-            .populate({
-                path: 'orderHistory',
-                match: { _id: orderId },
-                populate: [
-                    {
-                        path: 'orderedItems.product',
-                        select: 'productName productImage salePrice regularPrice'
-                    }
-                ]
-            });
+        const order = await Order.findById(orderId)
+            .populate('orderedItems.product', 'productName productImage')
+            .populate('userId', 'name email');
 
-        const user = users.find(u => u.orderHistory.some(o => o._id.toString() === orderId));
-        if (!user) {
+        if (!order) {
             return res.status(404).render('error', { message: 'Order not found' });
         }
 
-        const order = user.orderHistory.find(o => o._id.toString() === orderId);
         const orderObj = order.toObject();
+        orderObj.user = orderObj.userId;
 
-        // Calculate totals and add prices to ordered items
-        let totalAmount = 0;
-        orderObj.orderedItems = orderObj.orderedItems.map(item => {
-            const price = item.product.salePrice || item.product.regularPrice || 0;
-            const itemTotal = price * item.quantity;
-            totalAmount += itemTotal;
-            return {
-                ...item,
-                price: price,
-                total: itemTotal
-            };
-        });
-
-        orderObj.totalAmount = totalAmount;
-        orderObj.finalAmount = totalAmount - (orderObj.discount || 0);
-
-        console.log('Order found:', orderObj);
-        console.log('Address ID in order:', orderObj.address);
-
-        // Find the address document and the specific address from the array
+        // Get address details
         if (orderObj.address) {
             console.log('Looking for address with ID:', orderObj.address);
-            
-            const addressDoc = await Address.findOne({ userId: user._id });
+            const addressDoc = await Address.findOne({ userId: orderObj.userId._id });
             console.log('Found address document:', addressDoc);
 
             if (addressDoc && addressDoc.address) {
-                // Find the specific address from the array
                 const selectedAddress = addressDoc.address.find(addr => 
                     addr._id.toString() === orderObj.address.toString()
                 );
-                console.log('Selected address:', selectedAddress);
-                
                 if (selectedAddress) {
                     orderObj.address = selectedAddress;
-                } else {
-                    console.log('Address not found in array');
                 }
-            } else {
-                console.log('No address document found or no addresses in array');
             }
-        } else {
-            console.log('No address ID in order');
         }
 
-        // Add user information to the order object
-        const orderWithUser = {
-            ...orderObj,
-            user: {
-                name: user.name,
-                email: user.email
-            }
-        };
+        // Calculate totals
+        let subtotal = 0;
+        orderObj.orderedItems = orderObj.orderedItems.map(item => {
+            const itemTotal = item.finalPrice * item.quantity;
+            subtotal += itemTotal;
 
-        console.log('Final order with address:', orderWithUser);
-
-        res.render('orderDetails', {
-            order: orderWithUser,
-            error: null
+            return {
+                ...item,
+                totalItemPrice: itemTotal
+            };
         });
+
+        orderObj.subtotal = subtotal;
+        orderObj.discount = orderObj.discount || 0;
+        orderObj.finalAmount = Math.max(subtotal - orderObj.discount, 0);
+
+        console.log('Processed order:', orderObj);
+
+        res.render('orderDetails', { order: orderObj });
     } catch (error) {
-        console.error('Error fetching order details:', error);
-        res.status(500).render('error', { 
-            message: 'Error fetching order details',
-            error: error.message 
-        });
+        console.error('Error in getAdminOrderDetails:', error);
+        res.status(500).render('error', { message: 'Internal server error' });
     }
 };
 

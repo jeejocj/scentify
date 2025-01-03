@@ -98,12 +98,46 @@ const loadShoppingPage = async (req, res) => {
       .limit(limit)
       .lean();
 
+    // Calculate final prices considering both category and product offers
+    const productsWithPrices = products.map(product => {
+      // Calculate category offer price
+      let categoryOfferPrice = product.regularPrice;
+      if (product.category?.categoryOffer > 0) {
+        categoryOfferPrice = product.regularPrice - (product.regularPrice * (product.category.categoryOffer / 100));
+      }
+
+      // Calculate product offer price
+      let productOfferPrice = product.regularPrice;
+      if (product.productOffer > 0) {
+        productOfferPrice = product.regularPrice - (product.regularPrice * (product.productOffer / 100));
+      }
+
+      // Get the best price (lowest among regular, sale, category offer, and product offer)
+      const finalPrice = Math.min(
+        product.regularPrice,
+        product.salePrice || product.regularPrice,
+        categoryOfferPrice,
+        productOfferPrice
+      );
+
+      // Calculate savings and discount percentage
+      const totalSavings = product.regularPrice - finalPrice;
+      const discountPercentage = Math.round((totalSavings / product.regularPrice) * 100);
+
+      return {
+        ...product,
+        finalPrice,
+        savings: totalSavings,
+        discountPercentage
+      };
+    });
+
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);
 
     res.render("shop", {
       user: userData,
-      products,
+      products: productsWithPrices,
       categories,
       brands,
       totalProducts,

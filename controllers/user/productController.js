@@ -17,8 +17,19 @@ const productDetails = async(req,res)=>{
             categoryOfferPrice = product.regularPrice - (product.regularPrice * (findCategory.categoryOffer / 100));
         }
 
+        // Calculate product offer price if product has an offer
+        let productOfferPrice = product.regularPrice;
+        if (product.productOffer && product.productOffer > 0) {
+            productOfferPrice = product.regularPrice - (product.regularPrice * (product.productOffer / 100));
+        }
+
         // Compare with product's sale price and get the best offer
-        const finalPrice = Math.min(product.salesPrice || product.regularPrice, categoryOfferPrice);
+        const finalPrice = Math.min(
+            product.regularPrice,
+            product.salePrice || product.regularPrice,
+            categoryOfferPrice,
+            productOfferPrice
+        );
         
         // Calculate total savings and discount percentage
         const totalSavings = product.regularPrice - finalPrice;
@@ -37,7 +48,18 @@ const productDetails = async(req,res)=>{
             if (findCategory.categoryOffer && findCategory.categoryOffer > 0) {
                 relCategoryOfferPrice = relProduct.regularPrice - (relProduct.regularPrice * (findCategory.categoryOffer / 100));
             }
-            const relFinalPrice = Math.min(relProduct.salesPrice || relProduct.regularPrice, relCategoryOfferPrice);
+
+            let relProductOfferPrice = relProduct.regularPrice;
+            if (relProduct.productOffer && relProduct.productOffer > 0) {
+                relProductOfferPrice = relProduct.regularPrice - (relProduct.regularPrice * (relProduct.productOffer / 100));
+            }
+
+            const relFinalPrice = Math.min(
+                relProduct.regularPrice,
+                relProduct.salePrice || relProduct.regularPrice,
+                relCategoryOfferPrice,
+                relProductOfferPrice
+            );
             
             return {
                 ...relProduct.toObject(),
@@ -52,6 +74,7 @@ const productDetails = async(req,res)=>{
             ...product.toObject(),
             finalPrice,
             categoryOfferPrice,
+            productOfferPrice,
             savings: totalSavings,
             discountPercentage
         };
@@ -62,7 +85,7 @@ const productDetails = async(req,res)=>{
                 id: product._id,
                 name: product.productName,
                 regularPrice: product.regularPrice,
-                salesPrice: product.salesPrice
+                salePrice: product.salePrice
             },
             category: {
                 id: findCategory._id,
@@ -71,6 +94,7 @@ const productDetails = async(req,res)=>{
             },
             calculatedPrices: {
                 categoryOfferPrice,
+                productOfferPrice,
                 finalPrice,
                 totalSavings,
                 discountPercentage

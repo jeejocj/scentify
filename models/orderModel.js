@@ -23,9 +23,22 @@ const orderSchema = new Schema({
             type:Number,
             required:true
         },
-        price:{
+        regularPrice:{
+            type:Number,
+            required:true
+        },
+        finalPrice:{
+            type:Number,
+            required:true
+        },
+        discountPercentage:{
             type:Number,
             default:0
+        },
+        offerType:{
+            type:String,
+            enum:['regular', 'category', 'product', 'sale'],
+            default:'regular'
         }
     }],
     totalPrice:{

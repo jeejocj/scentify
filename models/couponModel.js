@@ -31,10 +31,10 @@ const couponSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
-    userId: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    }]
+    // userId: [{
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'User'
+    // }]
 });
 
 const Coupon = mongoose.model("Coupon", couponSchema);

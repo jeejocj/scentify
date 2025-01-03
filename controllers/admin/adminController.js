@@ -7,6 +7,7 @@ const Category = require("../../models/categoryModel");
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 
+// Handles rendering of the error page for the admin
 const pageerror = async (req, res) => {
   try {
     res.render("admin-error");
@@ -14,6 +15,8 @@ const pageerror = async (req, res) => {
     console.error(error);
   }
 };
+
+// Handles the loading of the admin login page
 
 const loadLogin = (req, res) => {
   try {
@@ -27,6 +30,8 @@ const loadLogin = (req, res) => {
     console.error(error);
   }
 };
+
+// Handles the admin login process
 
 const login = async (req, res) => {
   try {
@@ -161,7 +166,7 @@ async function getTopSellingProducts() {
       {
         $project: {
           _id: 1,
-          name: { $arrayElemAt: ['$productDetails.name', 0] },
+          name: { $arrayElemAt: ['$productDetails.productName', 0] },
           sales: '$totalQuantity'
         }
       }
@@ -233,7 +238,7 @@ const loadSalesReport = async (req, res) => {
       })
       .populate({
         path: 'orderedItems.product',
-        select: 'name price'
+        select: 'productName price regularPrice salesPrice'
       })
       .sort({ createdOn: -1 });
 
@@ -327,7 +332,7 @@ const downloadSalesReport = async (req, res) => {
       })
       .populate({
         path: 'orderedItems.product',
-        select: 'name price'
+        select: 'productName price regularPrice salesPrice'
       })
       .sort({ createdOn: -1 });
 
@@ -336,32 +341,56 @@ const downloadSalesReport = async (req, res) => {
       const workbook = new Excel.Workbook();
       const worksheet = workbook.addWorksheet('Sales Report');
 
-      // Add headers
+      // Add title and period info
+      worksheet.mergeCells('A1:I1');
+      worksheet.getCell('A1').value = 'Sales Report';
+      worksheet.getCell('A1').font = { bold: true, size: 16 };
+      worksheet.getCell('A1').alignment = { horizontal: 'center' };
+
+      worksheet.mergeCells('A2:I2');
+      worksheet.getCell('A2').value = `Period: ${period.charAt(0).toUpperCase() + period.slice(1)}`;
+      worksheet.getCell('A2').font = { bold: true };
+      worksheet.getCell('A2').alignment = { horizontal: 'center' };
+
+      worksheet.mergeCells('A3:I3');
+      worksheet.getCell('A3').value = `Date Range: ${startDateTime.toLocaleDateString()} to ${endDateTime.toLocaleDateString()}`;
+      worksheet.getCell('A3').font = { bold: true };
+      worksheet.getCell('A3').alignment = { horizontal: 'center' };
+
+      worksheet.addRow([]); // Empty row for spacing
+
+      // Add headers with improved widths
       worksheet.columns = [
-        { header: 'Order ID', key: 'orderId', width: 25 },
-        { header: 'Date', key: 'date', width: 15 },
+        { header: 'Order ID', key: 'orderId', width: 12 },
+        { header: 'Date', key: 'date', width: 12 },
         { header: 'Customer', key: 'customer', width: 20 },
-        { header: 'Original Amount', key: 'totalPrice', width: 15 },
-        { header: 'Discount', key: 'discount', width: 15 },
-        { header: 'Final Amount', key: 'finalAmount', width: 15 },
+        { header: 'Products', key: 'products', width: 35 },
+        { header: 'Original', key: 'totalPrice', width: 12 },
+        { header: 'Discount', key: 'discount', width: 12 },
+        { header: 'Final', key: 'finalAmount', width: 12 },
         { header: 'Status', key: 'status', width: 15 },
-        { header: 'Payment Method', key: 'paymentMethod', width: 15 }
+        { header: 'Payment', key: 'paymentMethod', width: 18 }
       ];
 
-      // Style the header row
-      worksheet.getRow(1).font = { bold: true };
-      worksheet.getRow(1).fill = {
+      // Style the header row (now row 5 due to title and period info)
+      worksheet.getRow(5).font = { bold: true };
+      worksheet.getRow(5).fill = {
         type: 'pattern',
         pattern: 'solid',
         fgColor: { argb: 'FFE0E0E0' }
       };
 
-      // Add data
+      // Add data with product details
       orders.forEach(order => {
+        const productsText = order.orderedItems.map(item => 
+          `${item.product?.productName || 'N/A'} (${item.quantity})`
+        ).join(', ');
+
         worksheet.addRow({
           orderId: order.orderId,
           date: new Date(order.createdOn).toLocaleDateString(),
           customer: order.userId?.name || 'N/A',
+          products: productsText,
           totalPrice: order.totalPrice,
           discount: order.totalPrice - order.finalAmount,
           finalAmount: order.finalAmount,
@@ -370,7 +399,19 @@ const downloadSalesReport = async (req, res) => {
         });
       });
 
-      // Add totals row
+      // Style all cells
+      worksheet.eachRow((row, rowNumber) => {
+        row.eachCell((cell) => {
+          cell.alignment = { vertical: 'middle', horizontal: 'left' };
+          if (cell.column === 5 || cell.column === 6 || cell.column === 7) {
+            cell.alignment = { vertical: 'middle', horizontal: 'right' };
+            cell.numFmt = '₹#,##0.00';
+          }
+        });
+        row.height = 25;
+      });
+
+      // Add totals row with formatting
       const totalRow = worksheet.addRow({
         orderId: 'TOTAL',
         totalPrice: orders.reduce((sum, order) => sum + order.totalPrice, 0),
@@ -378,6 +419,19 @@ const downloadSalesReport = async (req, res) => {
         finalAmount: orders.reduce((sum, order) => sum + order.finalAmount, 0)
       });
       totalRow.font = { bold: true };
+      totalRow.height = 25;
+
+      // Set borders for all cells
+      worksheet.eachRow((row) => {
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+        });
+      });
 
       // Set response headers
       res.setHeader(
@@ -431,80 +485,44 @@ const downloadSalesReport = async (req, res) => {
          .fillColor('white')
          .text('Sales Report', 0, 10, { align: 'center' });
 
-      doc.moveDown(2);
-
-      // Add period info with styling
-      doc.fontSize(12)
-         .fillColor('#2C3E50')
-         .text(`Period: ${period.charAt(0).toUpperCase() + period.slice(1)}`, { align: 'left' })
-         .text(`Date Range: ${startDateTime.toLocaleDateString()} to ${endDateTime.toLocaleDateString()}`);
-
       doc.moveDown();
 
-      // Add summary with colored background
-      const totals = {
-        count: orders.length,
-        totalPrice: orders.reduce((sum, order) => sum + order.totalPrice, 0),
-        discount: orders.reduce((sum, order) => sum + (order.totalPrice - order.finalAmount), 0),
-        finalAmount: orders.reduce((sum, order) => sum + order.finalAmount, 0)
-      };
-
-      // Summary box
-      const summaryX = 40;
-      const summaryY = doc.y;
-      const summaryWidth = doc.page.width - 80;
-      const summaryHeight = 120;
-
-      drawColoredRect(summaryX, summaryY, summaryWidth, summaryHeight, '#F5F6FA');
-      doc.roundedRect(summaryX, summaryY, summaryWidth, summaryHeight, 5).stroke('#4A90E2');
-
-      doc.fontSize(16)
-         .fillColor('#2C3E50')
-         .text('Summary', summaryX + 20, summaryY + 15);
-
+      // Add period and date range info with styling
+      const periodInfoY = titleHeight + 20;
+      drawColoredRect(40, periodInfoY, doc.page.width - 80, 60, '#F5F6FA');
+      
       doc.fontSize(12)
-         .fillColor('#34495E')
-         .text(`Total Orders: ${totals.count}`, summaryX + 20, summaryY + 40)
-         .text(`Total Amount: ₹${totals.totalPrice.toFixed(2)}`, summaryX + 20, summaryY + 60)
-         .text(`Total Discount: ₹${totals.discount.toFixed(2)}`, summaryX + 20, summaryY + 80)
-         .text(`Final Amount: ₹${totals.finalAmount.toFixed(2)}`, summaryX + 20, summaryY + 100);
+         .fillColor('#2C3E50')
+         .text(`Period: ${period.charAt(0).toUpperCase() + period.slice(1)}`, 60, periodInfoY + 10, { align: 'left' })
+         .text(`Date Range: ${startDateTime.toLocaleDateString()} to ${endDateTime.toLocaleDateString()}`, 60, periodInfoY + 30, { align: 'left' });
 
       doc.moveDown(2);
 
       // Table settings
       const startX = 40;
       let currentY = doc.y + 20;
-      const lineHeight = 25;
+      const lineHeight = 30;  
       const columnWidths = {
-        orderId: 100,
-        date: 80,
-        customer: 90,
-        products: 120,
-        amount: 80,
-        status: 70,
-        payment: 80
+        orderId: 70,
+        date: 60,
+        customer: 70,
+        products: 120,  
+        amount: 60,
+        status: 60,
+        payment: 80  // Increased width for payment method
       };
 
       // Draw table header
       drawColoredRect(startX, currentY, doc.page.width - 80, lineHeight, '#4A90E2');
-      doc.fillColor('white')
-         .fontSize(10);
-
-      // Header texts with proper alignment
-      let xOffset = startX + 5;
-      doc.text('Order ID', xOffset, currentY + 7, { width: columnWidths.orderId, align: 'left' });
-      xOffset += columnWidths.orderId;
-      doc.text('Date', xOffset, currentY + 7, { width: columnWidths.date, align: 'left' });
-      xOffset += columnWidths.date;
-      doc.text('Customer', xOffset, currentY + 7, { width: columnWidths.customer, align: 'left' });
-      xOffset += columnWidths.customer;
-      doc.text('Products', xOffset, currentY + 7, { width: columnWidths.products, align: 'left' });
-      xOffset += columnWidths.products;
-      doc.text('Amount', xOffset, currentY + 7, { width: columnWidths.amount, align: 'right' });
-      xOffset += columnWidths.amount;
-      doc.text('Status', xOffset, currentY + 7, { width: columnWidths.status, align: 'left' });
-      xOffset += columnWidths.status;
-      doc.text('Payment', xOffset, currentY + 7, { width: columnWidths.payment, align: 'left' });
+      doc.fontSize(10)
+         .fillColor('white')
+         .text('Order ID', startX + 5, currentY + 7, { width: columnWidths.orderId - 10, align: 'left' })
+         .text('Date', startX + columnWidths.orderId + 5, currentY + 7, { width: columnWidths.date - 10, align: 'left' })
+         .text('Customer', startX + columnWidths.orderId + columnWidths.date + 5, currentY + 7, { width: columnWidths.customer - 10, align: 'left' })
+         .text('Products', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + 5, currentY + 7, { width: columnWidths.products - 10, align: 'left' })
+         .text('Amount', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + columnWidths.products + 5, currentY + 7, { width: columnWidths.amount - 10, align: 'right' })
+         .text('Status', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + columnWidths.products + columnWidths.amount + 5, currentY + 7, { width: columnWidths.status - 10, align: 'left' })
+         .text('Payment', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + columnWidths.products + columnWidths.amount + columnWidths.status + 5, currentY + 7, { width: columnWidths.payment - 10, align: 'left' });
 
       currentY += lineHeight;
 
@@ -517,23 +535,15 @@ const downloadSalesReport = async (req, res) => {
           
           // Redraw header on new page
           drawColoredRect(startX, currentY, doc.page.width - 80, lineHeight, '#4A90E2');
-          doc.fillColor('white')
-             .fontSize(10);
-          
-          let headerX = startX + 5;
-          doc.text('Order ID', headerX, currentY + 7, { width: columnWidths.orderId, align: 'left' });
-          headerX += columnWidths.orderId;
-          doc.text('Date', headerX, currentY + 7, { width: columnWidths.date, align: 'left' });
-          headerX += columnWidths.date;
-          doc.text('Customer', headerX, currentY + 7, { width: columnWidths.customer, align: 'left' });
-          headerX += columnWidths.customer;
-          doc.text('Products', headerX, currentY + 7, { width: columnWidths.products, align: 'left' });
-          headerX += columnWidths.products;
-          doc.text('Amount', headerX, currentY + 7, { width: columnWidths.amount, align: 'right' });
-          headerX += columnWidths.amount;
-          doc.text('Status', headerX, currentY + 7, { width: columnWidths.status, align: 'left' });
-          headerX += columnWidths.status;
-          doc.text('Payment', headerX, currentY + 7, { width: columnWidths.payment, align: 'left' });
+          doc.fontSize(10)
+             .fillColor('white')
+             .text('Order ID', startX + 5, currentY + 7, { width: columnWidths.orderId - 10, align: 'left' })
+             .text('Date', startX + columnWidths.orderId + 5, currentY + 7, { width: columnWidths.date - 10, align: 'left' })
+             .text('Customer', startX + columnWidths.orderId + columnWidths.date + 5, currentY + 7, { width: columnWidths.customer - 10, align: 'left' })
+             .text('Products', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + 5, currentY + 7, { width: columnWidths.products - 10, align: 'left' })
+             .text('Amount', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + columnWidths.products + 5, currentY + 7, { width: columnWidths.amount - 10, align: 'right' })
+             .text('Status', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + columnWidths.products + columnWidths.amount + 5, currentY + 7, { width: columnWidths.status - 10, align: 'left' })
+             .text('Payment', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + columnWidths.products + columnWidths.amount + columnWidths.status + 5, currentY + 7, { width: columnWidths.payment - 10, align: 'left' });
           
           currentY += lineHeight;
         }
@@ -563,22 +573,28 @@ const downloadSalesReport = async (req, res) => {
         xOffset += columnWidths.date;
         
         // Customer
-        doc.text(order.userId?.name || 'Guest User', xOffset, currentY + 7, { 
+        doc.text(order.userId?.name || 'N/A', xOffset, currentY + 7, { 
             width: columnWidths.customer - 10, 
             align: 'left' 
         });
         xOffset += columnWidths.customer;
         
-        // Products
+        // Products with proper wrapping
         const productsText = order.orderedItems.map(item => {
-            const productName = item.product?.name || 'Product Unavailable';
+            const productName = item.product?.productName || 'N/A';
             return `${productName} (${item.quantity})`;
-        }).join(', ');
+        }).join('\n');  
         
-        doc.text(productsText || 'No products', xOffset, currentY + 7, {
+        const productLines = doc.heightOfString(productsText, {
             width: columnWidths.products - 10,
-            align: 'left',
-            ellipsis: true
+            align: 'left'
+        });
+        
+        const rowHeight = Math.max(lineHeight, productLines + 14);
+        
+        doc.text(productsText, xOffset, currentY + 7, {
+            width: columnWidths.products - 10,
+            align: 'left'
         });
         xOffset += columnWidths.products;
         
@@ -613,7 +629,7 @@ const downloadSalesReport = async (req, res) => {
                align: 'left' 
            });
 
-        currentY += lineHeight;
+        currentY += rowHeight;
       });
 
       // Add footer

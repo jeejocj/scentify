@@ -158,8 +158,11 @@
                                             <% } else { %>
                                                 <div class="no-image">No Image Available</div>
                                             <% } %>
+                                            <% if (product.quantity <= 0) { %>
+                                                <div class="out-of-stock-badge">Out of Stock</div>
+                                            <% } %>
                                             <div class="product-action">
-                                                <a href="#" class="action-btn" onclick="addToWishlist('<%= product._id %>'); return false;">
+                                                <a href="#" class="action-btn" onclick="addToWishlist('<%= product._id %>')">
                                                     <i class="fas fa-heart"></i>
                                                 </a>
                                                 <a href="/productDetails?id=<%= product._id %>" class="action-btn">
@@ -169,37 +172,35 @@
                                         </div>
                                         <div class="product-card-content">
                                             <h3 class="product-title"><%= product.productName %></h3>
-                                            <div class="product-rating">
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="far fa-star"></i>
-                                            </div>
                                             <div class="product-price">
-                                                <% 
-                                                    const categoryOffer = product.category?.categoryOffer || 0;
-                                                    const productOffer = product.productOffer || 0;
-                                                    const totalOffer = categoryOffer + productOffer;
-                                                    const finalPrice = product.salePrice || (totalOffer > 0 ? 
-                                                        Math.round(product.regularPrice - (product.regularPrice * totalOffer / 100)) : 
-                                                        product.regularPrice);
-                                                %>
-                                                <% if (product.salePrice || totalOffer > 0) { %>
-                                                    <span class="old-price">₹<%= product.regularPrice %></span>
-                                                    <span class="current-price">₹<%= finalPrice %></span>
-                                                <% } else { %>
-                                                    <span class="current-price">₹<%= product.regularPrice %></span>
+                                                <div class="price-container">
+                                                    <% if (product.finalPrice < product.regularPrice) { %>
+                                                        <span class="old-price">₹<%= product.regularPrice.toLocaleString('en-IN') %></span>
+                                                        <span class="current-price">₹<%= product.finalPrice.toLocaleString('en-IN') %></span>
+                                                    <% } else { %>
+                                                        <span class="current-price">₹<%= product.regularPrice.toLocaleString('en-IN') %></span>
+                                                    <% } %>
+                                                </div>
+                                                <% if (product.discountPercentage > 0) { %>
+                                                    <span class="discount-badge">-<%= product.discountPercentage %>% OFF</span>
                                                 <% } %>
                                             </div>
-                                            <a href="#" class="add-cart" data-product-id="<%= product._id %>">+ Add To Cart</a>
+                                            <% if (product.quantity > 0) { %>
+                                                <a href="#" class="add-cart" data-product-id="<%= product._id %>">+ Add To Cart</a>
+                                            <% } else { %>
+                                                <button class="out-of-stock-btn" disabled>Out of Stock</button>
+                                            <% } %>
                                         </div>
                                     </div>
                                 </div>
                             <% }); %>
                         <% } else { %>
-                            <div class="col-12 text-center">
-                                <p>No products found</p>
+                            <div class="col-12">
+                                <div class="no-products-found">
+                                    <i class="fas fa-box-open"></i>
+                                    <h3>No Products Found</h3>
+                                    <p>Try adjusting your search or filter to find what you're looking for.</p>
+                                </div>
                             </div>
                         <% } %>
                     </div>
@@ -319,22 +320,39 @@
 
         .product-price {
             display: flex;
-            justify-content: center;
             align-items: center;
-            gap: 10px;
-            margin: 15px 0;
+            justify-content: space-between;
+            margin: 10px 0;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .price-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .old-price {
-            text-decoration: line-through;
             color: #999;
+            text-decoration: line-through;
             font-size: 14px;
         }
 
         .current-price {
-            color: #ff7f50;
+            color: #ff4757;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 18px;
+        }
+
+        .discount-badge {
+            background-color: #ff4757;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
         }
 
         .add-cart {
@@ -450,128 +468,6 @@
         }
 
         .product__price .old-price {
-            color: #888;
-            text-decoration: line-through;
-            margin-left: 8px;
-            font-size: 14px;
-        }
-
-        .product__item {
-            margin-bottom: 35px;
-        }
-
-        .product__item__pic {
-            height: 260px;
-            position: relative;
-            overflow: hidden;
-            background-position: center;
-            background-size: cover;
-        }
-
-        .product__hover {
-            position: absolute;
-            right: 20px;
-            top: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            opacity: 0;
-            transform: translateX(20px);
-            transition: all 0.3s ease;
-        }
-
-        .product__hover li {
-            list-style: none;
-        }
-
-        .product__hover li a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 45px;
-            height: 45px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-
-        .product__hover li a i {
-            font-size: 18px;
-            color: #111111;
-            transition: all 0.3s ease;
-        }
-
-        .product__hover li a:hover i {
-            color: #ffffff;
-        }
-
-        .product__hover li a:hover {
-            background: #e53637;
-            transform: scale(1.1);
-        }
-
-        .product__item:hover .product__hover {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .product__item__text {
-            padding-top: 25px;
-            text-align: center;
-        }
-
-        .product__item__text h6 {
-            margin-bottom: 12px;
-            font-size: 15px;
-            color: #111111;
-            font-weight: 600;
-        }
-
-        .product__item__text .add-cart {
-            font-size: 15px;
-            color: #e53637;
-            font-weight: 500;
-            text-transform: uppercase;
-            display: inline-block;
-            margin-bottom: 12px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .product__item__text .add-cart:hover {
-            color: #111111;
-        }
-
-        .product__item__text .rating {
-            margin-bottom: 6px;
-        }
-
-        .product__item__text .rating i {
-            font-size: 14px;
-            color: #e3c01c;
-            margin-right: 3px;
-        }
-
-        .product__item__text .rating i.fa-star-o {
-            color: #d6d6d6;
-        }
-
-        .product__item__text .rating i.fa-star-half-o {
-            color: #e3c01c;
-        }
-
-        .product__item__text h5 {
-            color: #0d0d0d;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .new-price {
-            color: #000000;
-        }
-
-        .old-price {
             color: #888;
             text-decoration: line-through;
             margin-left: 8px;
@@ -711,11 +607,74 @@
             text-decoration: line-through;
             color: #999;
             margin-right: 10px;
+            font-size: 14px;
         }
 
         .new-price {
             color: #000000;
             font-weight: bold;
+        }
+
+        .out-of-stock-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .out-of-stock-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 16px;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .product-price {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .old-price {
+            color: #999;
+            text-decoration: line-through;
+            font-size: 14px;
+        }
+
+        .current-price {
+            color: #ff4757;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .no-products-found {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .no-products-found i {
+            font-size: 48px;
+            color: #999;
+            margin-bottom: 20px;
+        }
+
+        .no-products-found h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .no-products-found p {
+            color: #666;
         }
     </style>
 
@@ -754,6 +713,11 @@
                 button.addEventListener('click', async function(e) {
                     e.preventDefault();
                     const productId = this.getAttribute('data-product-id');
+                    if (!productId) {
+                        console.error('Product ID not found');
+                        toastr.error('Error: Product ID not found');
+                        return;
+                    }
                     console.log('Adding product:', productId); // Debug log
 
                     try {
