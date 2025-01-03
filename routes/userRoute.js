@@ -96,8 +96,9 @@ router.get("/orders/:orderId", profileController.getOrderDetails);
 router.post("/orders/cancel", userAuth, orderController.cancelOrder);
 
 // Order Routes
+router.get('/orders', userAuth, orderController.getOrderHistory);
+router.get('/orders/download-invoice/:orderId', userAuth, orderController.downloadInvoice);
 router.get('/orders/get-details/:orderId', userAuth, orderController.getOrderDetailsJson);
-// router.get('/orders/view/:orderId', userAuth, orderController.getOrderDetails);
 router.post('/orders/update-status', userAuth, orderController.updateOrderStatus);
 // router.get('/return-reason', userAuth, orderController.showReturnReasonPage);
 // router.post('/submit-return-reason', userAuth, orderController.submitReturnReason);

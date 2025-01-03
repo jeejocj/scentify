@@ -257,6 +257,14 @@ const loadSalesReport = async (req, res) => {
       returnRequestCount: orders.filter(order => order.status === 'Return Request').length
     };
 
+    // Calculate daily average
+    const daysDiff = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
+    totals.dailyAverage = {
+      orders: totals.count / daysDiff,
+      revenue: totals.finalAmount / daysDiff,
+      delivered: totals.deliveredCount / daysDiff
+    };
+
     // Calculate payment method statistics
     const paymentStats = orders.reduce((acc, order) => {
       acc[order.paymentMethod] = (acc[order.paymentMethod] || 0) + 1;

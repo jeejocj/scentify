@@ -422,65 +422,79 @@
 
 <!-- Order Details Modal -->
 <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="row mb-4">
-          <div class="col-md-6">
-            <h6>Order Information</h6>
-            <p><strong>Order ID:</strong> <span id="modalOrderId"></span></p>
-            <p><strong>Date:</strong> <span id="modalOrderDate"></span></p>
-            <p><strong>Status:</strong> <span id="modalOrderStatus"></span></p>
-            <p>
-              <strong>Payment Method:</strong> 
-              <span id="modalPaymentMethodIcon"></span>
-              <span id="modalPaymentMethod"></span>
-            </p>
-            <p><strong>Total Amount:</strong> ₹<span id="modalOrderTotal"></span></p>
-            <p id="modalOrderDiscount" style="display: none;">
-              <strong>Discount Applied:</strong> ₹<span id="modalDiscountAmount"></span>
-            </p>
-          </div>
-          <div class="col-md-6">
-            <h6>Shipping Address</h6>
-            <div id="modalShippingAddress"></div>
-          </div>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="order-info mb-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Order ID:</strong> <span id="modalOrderId"></span></p>
+                            <p><strong>Order Date:</strong> <span id="modalOrderDate"></span></p>
+                            <p><strong>Status:</strong> <span id="modalOrderStatus" class="badge"></span></p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <a href="#" id="downloadInvoiceBtn" class="btn btn-primary" target="_blank">
+                                <i class="fas fa-download"></i> Download Invoice
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                  <div class="col-md-6">
+                    <h6>Order Information</h6>
+                    <p><strong>Order ID:</strong> <span id="modalOrderId"></span></p>
+                    <p><strong>Date:</strong> <span id="modalOrderDate"></span></p>
+                    <p><strong>Status:</strong> <span id="modalOrderStatus"></span></p>
+                    <p>
+                      <strong>Payment Method:</strong> 
+                      <span id="modalPaymentMethodIcon"></span>
+                      <span id="modalPaymentMethod"></span>
+                    </p>
+                    <p><strong>Total Amount:</strong> ₹<span id="modalOrderTotal"></span></p>
+                    <p id="modalOrderDiscount" style="display: none;">
+                      <strong>Discount Applied:</strong> ₹<span id="modalDiscountAmount"></span>
+                    </p>
+                  </div>
+                  <div class="col-md-6">
+                    <h6>Shipping Address</h6>
+                    <div id="modalShippingAddress"></div>
+                  </div>
+                </div>
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody id="modalOrderItems">
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                        <td>₹<span id="modalSubtotal"></span></td>
+                      </tr>
+                      <tr id="modalDiscountRow" style="display: none;">
+                        <td colspan="3" class="text-end"><strong>Discount:</strong></td>
+                        <td class="text-success">-₹<span id="modalDiscountTotal"></span></td>
+                      </tr>
+                      <tr>
+                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                        <td><strong>₹<span id="modalFinalTotal"></span></strong></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+            </div>
         </div>
-        <div class="table-responsive">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody id="modalOrderItems">
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
-                <td>₹<span id="modalSubtotal"></span></td>
-              </tr>
-              <tr id="modalDiscountRow" style="display: none;">
-                <td colspan="3" class="text-end"><strong>Discount:</strong></td>
-                <td class="text-success">-₹<span id="modalDiscountTotal"></span></td>
-              </tr>
-              <tr>
-                <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                <td><strong>₹<span id="modalFinalTotal"></span></strong></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
     </div>
-  </div>
 </div>
 
 <!-- Return Modal -->
@@ -687,10 +701,15 @@
         // Function to populate modal with order details
         function populateModal(order) {
             // Order Information
-            document.getElementById('modalOrderId').textContent = order.orderId;
+            const orderId = order.orderId;
+            document.getElementById('modalOrderId').textContent = orderId;
             document.getElementById('modalOrderDate').textContent = new Date(order.createdOn).toLocaleDateString();
             document.getElementById('modalOrderStatus').textContent = order.status;
-            
+
+            // Update download invoice button
+            const downloadBtn = document.getElementById('downloadInvoiceBtn');
+            downloadBtn.href = `/orders/download-invoice/${orderId}`;
+
             // Set payment method with icon
             const paymentMethodIcon = document.getElementById('modalPaymentMethodIcon');
             const paymentMethod = order.paymentMethod.toLowerCase();

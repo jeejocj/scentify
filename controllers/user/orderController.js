@@ -4,6 +4,9 @@ const Cart = require("../../models/cartModel");
 const Address = require('../../models/addressModel');
 const Order = require('../../models/orderModel');
 const { addRefundToWallet } = require('./walletController');
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const path = require('path');
 
 const getOrderHistory = async (req, res) => {
     try {
@@ -391,6 +394,222 @@ const getOrderDetailsJson = async (req, res) => {
     }
 };
 
+const downloadInvoice = async (req, res) => {
+    try {
+        if (!req.session.user) {
+            return res.redirect('/login');
+        }
+
+        const orderId = req.params.orderId;
+        
+        // Find the order with populated fields
+        const order = await Order.findById(orderId)
+            .populate('userId')
+            .populate('orderedItems.product')
+            .lean();
+
+        if (!order) {
+            console.error('Order not found:', orderId);
+            return res.status(404).send('Order not found');
+        }
+
+        // Get address details
+        const addressDoc = await Address.findOne({ 
+            userId: req.session.user._id,
+            'address._id': order.address 
+        });
+
+        let shippingAddress = null;
+        if (addressDoc && addressDoc.address) {
+            shippingAddress = addressDoc.address.find(addr => 
+                addr._id.toString() === order.address.toString()
+            );
+        }
+
+        if (!shippingAddress) {
+            console.error('Shipping address not found for order:', orderId);
+            return res.status(404).send('Shipping address not found');
+        }
+
+        // Create a new PDF document
+        const doc = new PDFDocument({
+            size: 'A4',
+            margin: 50
+        });
+
+        // Set response headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=invoice-${orderId}.pdf`);
+
+        // Pipe the PDF to the response
+        doc.pipe(res);
+
+        // Add colored background for header
+        doc.rect(0, 0, doc.page.width, 150)
+           .fill('#487379');
+
+        // Add company logo and header with white text
+        doc.fillColor('white')
+           .fontSize(30)
+           .font('Helvetica-Bold')
+           .text('Scentify', { align: 'center', y: 50 });
+        doc.fontSize(14)
+           .font('Helvetica')
+           .text('Premium Perfumes & Fragrances', { align: 'center' });
+
+        // Add invoice title with a different color
+        doc.fillColor('#487379')
+           .fontSize(24)
+           .font('Helvetica-Bold')
+           .text('INVOICE', { align: 'center', y: 170 });
+
+        // Add order information in a colored box
+        doc.rect(50, 220, doc.page.width - 100, 80)
+           .fill('#f5f5f5');
+
+        doc.fillColor('#333333')
+           .fontSize(10)
+           .font('Helvetica')
+           .text('Order Information:', 70, 230)
+           .font('Helvetica-Bold')
+           .text(`Order ID: ${orderId}`, 70, 250)
+           .text(`Date: ${new Date(order.createdOn).toLocaleDateString()}`, 70, 270)
+           .text(`Payment Method: ${order.paymentMethod || 'N/A'}`, 70, 290);
+
+        // Add customer and shipping info in two columns with colored backgrounds
+        doc.rect(50, 320, (doc.page.width - 120) / 2, 120)
+           .fill('#eef7f8');
+        doc.rect(doc.page.width / 2 + 10, 320, (doc.page.width - 120) / 2, 120)
+           .fill('#eef7f8');
+
+        // Customer Details
+        doc.fillColor('#487379')
+           .fontSize(12)
+           .font('Helvetica-Bold')
+           .text('Customer Details:', 70, 335);
+        
+        doc.fillColor('#333333')
+           .fontSize(10)
+           .font('Helvetica')
+           .text(`Name: ${order.userId?.name || 'N/A'}`, 70, 355)
+           .text(`Email: ${order.userId?.email || 'N/A'}`, 70, 375)
+           .text(`Phone: ${order.userId?.phone || 'N/A'}`, 70, 395);
+
+        // Shipping Address
+        doc.fillColor('#487379')
+           .fontSize(12)
+           .font('Helvetica-Bold')
+           .text('Shipping Address:', doc.page.width / 2 + 30, 335);
+
+        doc.fillColor('#333333')
+           .fontSize(10)
+           .font('Helvetica')
+           .text(`${shippingAddress.name || 'N/A'}`, doc.page.width / 2 + 30, 355)
+           .text(`${shippingAddress.landMark || 'N/A'}`, doc.page.width / 2 + 30, 375)
+           .text(`${shippingAddress.city || 'N/A'}, ${shippingAddress.state || 'N/A'} ${shippingAddress.pincode || 'N/A'}`, doc.page.width / 2 + 30, 395)
+           .text(`Phone: ${shippingAddress.phone || 'N/A'}`, doc.page.width / 2 + 30, 415);
+
+        // Add table header with background
+        const tableTop = 460;
+        doc.rect(50, tableTop, doc.page.width - 100, 25)
+           .fill('#487379');
+
+        doc.fillColor('white')
+           .fontSize(10)
+           .font('Helvetica-Bold')
+           .text('Product', 70, tableTop + 8)
+           .text('Quantity', 270, tableTop + 8)
+           .text('Price', 370, tableTop + 8)
+           .text('Total', 470, tableTop + 8);
+
+        // Add items with alternating background
+        let y = tableTop + 25;
+        let subtotal = 0;
+        
+        if (order.orderedItems && order.orderedItems.length > 0) {
+            order.orderedItems.forEach((item, index) => {
+                if (item.product) {
+                    // Add alternating row background
+                    if (index % 2 === 0) {
+                        doc.rect(50, y, doc.page.width - 100, 20)
+                           .fill('#f9f9f9');
+                    }
+
+                    const itemTotal = (item.finalPrice || 0) * (item.quantity || 0);
+                    subtotal += itemTotal;
+                    
+                    doc.fillColor('#333333')
+                       .font('Helvetica')
+                       .text(item.product.productName || 'N/A', 70, y + 5)
+                       .text(item.quantity?.toString() || '0', 270, y + 5)
+                       .text(`₹${(item.finalPrice || 0).toLocaleString()}`, 370, y + 5)
+                       .text(`₹${itemTotal.toLocaleString()}`, 470, y + 5);
+                    y += 20;
+                }
+            });
+        }
+
+        // Add totals section with colored background
+        y += 20;
+        doc.rect(50, y, doc.page.width - 100, 80)
+           .fill('#f5f5f5');
+
+        doc.fillColor('#333333')
+           .font('Helvetica-Bold')
+           .text('Subtotal:', 370, y + 10)
+           .text(`₹${subtotal.toLocaleString()}`, 470, y + 10);
+
+        const discount = order.discount || 0;
+        if (discount > 0) {
+            doc.fillColor('#487379')
+               .text('Discount:', 370, y + 30)
+               .text(`-₹${discount.toLocaleString()}`, 470, y + 30);
+        }
+
+        const finalAmount = subtotal - discount;
+        doc.fillColor('#487379')
+           .fontSize(12)
+           .text('Total Amount:', 370, y + 50)
+           .text(`₹${finalAmount.toLocaleString()}`, 470, y + 50);
+
+        // Add footer with full width colored background
+        const footerY = y + 120;
+        
+        // First line background
+        doc.rect(0, footerY, doc.page.width, 30)
+           .fill('#487379');
+        
+        // First line text
+        doc.fillColor('white')
+           .fontSize(12)
+           .font('Helvetica-Bold')
+           .text('Thank you for shopping with Scentify!', 0, footerY + 8, {
+               align: 'center',
+               width: doc.page.width
+           });
+
+        // Second line background
+        doc.rect(0, footerY + 30, doc.page.width, 25)
+           .fill('#eef7f8');
+        
+        // Second line text
+        doc.fillColor('#487379')
+           .fontSize(10)
+           .font('Helvetica')
+           .text('This is a computer-generated invoice and does not require a signature.', 0, footerY + 35, {
+               align: 'center',
+               width: doc.page.width
+           });
+
+        // Finalize the PDF
+        doc.end();
+
+    } catch (error) {
+        console.error('Error generating invoice:', error);
+        res.status(500).send('Error generating invoice');
+    }
+};
+
 module.exports = {
     getOrderHistory,
     // getOrderDetails,
@@ -401,5 +620,6 @@ module.exports = {
     updateOrderStatus,
     // showReturnReasonPage,
     // submitReturnReason,
-    getOrderDetailsJson
+    getOrderDetailsJson,
+    downloadInvoice
 };

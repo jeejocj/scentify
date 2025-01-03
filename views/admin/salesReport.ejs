@@ -114,19 +114,18 @@
                 </div>
             </div>
         </div>
-        <!-- <div class="col-12 col-md-6 col-lg-3 mb-4">
+        <div class="col-12 col-md-6 col-lg-3 mb-4">
             <div class="card stats-card h-100 border-warning">
                 <div class="card-body">
                     <h6 class="card-subtitle mb-2 text-muted">Daily Average</h6>
-                    <h3 class="card-title text-warning">
-                        ₹<%= (totals.finalAmount / Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)))).toFixed(2) %>
-                    </h3>
-                    <p class="card-text small">
-                        Orders per day: <%= (totals.count / Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)))).toFixed(1) %>
+                    <p class="card-text">
+                        <strong>Orders:</strong> <%= totals.dailyAverage.orders.toFixed(1) %><br>
+                        <strong>Revenue:</strong> ₹<%= totals.dailyAverage.revenue.toLocaleString('en-IN', { maximumFractionDigits: 2 }) %><br>
+                        <strong>Delivered:</strong> <%= totals.dailyAverage.delivered.toFixed(1) %>
                     </p>
                 </div>
             </div>
-        </div> -->
+        </div>
     </div>
 
     <!-- Filters -->
