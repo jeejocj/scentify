@@ -709,6 +709,19 @@
             // Update download invoice button
             const downloadBtn = document.getElementById('downloadInvoiceBtn');
             downloadBtn.href = `/orders/download-invoice/${orderId}`;
+            
+            // Disable download button for cancelled or returned orders
+            if (order.status === 'Cancelled' || order.status === 'Returned') {
+                downloadBtn.classList.add('disabled');
+                downloadBtn.classList.remove('btn-primary');
+                downloadBtn.classList.add('btn-secondary');
+                downloadBtn.setAttribute('title', 'Invoice not available for cancelled or returned orders');
+            } else {
+                downloadBtn.classList.remove('disabled');
+                downloadBtn.classList.add('btn-primary');
+                downloadBtn.classList.remove('btn-secondary');
+                downloadBtn.removeAttribute('title');
+            }
 
             // Set payment method with icon
             const paymentMethodIcon = document.getElementById('modalPaymentMethodIcon');

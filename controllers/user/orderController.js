@@ -413,6 +413,11 @@ const downloadInvoice = async (req, res) => {
             return res.status(404).send('Order not found');
         }
 
+        // Check if order is cancelled or returned
+        if (order.status === 'Cancelled' || order.status === 'Returned') {
+            return res.status(403).send('Invoice download not available for cancelled or returned orders');
+        }
+
         // Get address details
         const addressDoc = await Address.findOne({ 
             userId: req.session.user._id,

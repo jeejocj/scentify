@@ -13,7 +13,7 @@ const wishlistController = require("../controllers/user/wishlistController");
 const walletController = require("../controllers/user/walletController");
 
 const passport = require("passport");
-const { userAuth,googleAuth } = require("../middlewares/auth");
+const { userAuth } = require("../middlewares/auth");
 
 router.get("/",userController.loadHomepage);
 router.get("/pageNotFound",userController.pageNotFound);

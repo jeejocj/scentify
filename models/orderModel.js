@@ -76,9 +76,19 @@ const orderSchema = new Schema({
         default:Date.now,
         required:true
     },
-    couponApplied:{
-        type:Boolean,
-        default:false
+    couponApplied: {
+        type: Boolean,
+        default: false
+    },
+    couponDetails: {
+        name: {
+            type: String,
+            default: null
+        },
+        discount: {
+            type: Number,
+            default: 0
+        }
     },
     returnReason: {
         type: String,

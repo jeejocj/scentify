@@ -447,15 +447,15 @@
                         </div>
 
                         <div class="checkout__order__subtotal">
-                            Subtotal <span id="subtotal">₹<%= subtotal.toLocaleString('en-IN') %></span>
+                            Subtotal <span id="subtotal">₹<%= parseInt(subtotal).toLocaleString('en-IN') %></span>
                         </div>
                         
-                        <div id="discountRow" class="checkout__order__discount" style="display: <%= discountAmount > 0 ? 'flex' : 'none' %>;">
-                            Discount <span id="discountAmount">-₹<%= discountAmount.toLocaleString('en-IN') %></span>
+                        <div id="discountRow" class="checkout__order__discount" style="display: none;">
+                            Discount <span id="discountAmount">₹0</span>
                         </div>
                         
                         <div class="checkout__order__total">
-                            Total <span id="finalAmount">₹<%= finalAmount.toLocaleString('en-IN') %></span>
+                            Total <span id="finalAmount">₹<%= parseInt(finalAmount).toLocaleString('en-IN') %></span>
                         </div>
 
                         <button type="button" class="site-btn" onclick="placeOrder()">PLACE ORDER</button>
@@ -500,19 +500,23 @@
             if (data.success) {
                 messageDiv.innerHTML = '<div class="alert alert-success">' + data.message + '</div>';
                 
+                // Remove any existing active coupon
+                const existingCoupon = document.querySelector('.active-coupon');
+                if (existingCoupon) {
+                    existingCoupon.remove();
+                }
+                
                 // Show discount row
                 const discountRow = document.getElementById('discountRow');
                 discountRow.style.display = 'flex';
                 
-                // Update discount amount with proper symbol
+                // Update discount amount
                 const discountAmount = document.getElementById('discountAmount');
-                discountAmount.textContent = data.couponType === 'percentage' 
-                    ? `-${data.discountAmount}%` 
-                    : `-₹${parseFloat(data.discountAmount).toLocaleString('en-IN')}`;
+                discountAmount.textContent = `-₹${parseFloat(data.discount).toLocaleString('en-IN')}`;
                 
                 // Update final amount
                 const finalAmount = document.getElementById('finalAmount');
-                finalAmount.textContent = `₹${parseFloat(data.finalAmount).toLocaleString('en-IN')}`;
+                finalAmount.textContent = `₹${parseFloat(data.total).toLocaleString('en-IN')}`;
                 
                 // Show active coupon section
                 const activeCouponHtml = `
@@ -612,8 +616,8 @@
         }
 
         const products = <%- JSON.stringify(products) %>;
-        const subtotal = <%= subtotal %>;
-        const total = <%= finalAmount %>;
+        const subtotal = <%= parseInt(subtotal) %>;
+        const total = <%= parseInt(finalAmount) %>;
 
         const orderData = {
             address: selectedAddress.value,
