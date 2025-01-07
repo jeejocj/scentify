@@ -86,17 +86,22 @@ async function sendVerificationEmail(email,otp) {
     try {
       const {name,phone,email,password,cPassword} = req.body;
       if(password !== cPassword){
+        console.log("password not match")
+        console.log(password,cPassword  )
         return res.render("signup",{message:"Password do not match"});
       }
       const findUser = await User.findOne({email});
       if(findUser){
+        console.log("User already exists")
         return res.render("signup",{message:"User with this mail already exists"})
       }
       const otp = generateOtp();
+      console.log("OTP",otp);
       const emailSent = await sendVerificationEmail(email,otp);
       if(!emailSent){
         return res.json({ error: "email-error" });
       }
+      console.log("Email Sent",emailSent);
       req.session.userOtp = otp;
       req.session.userData = {name,phone,email,password};
       res.render("verify-otp");

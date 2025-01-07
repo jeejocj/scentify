@@ -1,331 +1,239 @@
-<%- include("../../views/partials/user/header") %>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" />
-    <link rel="stylesheet" href="css/elegant-icons.css" type="text/css" />
-    <link rel="stylesheet" href="css/magnific-popup.css" type="text/css" />
-    <link rel="stylesheet" href="css/nice-select.css" type="text/css" />
-    <link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css" />
-    <link rel="stylesheet" href="css/slicknav.min.css" type="text/css" />
-    <link rel="stylesheet" href="css/style.css" type="text/css" />
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-      rel="stylesheet"
-    />
-    <style>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Perfume Boutique Sign-Up Page" />
+    <title>Perfume Boutique - Sign Up</title>
 
-      .header__nav__option .sign-in-link {
-        font-size: 16px;
-        color: #333;
-        margin-right: 15px;
+    <!-- Fonts and Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <style>
+      body {
+        font-family: "Nunito", sans-serif;
+        background: url("https://source.unsplash.com/featured/?perfume") no-repeat center center/cover;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+      }
+
+      .signup-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        padding: 20px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-primary {
+        background: linear-gradient(to right, #f9a826, #e94e77);
+        border: none;
+        transition: background 0.3s ease;
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(to right, #e94e77, #f9a826);
+      }
+
+      .text-danger {
+        font-size: 0.875rem;
+      }
+
+      .form-footer {
+        text-align: center;
+        margin-top: 15px;
+      }
+
+      .form-footer a {
+        color: #e94e77;
         text-decoration: none;
         font-weight: 600;
       }
-      .header__nav__option .sign-in-link:hover {
-        color: #ff7f50;
-      }
-      .signup-section {
-        display: flex;
-        justify-content: space-between;
-        flex-wrap: wrap;
-      }
-      .signup-form,
-      .signup-image {
-        flex: 1;
-        padding: 10px;
-      }
-      .signup-form {
-        max-width: 50%;
-      }
-      .signup-image {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        max-width: 40%;
-      }
-      .signup-image img {
-        max-width: 100%;
-        height: auto;
-      }
 
-      .social-btns {
-  display: flex;
-  flex-direction: row; /* Arrange items horizontally */
-  align-items: center; /* Align items vertically */
-  justify-content: center; /* Center the items horizontally */
-  gap: 10px; /* Add space between buttons */
-}
-
-      .social-btns button,
-.social-btns a {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-}
-      .spacer {
-        height: 30px; /* Adjust the height as needed */
-      }
-      .form-group label {
-        font-size: 0.875rem; /* Decrease label size */
-      }
-      .form-control {
-        font-size: 0.875rem; /* Decrease input text size */
-        padding: 0.5rem; /* Decrease padding */
-      }
-      .btn-primary {
-        padding: 0.5rem 1rem; /* Decrease button padding */
-        font-size: 0.875rem; /* Decrease button text size */
-      }
-      .card-title {
-        font-size: 1.25rem; /* Decrease card title size */
-      }
-      .signup-image .sign-in-link {
-        color: #333;
-        text-decoration: none;
-      }
-      .signup-image .sign-in-link:hover {
-        color: #ff7f50;
-      }
-      .error-message{
-        color: red;
-        font-size: 0.75rem;
-        display: none;
+      .form-footer a:hover {
+        color: #f9a826;
+        text-decoration: underline;
       }
     </style>
   </head>
   <body>
-    <div class="container mt-5 mb-1">
-      <div class="row justify-content-center">
-        <div class="col-md-8">
-          <div class="card">
-            <div class="card-body signup-section">
-              <div class="signup-form">
-                <h3 class="card-title text-center">Sign Up</h3>
+    <div class="signup-card">
+      <h3 class="text-center">Create Your Account</h3>
+      <form id="signupForm" method="post" action="/signup">
 
-                <form method="post" action="/signup" id="signupForm">
-                  <div class="form-group">
-                    <label for="name">Full Name</label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      name="name"
-                      id="name"
-                      placeholder="Enter Name"
-                    />
-                    <div id="error1" class="error-message"></div>
-                  </div>
-                  
-                  <div class="form-group">
-                    <label for="email">Email address</label>
-                    <input
-                      type="email"
-                      class="form-control"
-                      name="email"
-                      id="email"
-                      placeholder="Enter email"
-                    />
-                    <div id="error2" class="error-message"></div>
-                  </div>
-                  <div class="form-group">
-                    <label for="phone">Phone Number</label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      name="phone"
-                      id="phone"
-                      placeholder="Enter phone number"
-                    />
-                    <div id="error3" class="error-message"></div>
-                  </div>
-                  <div class="form-group">
-                    <label for="password">Password</label>
-                    <input
-                      type="password"
-                      class="form-control"
-                      name="password"
-                      id="password"
-                      placeholder="Password"
-                    />
-                    <div id="error4" class="error-message"></div>
-                  </div>
-                  <div class="form-group">
-                    <label for="confirm-password">Confirm Password</label>
-                    <input
-                      type="password"
-                      class="form-control"
-                      id="confirm-password"
-                      name="cPassword"
-                      placeholder="Confirm Password"
-                    />
-                    <div id="error5" class="error-message"></div>
-                  </div>
-                   <%if(locals.message && message.length>0){%>
-              <div class="alert alert-danger text-center">
-                <%=message%>
-              </div>
-              <%}%>
-                  <div
-                    class="d-flex justify-content-between align-items-center"
-                  >
-                    <button type="submit" class="btn btn-primary">
-                      Sign Up
-                    </button>
-                    <div class="mt-1px">
-                      <p>or sign up with</p>
-                    </div>
-                    <div class="social-btns">
-                      <a href="/auth/google" class="btn btn-outline-danger">
-                        <img
-                          src="img/googlesignup.png"
-                          alt="Google Logo"
-                          style="width: 24px; height: 24px"
-                        />
-                      </a>
-                    </div>
-                    
+        <div class="mb-3">
+          <label for="name" class="form-label">Full Name</label>
+          <input type="text" id="name" name="name" class="form-control" placeholder="Enter your full name" />
+          <small id="error1" class="text-danger"></small>
 
-                  </div>
-                </form>
-              </div>
-              <div class="signup-image">
-                <a href="/">
-                  <img src="signupImg.webp" alt="Shopping Site" />
-                </a>
-                <div class="text-center mt-2">
-                  <a href="#" class="sign-in-link"
-                    >Already registered? Log in</a
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
+
+        <div class="mb-3">
+          <label for="email" class="form-label">Email Address</label>
+          <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" />
+          <small id="error2" class="text-danger"></small>
+
+        </div>
+
+        <div class="mb-3">
+          <label for="phone" class="form-label">Phone Number</label>
+          <input type="text" id="phone" name="phone" class="form-control" placeholder="Enter your phone number" />
+          <small id="error3" class="text-danger"></small>
+
+        </div>
+
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" id="password" name="password" class="form-control" placeholder="Enter a strong password" />
+          <small id="error4" class="text-danger"></small>
+
+        </div>
+
+        <div class="mb-3">
+          <label for="confirm-password" class="form-label">Confirm Password</label>
+          <input type="password" id="confirm-password" name="cPassword" class="form-control" placeholder="Re-enter your password" />
+          <small id="error5" class="text-danger"></small>
+
+        </div>
+
+        <%if(locals.message && message.length>0){%>
+
+          <div class="alert alert-danger text-center">
+
+            <%=message%>
+
+        </div>
+          <%}%>
+
+
+        <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+
+        <div class="form-footer">
+          <p>Already have an account? <a href="/login">Log In</a></p>
+        </div>
+      </form>
     </div>
-    <div class="spacer"></div>
-    <%- include("../../views/partials/user/footer") %>
 
-  
-<script>
+    <script>
 
-  const nameid = document.getElementById("name")
-  const emailid = document.getElementById("email")
-  const phoneid = document.getElementById("phone")
-  const passid = document.getElementById("password")
-  const cpassid = document.getElementById("confirm-password")
-  const error1 = document.getElementById("error1")
-  const error2 = document.getElementById("error2")
-  const error3 = document.getElementById("error3")
-  const error4 = document.getElementById("error4")
-  const error5 = document.getElementById("error5")
-  const signform = document.getElementById("signupForm")
-
-
-  function nameValidateChecking(e){
-    const nameval = nameid.value;
-    const namepattern = /^[A-Za-z\s]+$/;
-    if(nameval.trim()===""){
-      error1.style.display="block";
-      error1.innerHTML = "Name is required";
-    }else if(!namepattern.test(nameval)){
-      error1.style.display = "block";
-      error1.innerHTML = "Name can only contain alphabets and spaces";
-    }else{
-      error1.style.display="none"
-      error1.innerHTML=""
-    }
-  }
-
-
-  function emailValidateChecking(e){
-    const emailval = emailid.value;
-    const emailpattern = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-    if(emailval.trim()===""){
-      error2.style.display="block";
-      error2.innerHTML = "Email is required";
-    }else if(!emailpattern.test(emailval)){
-      error2.style.display = "block";
-      error2.innerHTML = "Invalid format";
-    }else{
-      error2.style.display="none"
-      error2.innerHTML=""
-    }
-
-  }
-
-
-  function phoneValidateChecking(e){
-    const phoneval = phoneid.value;
-    if(phoneval.trim()===""){
-      error3.style.display="block";
-      error3.innerHTML = "phone no. is required";
-    }else if(phoneval.length<10 || phoneval.length>10){
-      error3.style.display = "block";
-      error3.innerHTML = "Enter 10 digit";
-    }else{
-      error3.style.display="none"
-      error3.innerHTML=""
-    }
-  }
-
-
-  function passValidateChecking(e){
-    const passval = passid.value;
-    const cpassval = cpassid.value;
-    const alpha = /[a-zA-Z]/;
-    const digit = /\d/;
-    if(passval.trim()===""){
-      error4.style.display="block";
-      error4.innerHTML = "password  is required";
-    }else if(passval.length < 8){
-      error4.style.display = "block";
-      error4.innerHTML = "Should contain atleast 8 characters";
-    }else if(!alpha.test(passval) || !digit.test(passval)){
-      error4.style.display = "block";
-      error4.innerHTML = "Should contain numbers and alphabets";
-    }else{
-      error4.style.display="none"
-      error4.innerHTML=""
-    }
-
-
-
-    if(passval != cpassval){
-      error5.style.display="block";
-      error5.innerHTML = "Password do not match";
-    }else{
-      error5.style.display="none";
-      error5.innerHTML="";
-    }
-  
-  }
-
-  document.addEventListener("DOMContentLoaded",function(){
-    signform.addEventListener("submit",function(e){
-      nameValidateChecking();
-      emailValidateChecking();
-      phoneValidateChecking();
-      passValidateChecking();
-
-
-
-      if(!nameid || !emailid || !phoneid || !passid || !error1 || !error2 || !error3 || !error4 || !error5 || !signform){
-        alert("One or more elements not found")
+      const nameid = document.getElementById("name")
+      const emailid = document.getElementById("email")
+      const phoneid = document.getElementById("phone")
+      const passid = document.getElementById("password")
+      const cpassid = document.getElementById("confirm-password")
+      const error1 = document.getElementById("error1")
+      const error2 = document.getElementById("error2")
+      const error3 = document.getElementById("error3")
+      const error4 = document.getElementById("error4")
+      const error5 = document.getElementById("error5")
+      const signform = document.getElementById("signupForm")
+    
+    
+      function nameValidateChecking(e){
+        const nameval = nameid.value;
+        const namepattern = /^[A-Za-z\s]+$/;
+        if(nameval.trim()===""){
+          error1.style.display="block";
+          error1.innerHTML = "Name is required";
+        }else if(!namepattern.test(nameval)){
+          error1.style.display = "block";
+          error1.innerHTML = "Name can only contain alphabets and spaces";
+        }else{
+          error1.style.display="none"
+          error1.innerHTML=""
+        }
       }
-
-      if(error1.innerHTML || error2.innerHTML || error3.innerHTML || error4.innerHTML || error5.innerHTML){
-        e.preventDefault()
+    
+    
+      function emailValidateChecking(e){
+        const emailval = emailid.value;
+        const emailpattern = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+        if(emailval.trim()===""){
+          error2.style.display="block";
+          error2.innerHTML = "Email is required";
+        }else if(!emailpattern.test(emailval)){
+          error2.style.display = "block";
+          error2.innerHTML = "Invalid format";
+        }else{
+          error2.style.display="none"
+          error2.innerHTML=""
+        }
+    
       }
+    
+    
+      function phoneValidateChecking(e){
+        const phoneval = phoneid.value;
+        if(phoneval.trim()===""){
+          error3.style.display="block";
+          error3.innerHTML = "phone no. is required";
+        }else if(phoneval.length<10 || phoneval.length>10){
+          error3.style.display = "block";
+          error3.innerHTML = "Enter 10 digit";
+        }else{
+          error3.style.display="none"
+          error3.innerHTML=""
+        }
+      }
+    
+    
+      function passValidateChecking(e){
+        const passval = passid.value;
+        const cpassval = cpassid.value;
+        const alpha = /[a-zA-Z]/;
+        const digit = /\d/;
+        if(passval.trim()===""){
+          error4.style.display="block";
+          error4.innerHTML = "password  is required";
+        }else if(passval.length < 8){
+          error4.style.display = "block";
+          error4.innerHTML = "Should contain atleast 8 characters";
+        }else if(!alpha.test(passval) || !digit.test(passval)){
+          error4.style.display = "block";
+          error4.innerHTML = "Should contain numbers and alphabets";
+        }else{
+          error4.style.display="none"
+          error4.innerHTML=""
+        }
+    
+    
+    
+        if(passval != cpassval){
+          error5.style.display="block";
+          error5.innerHTML = "Password do not match";
+        }else{
+          error5.style.display="none";
+          error5.innerHTML="";
+        }
       
-    })
-  })
-
-</script>
+      }
+    
+      document.addEventListener("DOMContentLoaded",function(){
+        signform.addEventListener("submit",function(e){
+          nameValidateChecking();
+          emailValidateChecking();
+          phoneValidateChecking();
+          passValidateChecking();
+    
+    
+    
+          if(!nameid || !emailid || !phoneid || !passid || !error1 || !error2 || !error3 || !error4 || !error5 || !signform){
+            alert("One or more elements not found")
+          }
+    
+          if(error1.innerHTML || error2.innerHTML || error3.innerHTML || error4.innerHTML || error5.innerHTML){
+            e.preventDefault()
+          }
+          
+        })
+      })
+    
+    </script>
+  </body>
+</html>
