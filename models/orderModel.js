@@ -63,6 +63,11 @@ const orderSchema = new Schema({
         enum: ['COD', 'Online Payment', 'Wallet'],
         default: 'COD'
     },
+    paymentStatus: {
+        type: String,
+        enum: ["Pending", "Completed"],
+        default: "Completed"
+    },
     invoiceDate:{
         type:Date
     },

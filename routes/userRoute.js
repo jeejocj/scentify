@@ -53,14 +53,12 @@ router.post("/resend-forgot-otp",profileController.resendOtp);
 router.post("/reset-password",profileController.postNewPassword);
 
 router.get("/userProfile",userAuth,profileController.userProfile);
-router.get("/change-email",userAuth,profileController.changeEmail);
-router.post("/change-email",userAuth,profileController.changeEmailValid);
-router.post("/verify-email-otp",userAuth,profileController.verifyEmailOtp);
-router.post("/update-email",userAuth,profileController.updateEmail)
+
 
 router.get("/change-password", userAuth, profileController.ChangePassword);
 router.post("/change-password", userAuth, profileController.changePasswordValid);
 router.post("/verify-changepassword-otp", userAuth, profileController.verifyChangepassOtp);
+router.post("/resend-changepassword-otp", userAuth, profileController.resendChangePasswordOtp);
 
 router.get("/addAddress",userAuth,profileController.addAddress);
 router.post("/addAddress",userAuth,profileController.postAddAddress);
@@ -88,7 +86,9 @@ router.post("/checkout/apply-coupon", userAuth, checkoutController.applyCoupon);
 router.post("/checkout/remove-coupon", userAuth, checkoutController.removeCoupon);
 router.post("/checkout/place-order", userAuth, checkoutController.postCheckout);
 router.post("/checkout/verify-payment", userAuth, checkoutController.verifyPayment);
-router.get("/checkout/confirmation", userAuth, checkoutController.orderConfirm);
+router.post("/retry-payment", userAuth, checkoutController.retryPayment);
+router.get("/payment-failed", userAuth, checkoutController.paymentFailed);
+router.get("/order-confirmation", userAuth, checkoutController.orderConfirm);
 
 // Profile and Order Routes
 router.get("/profile", profileController.userProfile);

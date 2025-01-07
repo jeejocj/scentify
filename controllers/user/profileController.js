@@ -226,129 +226,6 @@ const changeEmail=async (req,res)=>{
     }
 };
 
-const changeEmailValid=async(req,res)=>{
-    try {
-        const {email} = req.body;
-        const userId = req.session.user;
-        
-        // First check if the entered email matches the user's current email
-        const currentUser = await User.findById(userId);
-        if (!currentUser) {
-            return res.render("change-email", {
-                message: "User not found"
-            });
-        }
-
-        if (currentUser.email !== email) {
-            return res.render("change-email", {
-                message: "The email you entered does not match your current email"
-            });
-        }
-
-        // If email matches, proceed with OTP generation and sending
-        const otp = generateOtp();
-        const emailSent = await sendVerificationEmail(email, otp);
-        if (emailSent) {
-            req.session.userOtp = otp;
-            req.session.userData = req.body;
-            req.session.email = email;
-            res.render("change-email-otp");
-            console.log("EmailSent", email);
-            console.log("OTP", otp);
-        } else {
-            res.render("change-email", {
-                message: "Failed to send verification email. Please try again."
-            });
-        }
-    } catch (error) {
-        console.error("Error in changeEmailValid:", error);
-        res.redirect("/pageNotFound");
-    }
-};
-
-const verifyEmailOtp= async(req,res)=>{
-    try {
-        const enteredOtp=req.body.otp;
-        console.log(enteredOtp)
-        if(enteredOtp===req.session.userOtp){
-            req.session.userData=req.body.userData;
-            res.render("new-email",{
-                userData:req.session.userData,
-            })
-        }else{
-            res.render("change-email-otp",{
-                message:"OTP not matching",
-                userData:req.session.userData
-            })
-        }
-    } catch (error) {
-        res.redirect("/pageNotFound")
-    }
-};
-
-const updateEmail = async (req, res) => {
-    try {
-        const { newEmail, confirmEmail } = req.body;
-        const userId = req.session.user;
-
-        // Basic validation
-        if (!newEmail || !confirmEmail) {
-            return res.render("new-email", {
-                message: "Please fill in all fields"
-            });
-        }
-
-        if (newEmail !== confirmEmail) {
-            return res.render("new-email", {
-                message: "Emails do not match"
-            });
-        }
-
-        // Email format validation
-        const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-        if (!emailPattern.test(newEmail)) {
-            return res.render("new-email", {
-                message: "Please enter a valid email address"
-            });
-        }
-
-        // Get current user
-        const currentUser = await User.findById(userId);
-        if (!currentUser) {
-            return res.render("new-email", {
-                message: "User not found"
-            });
-        }
-
-        // Check if new email is same as current email
-        if (currentUser.email === newEmail) {
-            return res.render("new-email", {
-                message: "New email cannot be the same as your current email"
-            });
-        }
-
-        // Check if email is already in use by another user
-        const existingUser = await User.findOne({ email: newEmail, _id: { $ne: userId } });
-        if (existingUser) {
-            return res.render("new-email", {
-                message: "This email is already registered with another account"
-            });
-        }
-
-        // Update the email
-        await User.findByIdAndUpdate(userId, { email: newEmail });
-        
-        // Render with success message
-        res.render("new-email", { 
-            success: true 
-        });
-    } catch (error) {
-        console.error("Error updating email:", error);
-        res.render("new-email", {
-            message: "An error occurred while updating your email. Please try again."
-        });
-    }
-};
 
 
 
@@ -403,14 +280,52 @@ const changePasswordValid = async (req, res) => {
 
 const verifyChangepassOtp = async (req, res) => {
     try {
-        const enteredOtp = req.body.otp;
-        if (enteredOtp === req.session.userOtp) {
-            res.json({ success: true, redirectUrl: "/reset-password" });
+        const { otp } = req.body;
+        const storedOtp = req.session.userOtp;
+        
+        if (otp === storedOtp) {
+            res.json({ success: true, redirectUrl: '/reset-password' });
         } else {
-            res.json({ success: false, message: "OTP not matching" });
+            res.json({ success: false, message: 'Invalid OTP' });
         }
     } catch (error) {
-        res.status(500).json({ success: false, message: "An error occurred. Please try again later" });
+        console.error("Error in OTP verification:", error);
+        res.json({ success: false, message: 'Error verifying OTP' });
+    }
+};
+
+const resendChangePasswordOtp = async (req, res) => {
+    try {
+        const email = req.session.email;
+        if (!email) {
+            return res.json({
+                success: false,
+                message: "Email not found in session"
+            });
+        }
+
+        const otp = generateOtp();
+        const emailSent = await sendVerificationEmail(email, otp);
+        
+        if (emailSent) {
+            req.session.userOtp = otp;
+            console.log("New OTP", otp);
+            res.json({
+                success: true,
+                message: "OTP sent successfully"
+            });
+        } else {
+            res.json({
+                success: false,
+                message: "Failed to send OTP"
+            });
+        }
+    } catch (error) {
+        console.error("Error in resending OTP:", error);
+        res.json({
+            success: false,
+            message: "Error resending OTP"
+        });
     }
 };
 
@@ -639,13 +554,10 @@ module.exports = {
     resendOtp,
     postNewPassword,
     userProfile,
-    changeEmail,
-    changeEmailValid,
-    verifyEmailOtp,
-    updateEmail,
     ChangePassword,
     changePasswordValid,
     verifyChangepassOtp,
+    resendChangePasswordOtp,
     updatePassword,
     addAddress,
     postAddAddress,

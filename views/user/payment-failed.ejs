@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include("../../views/partials/user/header") %>
+    <style>
+        .payment-failed-container {
+            min-height: 60vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .payment-failed-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        .failed-icon {
+            color: #dc3545;
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        .order-id {
+            background: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-failed-container">
+        <div class="payment-failed-card">
+            <div class="failed-icon">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <h2 class="mb-4">Payment Failed</h2>
+            <p>We're sorry, but your payment could not be processed.</p>
+            <div class="order-id">
+                <p class="mb-0">Order ID: #<%= orderId %></p>
+            </div>
+            <p>Don't worry! Your order has been saved and you can retry the payment from your profile page.</p>
+            <div class="mt-4">
+                <a href="/profile" class="btn btn-primary me-2">Go to Profile</a>
+                <a href="/" class="btn btn-outline-secondary">Continue Shopping</a>
+            </div>
+        </div>
+    </div>
+    <%- include("../../views/partials/user/footer") %>
+</body>
+</html>

@@ -204,7 +204,6 @@
                      <p class="card-text">
                        <strong>Email:</strong><%=user.email%>
                      </p>
-                     <a href="/change-email" class="btn btn-sm btn-success ml-2">Change Email</a>
                      <a href="/change-password" class="btn btn-sm btn-success">Change Password</a>
                    </div>
                  </div>
@@ -296,6 +295,11 @@
                                        class="btn btn-sm btn-warning return-order-btn" 
                                        onclick="showReturnModal('<%= order.orderId %>')">
                                        Return
+                                     </button>
+                                   <% } %>
+                                   <% if (order.paymentStatus === 'Pending' && order.paymentMethod === 'Online Payment') { %>
+                                     <button class="btn btn-warning btn-sm" onclick="retryPayment('<%= order._id %>')">
+                                       Retry Payment
                                      </button>
                                    <% } %>
                                  </td>
@@ -420,7 +424,7 @@
  </section>
 </main>
 
-<!-- Order Details Modal -->
+<!-- Order Details Modal
 <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -445,10 +449,6 @@
                 </div>
                 <div class="row mb-4">
                   <div class="col-md-6">
-                    <h6>Order Information</h6>
-                    <p><strong>Order ID:</strong> <span id="modalOrderId"></span></p>
-                    <p><strong>Date:</strong> <span id="modalOrderDate"></span></p>
-                    <p><strong>Status:</strong> <span id="modalOrderStatus"></span></p>
                     <p>
                       <strong>Payment Method:</strong> 
                       <span id="modalPaymentMethodIcon"></span>
@@ -495,7 +495,172 @@
             </div>
         </div>
     </div>
+</div> -->
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+      <div class="modal-content">
+          <div class="modal-header bg-light py-2">
+              <h5 class="modal-title" id="orderDetailsModalLabel">
+                  <i class="fas fa-shopping-bag me-2"></i>Order Details
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-3">
+              <div class="order-info mb-3 p-2 bg-light rounded">
+                  <div class="row align-items-center">
+                      <div class="col-8">
+                          <div class="d-flex align-items-center mb-1">
+                              <i class="fas fa-hashtag text-primary me-2"></i>
+                              <small><strong>Order ID:</strong> <span id="modalOrderId"></span></small>
+                          </div>
+                          <div class="d-flex align-items-center mb-1">
+                              <i class="far fa-calendar-alt text-primary me-2"></i>
+                              <small><strong>Order Date:</strong> <span id="modalOrderDate"></span></small>
+                          </div>
+                          <div class="d-flex align-items-center">
+                              <i class="fas fa-info-circle text-primary me-2"></i>
+                              <small><strong>Status:</strong> <span id="modalOrderStatus" class="badge ms-1"></span></small>
+                          </div>
+                      </div>
+                      <div class="col-4 text-end">
+                          <a href="#" id="downloadInvoiceBtn" class="btn btn-sm btn-primary" target="_blank">
+                              <i class="fas fa-download me-1"></i>Invoice
+                          </a>
+                      </div>
+                  </div>
+              </div>
+              <div class="row mb-3">
+                  <div class="col-md-6">
+                      <div class="payment-details p-2 bg-light rounded">
+                          <h6 class="border-bottom pb-2 mb-2 fs-7">Payment Info</h6>
+                          <div class="d-flex align-items-center mb-1">
+                              <i class="fas fa-credit-card text-primary me-2"></i>
+                              <small class="mb-0">
+                                  <strong>Method:</strong> 
+                                  <span id="modalPaymentMethodIcon"></span>
+                                  <span id="modalPaymentMethod"></span>
+                              </small>
+                          </div>
+                          <div class="d-flex align-items-center mb-1">
+                              <i class="fas fa-rupee-sign text-primary me-2"></i>
+                              <small class="mb-0"><strong>Amount:</strong> ₹<span id="modalOrderTotal"></span></small>
+                          </div>
+                          <div class="d-flex align-items-center" id="modalOrderDiscount" style="display: none;">
+                              <i class="fas fa-tags text-primary me-2"></i>
+                              <small class="mb-0"><strong>Discount:</strong> ₹<span id="modalDiscountAmount"></span></small>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-6">
+                      <div class="shipping-details p-2 bg-light rounded">
+                          <h6 class="border-bottom pb-2 mb-2 fs-7">
+                              <i class="fas fa-shipping-fast me-2"></i>Shipping Info
+                          </h6>
+                          <div id="modalShippingAddress" class="small"></div>
+                      </div>
+                  </div>
+              </div>
+              <div class="table-responsive">
+                  <table class="table table-sm table-hover">
+                      <thead class="table-light">
+                          <tr>
+                              <th class="py-2">Product</th>
+                              <th class="py-2">Qty</th>
+                              <th class="py-2">Price</th>
+                              <th class="py-2">Total</th>
+                          </tr>
+                      </thead>
+                      <tbody id="modalOrderItems">
+                      </tbody>
+                      <tfoot class="table-light">
+                          <tr>
+                              <td colspan="3" class="text-end py-2"><small><strong>Subtotal:</strong></small></td>
+                              <td class="py-2"><small>₹<span id="modalSubtotal"></span></small></td>
+                          </tr>
+                          <tr id="modalDiscountRow" style="display: none;">
+                              <td colspan="3" class="text-end py-2"><small><strong>Discount:</strong></small></td>
+                              <td class="text-success py-2"><small>-₹<span id="modalDiscountTotal"></span></small></td>
+                          </tr>
+                          <tr>
+                              <td colspan="3" class="text-end py-2"><strong>Total:</strong></td>
+                              <td class="py-2"><strong>₹<span id="modalFinalTotal"></span></strong></td>
+                          </tr>
+                      </tfoot>
+                  </table>
+              </div>
+          </div>
+      </div>
+  </div>
 </div>
+
+<style>
+.modal-content {
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.badge {
+    padding: 0.3em 0.6em;
+    font-weight: 500;
+    font-size: 0.75rem;
+}
+
+.table > :not(caption) > * > * {
+    padding: 0.5rem;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+.text-primary {
+    color: #e94e77 !important;
+}
+
+.btn-primary {
+    background: linear-gradient(to right, #f9a826, #e94e77);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(to right, #e94e77, #f9a826);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.shipping-details, .payment-details {
+    height: 100%;
+}
+
+#modalShippingAddress {
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.fas, .far {
+    width: 16px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.fs-7 {
+    font-size: 0.9rem;
+}
+
+.table-sm td, .table-sm th {
+    font-size: 0.85rem;
+}
+</style>
 
 <!-- Return Modal -->
 <div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
@@ -652,7 +817,7 @@
                         email: '<%= user.email %>',
                     },
                     theme: {
-                        color: '#3399cc'
+                        color: "#3399cc"
                     }
                 };
 
@@ -813,6 +978,131 @@
             });
         });
     });
+
+    async function retryPayment(orderId) {
+        try {
+            const response = await fetch('/retry-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ orderId })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                var options = {
+                    key: data.key_id,
+                    amount: data.amount,
+                    currency: data.currency,
+                    name: data.name,
+                    description: data.description,
+                    order_id: data.order_id,
+                    prefill: data.prefill,
+                    handler: function(payment) {
+                        verifyRetryPayment(payment, orderId);
+                    },
+                    modal: {
+                        ondismiss: function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Payment Cancelled',
+                                text: 'You can retry the payment from your orders page'
+                            });
+                        }
+                    },
+                    theme: {
+                        color: "#3399cc"
+                    }
+                };
+                var rzp = new Razorpay(options);
+                rzp.on('payment.failed', function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Payment Failed',
+                        text: 'You can retry the payment from your orders page'
+                    });
+                });
+                rzp.open();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to initiate payment retry'
+                });
+            }
+        } catch (error) {
+            console.error('Error retrying payment:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to process payment retry'
+            });
+        }
+    }
+
+    function verifyRetryPayment(payment, orderId) {
+        console.log('Verifying payment:', { payment, orderId });
+        
+        const verificationData = {
+            razorpay_payment_id: payment.razorpay_payment_id,
+            razorpay_order_id: payment.razorpay_order_id,
+            razorpay_signature: payment.razorpay_signature,
+            orderId: orderId
+        };
+        
+        $.ajax({
+            url: '/checkout/verify-payment',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            data: JSON.stringify(verificationData),
+            success: function(response) {
+                console.log('Verification response:', response);
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Payment Successful',
+                        text: 'Your payment has been completed successfully',
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    console.error('Payment verification failed:', response.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Payment Failed',
+                        text: response.message || 'Failed to verify payment. Please contact support if amount is deducted.',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                }
+            },
+            error: function(xhr) {
+                console.error('Payment verification error:', xhr.responseText);
+                let errorMessage = 'Failed to verify payment';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.message || errorMessage;
+                } catch (e) {
+                    console.error('Error parsing error response:', e);
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMessage + ' Please contact support if amount is deducted.',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.reload();
+                });
+            }
+        });
+    }
 
     function cancelOrder(orderId) {
         Swal.fire({
@@ -1007,6 +1297,70 @@
 
 .table th {
     background: #f8f9fa;
+}
+
+.modal-content {
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    border-bottom: 2px solid #f8f9fa;
+}
+
+.badge {
+    padding: 0.5em 1em;
+    font-weight: 500;
+}
+
+.table > :not(caption) > * > * {
+    padding: 1rem;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+.text-primary {
+    color: #e94e77 !important;
+}
+
+.btn-primary {
+    background: linear-gradient(to right, #f9a826, #e94e77);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(to right, #e94e77, #f9a826);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.shipping-details, .payment-details {
+    height: 100%;
+}
+
+#modalShippingAddress {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.fas, .far {
+    width: 20px;
+    text-align: center;
+}
+
+.fs-7 {
+    font-size: 0.9rem;
+}
+
+.table-sm td, .table-sm th {
+    font-size: 0.85rem;
 }
 </style>
 

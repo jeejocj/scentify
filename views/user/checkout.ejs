@@ -404,46 +404,42 @@
                             <% }); %>
                         </ul>
 
-                        <div class="discount__content">
-                            <h6>Discount codes</h6>
-                            <div class="coupon-form">
-                                <input type="text" id="couponCode" placeholder="Enter your coupon code">
-                                <button type="button" onclick="applyCoupon()" class="btn btn-primary">Apply</button>
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Apply Coupon</h5>
                             </div>
-                            <div id="couponMessage" class="coupon-message mt-2"></div>
-                            
-                            <% if (activeCoupon) { %>
-                                <div class="active-coupon mt-2">
-                                    <span>Coupon "<%= activeCoupon.name %>" applied</span>
-                                    <button onclick="removeCoupon()" class="btn btn-sm btn-danger">Remove</button>
+                            <div class="card-body">
+                                <div class="input-group mb-3">
+                                    <input type="text" id="couponCode" class="form-control" placeholder="Enter coupon code">
+                                    <button class="btn btn-primary" onclick="applyCoupon()">Apply</button>
                                 </div>
-                            <% } %>
-
-                            <% if (availableCoupons && availableCoupons.length > 0) { %>
-                                <div class="available-coupons mt-3">
-                                    <h6>Available Coupons</h6>
-                                    <div class="coupon-list">
-                                        <% availableCoupons.forEach(coupon => { %>
-                                            <div class="coupon-item" onclick="selectCoupon('<%= coupon.name %>')">
-                                                <div class="coupon-info">
-                                                    <strong><%= coupon.name %></strong>
-                                                    <p class="mb-0">
-                                                        <%= coupon.type === 'percentage' ? `${coupon.offerPrice}% off` : `₹${coupon.offerPrice} off` %>
-                                                    </p>
-                                                    <small>Min. Purchase: ₹<%= coupon.minimumPrice %></small>
-                                                    <small>Expires: <%= new Date(coupon.expireOn).toLocaleDateString() %></small>
-                                                    <% if (coupon.description) { %>
-                                                        <small class="text-muted"><%= coupon.description %></small>
-                                                    <% } %>
+                                <div id="couponMessage"></div>
+                                
+                                <% if (availableCoupons && availableCoupons.length > 0) { %>
+                                    <div class="mt-3">
+                                        <h6>Available Coupons:</h6>
+                                        <div class="coupon-list">
+                                            <% availableCoupons.forEach(coupon => { %>
+                                                <div class="coupon-item border p-2 mb-2 rounded">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <strong><%= coupon.name %></strong>
+                                                            <br>
+                                                            <small>Get ₹<%= coupon.offerPrice %> off</small>
+                                                            <br>
+                                                            <small>Min purchase: ₹<%= coupon.minimumPrice %></small>
+                                                        </div>
+                                                        <button class="btn btn-sm btn-outline-primary" 
+                                                                onclick="applyCouponDirect('<%= coupon.name %>')">
+                                                            Apply
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); applyCouponDirect('<%= coupon.name %>')">
-                                                    Apply
-                                                </button>
-                                            </div>
-                                        <% }); %>
+                                            <% }); %>
+                                        </div>
                                     </div>
-                                </div>
-                            <% } %>
+                                <% } %>
+                            </div>
                         </div>
 
                         <div class="checkout__order__subtotal">
@@ -470,9 +466,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
-    // Debug logging
-    console.log('Products:', <%- JSON.stringify(products) %>);
-
+    // Coupon functionality
     async function applyCoupon() {
         const couponCode = document.getElementById('couponCode').value;
         if (!couponCode.trim()) {
@@ -483,7 +477,7 @@
 
         const subtotalElement = document.getElementById('subtotal');
         const totalAmount = subtotalElement.textContent.replace(/[₹,]/g, '').trim();
-        
+
         try {
             const response = await fetch('/checkout/apply-coupon', {
                 method: 'POST',
@@ -594,6 +588,88 @@
         }
     });
 
+    // Payment handling functions
+    function handlePayment(orderData) {
+        $.ajax({
+            url: '/checkout/place-order',
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            data: JSON.stringify({
+                address: orderData.address,
+                products: orderData.products,
+                subtotal: orderData.subtotal,
+                total: orderData.total,
+                paymentMethod: 'onlinePayment'
+            }),
+            success: function(response) {
+                if (response.success) {
+                    var options = {
+                        key: response.key_id,
+                        amount: response.amount,
+                        currency: response.currency,
+                        name: response.name,
+                        description: response.description,
+                        order_id: response.order_id,
+                        prefill: response.prefill,
+                        handler: function(payment) {
+                            verifyPayment(payment, orderData);
+                        },
+                        modal: {
+                            ondismiss: function() {
+                                window.location.href = `/payment-failed?orderId=${response.orderId}`;
+                            }
+                        },
+                        theme: {
+                            color: "#3399cc"
+                        }
+                    };
+                    var rzp = new Razorpay(options);
+                    rzp.on('payment.failed', function(response) {
+                        window.location.href = `/payment-failed?orderId=${response.orderId}`;
+                    });
+                    rzp.open();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to process order'
+                });
+            }
+        });
+    }
+
+    function verifyPayment(payment, orderData) {
+        $.ajax({
+            url: '/checkout/verify-payment',
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            data: JSON.stringify({
+                razorpay_payment_id: payment.razorpay_payment_id,
+                razorpay_order_id: payment.razorpay_order_id,
+                razorpay_signature: payment.razorpay_signature,
+                orderId: payment.orderId
+            }),
+            success: function(response) {
+                if (response.success) {
+                    window.location.href = `/order-confirmation?orderId=${response.orderId}`;
+                } else {
+                    window.location.href = `/payment-failed?orderId=${response.orderId}`;
+                }
+            },
+            error: function() {
+                window.location.href = `/payment-failed?orderId=${response.orderId}`;
+            }
+        });
+    }
+
     async function placeOrder() {
         const selectedAddress = document.querySelector('input[name="address"]:checked');
         if (!selectedAddress) {
@@ -617,18 +693,20 @@
 
         const products = <%- JSON.stringify(products) %>;
         const subtotal = <%= parseInt(subtotal) %>;
-        const total = <%= parseInt(finalAmount) %>;
+        const finalAmount = document.getElementById('finalAmount').textContent.replace(/[₹,]/g, '').trim();
 
         const orderData = {
             address: selectedAddress.value,
             products: JSON.stringify(products),
             subtotal: subtotal,
-            total: total,
+            total: parseFloat(finalAmount),
             paymentMethod: paymentMethod.value
         };
 
         try {
             if (paymentMethod.value === 'onlinePayment') {
+                handlePayment(orderData);
+            } else {
                 const response = await fetch('/checkout/place-order', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -637,67 +715,7 @@
                 
                 const data = await response.json();
                 if (data.success) {
-                    const options = {
-                        key: data.key_id,
-                        amount: data.amount,
-                        currency: data.currency,
-                        name: data.name,
-                        description: data.description,
-                        order_id: data.order_id,
-                        prefill: data.prefill,
-                        handler: async function (response) {
-                            try {
-                                const verifyResponse = await fetch('/checkout/verify-payment', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        razorpay_order_id: response.razorpay_order_id,
-                                        razorpay_payment_id: response.razorpay_payment_id,
-                                        razorpay_signature: response.razorpay_signature,
-                                        orderDetails: JSON.stringify(orderData)
-                                    })
-                                });
-                                
-                                const verifyData = await verifyResponse.json();
-                                if (verifyData.success) {
-                                    window.location.href = `/checkout/confirmation?orderId=${verifyData.orderId}`;
-                                } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Payment Failed',
-                                        text: verifyData.message || 'Payment verification failed'
-                                    });
-                                }
-                            } catch (error) {
-                                console.error('Error verifying payment:', error);
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'Error verifying payment. Please contact support.'
-                                });
-                            }
-                        }
-                    };
-                    
-                    const rzp = new Razorpay(options);
-                    rzp.open();
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Error creating order'
-                    });
-                }
-            } else if (paymentMethod.value === 'cashOnDelivery') {
-                const response = await fetch('/checkout/place-order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(orderData)
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    window.location.href = `/checkout/confirmation?orderId=${data.orderId}`;
+                    window.location.href = `/order-confirmation?orderId=${data.orderId}`;
                 } else {
                     Swal.fire({
                         icon: 'error',
