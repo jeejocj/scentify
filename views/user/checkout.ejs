@@ -612,7 +612,8 @@
                         order_id: response.order_id,
                         prefill: response.prefill,
                         handler: function(payment) {
-                            verifyPayment(payment, orderData);
+                            payment.orderId = response.orderId;
+                            verifyPayment(payment, response.orderId);
                         },
                         modal: {
                             ondismiss: function() {
@@ -646,7 +647,7 @@
         });
     }
 
-    function verifyPayment(payment, orderData) {
+    function verifyPayment(payment, orderId) {
         $.ajax({
             url: '/checkout/verify-payment',
             method: 'POST',
@@ -655,7 +656,7 @@
                 razorpay_payment_id: payment.razorpay_payment_id,
                 razorpay_order_id: payment.razorpay_order_id,
                 razorpay_signature: payment.razorpay_signature,
-                orderId: payment.orderId
+                orderId: orderId
             }),
             success: function(response) {
                 if (response.success) {
@@ -700,7 +701,8 @@
             products: JSON.stringify(products),
             subtotal: subtotal,
             total: parseFloat(finalAmount),
-            paymentMethod: paymentMethod.value
+            paymentMethod: paymentMethod.value,
+            orderId: paymentMethod.value === 'onlinePayment' ? '' : selectedAddress.value
         };
 
         try {

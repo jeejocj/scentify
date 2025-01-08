@@ -17,7 +17,6 @@ const pageerror = async (req, res) => {
 };
 
 // Handles the loading of the admin login page
-
 const loadLogin = (req, res) => {
   try {
     if (req.session.admin) {
@@ -32,7 +31,6 @@ const loadLogin = (req, res) => {
 };
 
 // Handles the admin login process
-
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -55,129 +53,6 @@ const login = async (req, res) => {
     return res.redirect("/pageerror");
   }
 };
-
-const loadDashboard = async (req, res) => {
-  try {
-    // Get total users (excluding admin)
-    const totalUsers = await User.countDocuments({ isAdmin: { $ne: true } });
-
-    // Get total products
-    const totalProducts = await Product.countDocuments();
-
-    // Get orders and calculate totals
-    const orders = await Order.find();
-    const totalOrders = orders.length;
-
-    // Calculate total revenue from delivered orders only
-    const totalRevenue = orders
-      .filter(order => order.status === 'Delivered')
-      .reduce((acc, order) => acc + (order.finalAmount || 0), 0);
-
-    // Get monthly sales data for chart
-    const monthlyData = await getMonthlyData();
-
-    // Get top selling products
-    const topProducts = await getTopSellingProducts();
-
-    res.render("dashboard", {
-      admin: req.session.admin,
-      totalUsers,
-      totalProducts,
-      totalOrders,
-      totalRevenue,
-      salesData: monthlyData,
-      topProducts
-    });
-
-  } catch (error) {
-    console.error('Error in loadDashboard:', error);
-    res.redirect("/admin/pagerror");
-  }
-};
-
-// Helper function to get monthly sales data
-async function getMonthlyData() {
-  try {
-    const months = [];
-    const values = [];
-
-    // Get last 6 months of data
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date();
-      date.setMonth(date.getMonth() - i);
-      
-      // Get start and end of month
-      const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
-
-      // Get orders for this month
-      const monthlyOrders = await Order.find({
-        createdOn: { $gte: startOfMonth, $lte: endOfMonth },
-        status: 'Delivered'
-      });
-
-      // Calculate total revenue for the month
-      const monthlyRevenue = monthlyOrders.reduce((acc, order) => acc + (order.finalAmount || 0), 0);
-
-      months.push(date.toLocaleString('default', { month: 'short' }));
-      values.push(monthlyRevenue);
-    }
-
-    return {
-      labels: months,
-      values: values
-    };
-  } catch (error) {
-    console.error('Error in getMonthlyData:', error);
-    return { labels: [], values: [] };
-  }
-}
-
-// Helper function to get top selling products
-async function getTopSellingProducts() {
-  try {
-    // Aggregate pipeline to get top 5 selling products
-    const topProducts = await Order.aggregate([
-      // Match only delivered orders
-      { $match: { status: 'Delivered' } },
-      // Unwind the orderItems array
-      { $unwind: '$orderItems' },
-      // Group by product and sum quantities
-      {
-        $group: {
-          _id: '$orderItems.product',
-          totalQuantity: { $sum: '$orderItems.quantity' }
-        }
-      },
-      // Sort by total quantity sold
-      { $sort: { totalQuantity: -1 } },
-      // Limit to top 5
-      { $limit: 5 },
-      // Lookup product details
-      {
-        $lookup: {
-          from: 'products',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'productDetails'
-        }
-      },
-      // Project final format
-      {
-        $project: {
-          _id: 1,
-          name: { $arrayElemAt: ['$productDetails.productName', 0] },
-          sales: '$totalQuantity'
-        }
-      }
-    ]);
-
-    return topProducts;
-  } catch (error) {
-    console.error('Error in getTopSellingProducts:', error);
-    return [];
-  }
-}
 
 const logout = async (req, res) => {
   try {
@@ -664,12 +539,10 @@ const downloadSalesReport = async (req, res) => {
 };
 
 module.exports = {
-
   loadLogin,
   login,
-  loadDashboard,
-  pageerror,
   logout,
+  pageerror,
   loadSalesReport,
   downloadSalesReport
 };

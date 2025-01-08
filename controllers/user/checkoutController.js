@@ -311,7 +311,7 @@ const postCheckout = async (req, res) => {
             
             return res.status(200).json({
                 success: true,
-                orderId: order._id,
+                orderId: order._id.toString(), // Ensure orderId is a string
                 order_id: razorpayOrder.id,
                 key_id: process.env.RAZORPAY_KEY_ID,
                 amount: finalAmount * 100,

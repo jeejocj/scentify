@@ -1,6 +1,65 @@
 <%- include("../../views/partials/admin/header") %>
 
-<section class="content-main">
+<style>
+    .dashboard-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transition: transform 0.2s;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+    }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+    .filter-container {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    .content-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 0.5rem 1rem;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+    .content-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0;
+    }
+    .btn-primary {
+        background-color: #0C977F;
+        border-color: #0C977F;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        background-color: #0a7d6a;
+        border-color: #0a7d6a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(12, 151, 127, 0.2);
+    }
+</style>
+
+<div class="container-fluid p-4">
     <div class="content-header">
         <h2 class="content-title">Dashboard</h2>
         <div>
@@ -8,122 +67,282 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-3">
-            <div class="card card-body mb-4">
-                <article class="icontext">
-                    <span class="icon icon-sm rounded-circle bg-primary-light">
-                        <i class="text-primary material-icons md-monetization_on"></i>
-                    </span>
-                    <div class="text">
-                        <h6 class="mb-1">Total Revenue</h6>
-                        <span>₹<%= typeof totalRevenue !== 'undefined' ? totalRevenue.toLocaleString('en-IN') : '0' %></span>
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <div class="stat-icon bg-primary-light">
+                        <i class="fas fa-money-bill text-primary"></i>
                     </div>
-                </article>
+                    <h6 class="card-title mb-2">Total Revenue</h6>
+                    <h3 class="mb-0">₹<%= typeof totalRevenue !== 'undefined' ? totalRevenue.toLocaleString('en-IN') : '0' %></h3>
+                </div>
             </div>
         </div>
-
-        <div class="col-lg-3">
-            <div class="card card-body mb-4">
-                <article class="icontext">
-                    <span class="icon icon-sm rounded-circle bg-success-light">
-                        <i class="text-success material-icons md-local_shipping"></i>
-                    </span>
-                    <div class="text">
-                        <h6 class="mb-1">Total Orders</h6>
-                        <span><%= typeof totalOrders !== 'undefined' ? totalOrders : '0' %></span>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <div class="stat-icon bg-success-light">
+                        <i class="fas fa-shopping-cart text-success"></i>
                     </div>
-                </article>
+                    <h6 class="card-title mb-2">Total Orders</h6>
+                    <h3 class="mb-0"><%= typeof totalOrders !== 'undefined' ? totalOrders : '0' %></h3>
+                </div>
             </div>
         </div>
-
-        <div class="col-lg-3">
-            <div class="card card-body mb-4">
-                <article class="icontext">
-                    <span class="icon icon-sm rounded-circle bg-warning-light">
-                        <i class="text-warning material-icons md-person"></i>
-                    </span>
-                    <div class="text">
-                        <h6 class="mb-1">Total Users</h6>
-                        <span><%= typeof totalUsers !== 'undefined' ? totalUsers : '0' %></span>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <div class="stat-icon bg-warning-light">
+                        <i class="fas fa-users text-warning"></i>
                     </div>
-                </article>
+                    <h6 class="card-title mb-2">Total Users</h6>
+                    <h3 class="mb-0"><%= typeof totalUsers !== 'undefined' ? totalUsers : '0' %></h3>
+                </div>
             </div>
         </div>
-
-        <div class="col-lg-3">
-            <div class="card card-body mb-4">
-                <article class="icontext">
-                    <span class="icon icon-sm rounded-circle bg-info-light">
-                        <i class="text-info material-icons md-shopping_basket"></i>
-                    </span>
-                    <div class="text">
-                        <h6 class="mb-1">Total Products</h6>
-                        <span><%= typeof totalProducts !== 'undefined' ? totalProducts : '0' %></span>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <div class="stat-icon bg-info-light">
+                        <i class="fas fa-box text-info"></i>
                     </div>
-                </article>
+                    <h6 class="card-title mb-2">Total Products</h6>
+                    <h3 class="mb-0"><%= typeof totalProducts !== 'undefined' ? totalProducts : '0' %></h3>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-xl-8 col-lg-12">
-            <div class="card mb-4">
-                <article class="card-body">
-                    <h5 class="card-title">Sales Statistics</h5>
-                    <canvas id="salesChart" height="120px"></canvas>
-                </article>
+    <!-- Sales Chart -->
+    <div class="card dashboard-card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="card-title">Sales Overview</h5>
+                <div class="filter-container d-flex gap-3">
+                    <select id="chartFilter" class="form-select form-select-sm">
+                        <option value="yearly">Yearly</option>
+                        <option value="monthly" selected>Monthly</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="daily">Daily</option>
+                    </select>
+                    <select id="yearFilter" class="form-select form-select-sm">
+                        <!-- Will be populated dynamically -->
+                    </select>
+                </div>
             </div>
-        </div>
-
-        <div class="col-xl-4 col-lg-12">
-            <div class="card mb-4">
-                <article class="card-body">
-                    <h5 class="card-title">Top Selling Products</h5>
-                    <% if (typeof topProducts !== 'undefined' && topProducts.length > 0) { %>
-                        <ul class="list-group list-group-flush">
-                            <% topProducts.forEach(product => { %>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <%= product.name %>
-                                    <span class="badge bg-primary rounded-pill"><%= product.sales %></span>
-                                </li>
-                            <% }) %>
-                        </ul>
-                    <% } else { %>
-                        <p class="text-muted text-center mt-3">No sales data available</p>
-                    <% } %>
-                </article>
+            <div class="chart-container">
+                <canvas id="salesChart"></canvas>
             </div>
         </div>
     </div>
-</section>
 
+    <!-- Top Products, Categories, and Brands -->
+    <div class="row">
+        <!-- Top Products -->
+        <div class="col-lg-4 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Top Selling Products</h5>
+                    <div class="chart-container mb-3">
+                        <canvas id="topProductsChart"></canvas>
+                    </div>
+                    <div id="topProductsList" class="list-group list-group-flush">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Categories -->
+        <div class="col-lg-4 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Top Categories</h5>
+                    <div class="chart-container mb-3">
+                        <canvas id="topCategoriesChart"></canvas>
+                    </div>
+                    <div id="topCategoriesList" class="list-group list-group-flush">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Brands -->
+        <div class="col-lg-4 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Top Brands</h5>
+                    <div class="chart-container mb-3">
+                        <canvas id="topBrandsChart"></canvas>
+                    </div>
+                    <div id="topBrandsList" class="list-group list-group-flush">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-    // Initialize sales chart if data is available
-    if (typeof salesData !== 'undefined') {
-        const ctx = document.getElementById('salesChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
+let salesChart, topProductsChart, topCategoriesChart, topBrandsChart;
+
+// Initialize all charts
+function initializeCharts() {
+    // Sales Chart
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    salesChart = new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Sales',
+                data: [],
+                borderColor: '#0C977F',
+                backgroundColor: 'rgba(12, 151, 127, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: value => '₹' + value.toLocaleString('en-IN')
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Initialize doughnut charts
+    const chartConfigs = [
+        { id: 'topProductsChart', title: 'Products' },
+        { id: 'topCategoriesChart', title: 'Categories' },
+        { id: 'topBrandsChart', title: 'Brands' }
+    ];
+
+    chartConfigs.forEach(config => {
+        const ctx = document.getElementById(config.id).getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
             data: {
-                labels: salesData.labels,
+                labels: [],
                 datasets: [{
-                    label: 'Sales',
-                    data: salesData.values,
-                    borderColor: 'rgb(75, 192, 192)',
-                    tension: 0.1
+                    data: [],
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                        '#FF9F40', '#FF6B81', '#45AAF2', '#2ED573', '#FFA502'
+                    ]
                 }]
             },
             options: {
                 responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
                     }
                 }
             }
         });
+
+        if (config.id === 'topProductsChart') topProductsChart = chart;
+        else if (config.id === 'topCategoriesChart') topCategoriesChart = chart;
+        else if (config.id === 'topBrandsChart') topBrandsChart = chart;
+    });
+}
+
+// Update charts with new data
+async function updateCharts() {
+    const chartFilter = document.getElementById('chartFilter').value;
+    const yearFilter = document.getElementById('yearFilter').value;
+
+    try {
+        // Fetch and update sales data
+        const salesResponse = await fetch(`/admin/dashboard/sales-data?filter=${chartFilter}&year=${yearFilter}`);
+        const salesData = await salesResponse.json();
+        
+        salesChart.data.labels = salesData.labels;
+        salesChart.data.datasets[0].data = salesData.data;
+        salesChart.update();
+
+        // Fetch and update top products
+        const productsResponse = await fetch('/admin/dashboard/top-products');
+        const productsData = await productsResponse.json();
+        updateTopChart(topProductsChart, productsData, 'topProductsList');
+
+        // Fetch and update top categories
+        const categoriesResponse = await fetch('/admin/dashboard/top-categories');
+        const categoriesData = await categoriesResponse.json();
+        updateTopChart(topCategoriesChart, categoriesData, 'topCategoriesList');
+
+        // Fetch and update top brands
+        const brandsResponse = await fetch('/admin/dashboard/top-brands');
+        const brandsData = await brandsResponse.json();
+        updateTopChart(topBrandsChart, brandsData, 'topBrandsList');
+
+    } catch (error) {
+        console.error('Error updating charts:', error);
     }
+}
+
+// Helper function to update top charts and lists
+function updateTopChart(chart, data, listId) {
+    // Update chart
+    chart.data.labels = data.map(item => item.name);
+    chart.data.datasets[0].data = data.map(item => item.count);
+    chart.update();
+
+    // Update list
+    const list = document.getElementById(listId);
+    list.innerHTML = data.map((item, index) => `
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-primary rounded-pill me-2">#${index + 1}</span>
+                ${item.name}
+            </div>
+            <span class="badge bg-secondary">${item.count} sales</span>
+        </div>
+    `).join('');
+}
+
+// Initialize year filter
+function initializeYearFilter() {
+    const yearFilter = document.getElementById('yearFilter');
+    const currentYear = new Date().getFullYear();
+    for (let year = currentYear; year >= currentYear - 4; year--) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearFilter.appendChild(option);
+    }
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    initializeCharts();
+    initializeYearFilter();
+    updateCharts();
+
+    // Add filter change listeners
+    document.getElementById('chartFilter').addEventListener('change', updateCharts);
+    document.getElementById('yearFilter').addEventListener('change', updateCharts);
+});
 </script>
 
 <%- include("../../views/partials/admin/footer") %>
