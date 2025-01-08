@@ -184,7 +184,7 @@ const addRefundToWallet = async (userId, amount, orderId, description = 'Order r
         const user = await User.findById(userId);
         if (!user.wallet) {
             console.log('Updating user wallet reference');
-            user.wallet = wallet._id;
+            user.wallet = wallet.balance;
             await user.save();
         }
 
