@@ -262,7 +262,7 @@ const postCheckout = async (req, res) => {
         const paymentMethodMap = {
             'cashOnDelivery': 'COD',
             'onlinePayment': 'Online Payment',
-            'wallet': 'Wallet'
+          
         };
 
         const mappedPaymentMethod = paymentMethodMap[paymentMethod];
@@ -279,7 +279,7 @@ const postCheckout = async (req, res) => {
         if (paymentMethod === 'cashOnDelivery' && finalAmount > 1000) {
             return res.status(400).json({ 
                 success: false, 
-                message: "Cash on Delivery is not available for orders above Rs 1000. Please choose online payment or wallet."
+                message: "Cash on Delivery is not available for orders above Rs 1000. Please choose online payment."
             });
         }
 

@@ -256,6 +256,14 @@ function initializeCharts() {
                 plugins: {
                     legend: {
                         display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                return `₹${value.toLocaleString('en-IN')}`;
+                            }
+                        }
                     }
                 }
             }
@@ -303,20 +311,42 @@ async function updateCharts() {
 
 // Helper function to update top charts and lists
 function updateTopChart(chart, data, listId) {
+    if (!data || data.length === 0) {
+        console.log('No data available for', listId);
+        return;
+    }
+
     // Update chart
-    chart.data.labels = data.map(item => item.name);
-    chart.data.datasets[0].data = data.map(item => item.count);
+    chart.data.labels = data.map(item => item.name || 'Unknown');
+    chart.data.datasets[0].data = data.map(item => item.revenue || 0);
     chart.update();
 
-    // Update list
+    // Update list with more detailed information
     const list = document.getElementById(listId);
     list.innerHTML = data.map((item, index) => `
-        <div class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-                <span class="badge bg-primary rounded-pill me-2">#${index + 1}</span>
-                ${item.name}
+        <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <span class="badge bg-primary rounded-pill me-2">#${index + 1}</span>
+                    <strong>${item.name || 'Unknown'}</strong>
+                </div>
             </div>
-            <span class="badge bg-secondary">${item.count} sales</span>
+            <div class="small text-muted">
+                <div class="d-flex justify-content-between">
+                    <span>Sales Count:</span>
+                    <span>${item.count || 0}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Revenue:</span>
+                    <span>₹${(item.revenue || 0).toLocaleString('en-IN')}</span>
+                </div>
+                ${item.uniqueProductCount ? `
+                <div class="d-flex justify-content-between">
+                    <span>Unique Products:</span>
+                    <span>${item.uniqueProductCount}</span>
+                </div>
+                ` : ''}
+            </div>
         </div>
     `).join('');
 }
@@ -337,11 +367,23 @@ function initializeYearFilter() {
 document.addEventListener('DOMContentLoaded', () => {
     initializeCharts();
     initializeYearFilter();
-    updateCharts();
+    
+    // Add error handling for updateCharts
+    updateCharts().catch(error => {
+        console.error('Error updating charts:', error);
+    });
 
     // Add filter change listeners
-    document.getElementById('chartFilter').addEventListener('change', updateCharts);
-    document.getElementById('yearFilter').addEventListener('change', updateCharts);
+    document.getElementById('chartFilter').addEventListener('change', () => {
+        updateCharts().catch(error => {
+            console.error('Error updating charts after filter change:', error);
+        });
+    });
+    document.getElementById('yearFilter').addEventListener('change', () => {
+        updateCharts().catch(error => {
+            console.error('Error updating charts after year change:', error);
+        });
+    });
 });
 </script>
 

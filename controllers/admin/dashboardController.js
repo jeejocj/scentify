@@ -2,6 +2,7 @@ const Order = require('../../models/orderModel');
 const Product = require('../../models/productModel');
 const Category = require('../../models/categoryModel');
 const User = require('../../models/userModel');
+const Brand = require('../../models/brandModel');
 
 // Load dashboard with initial data
 const loadDashboard = async (req, res) => {
@@ -13,7 +14,7 @@ const loadDashboard = async (req, res) => {
         const totalProducts = await Product.countDocuments();
 
         // Get total orders and revenue
-        const orders = await Order.find({ paymentStatus: 'Completed' });
+        const orders = await Order.find({ paymentStatus: 'Completed', status: { $nin: ['Cancelled', 'Returned'] } });
         const totalOrders = orders.length;
         const totalRevenue = orders.reduce((acc, order) => acc + (order.finalAmount || 0), 0);
 
@@ -23,60 +24,102 @@ const loadDashboard = async (req, res) => {
         // Get initial top 10 data
         const [topProducts, topCategories, topBrands] = await Promise.all([
             Order.aggregate([
-                { $match: { paymentStatus: 'Completed' } },
-                { $unwind: '$orderedItems' },
-                {
-                    $group: {
-                        _id: '$orderedItems.productId',
-                        name: { $first: '$orderedItems.name' },
-                        count: { $sum: '$orderedItems.quantity' }
-                    }
-                },
-                { $sort: { count: -1 } },
-                { $limit: 10 }
-            ]),
-            Order.aggregate([
-                { $match: { paymentStatus: 'Completed' } },
+                { $match: { paymentStatus: 'Completed', status: { $nin: ['Cancelled', 'Returned'] } }},
                 { $unwind: '$orderedItems' },
                 {
                     $lookup: {
                         from: 'products',
-                        localField: 'orderedItems.productId',
+                        localField: 'orderedItems.product',
                         foreignField: '_id',
-                        as: 'product'
+                        as: 'productInfo'
                     }
                 },
-                { $unwind: '$product' },
+                { $unwind: '$productInfo' },
                 {
                     $group: {
-                        _id: '$product.category',
-                        name: { $first: '$product.category' },
-                        count: { $sum: '$orderedItems.quantity' }
+                        _id: '$orderedItems.product',
+                        name: { $first: '$productInfo.productName' },
+                        count: { $sum: '$orderedItems.quantity' },
+                        revenue: { $sum: { $multiply: ['$orderedItems.finalPrice', '$orderedItems.quantity'] } }
                     }
                 },
-                { $sort: { count: -1 } },
+                { $sort: { revenue: -1 } },
                 { $limit: 10 }
             ]),
             Order.aggregate([
-                { $match: { paymentStatus: 'Completed' } },
+                { $match: { paymentStatus: 'Completed', status: { $nin: ['Cancelled', 'Returned'] } }},
                 { $unwind: '$orderedItems' },
                 {
                     $lookup: {
                         from: 'products',
-                        localField: 'orderedItems.productId',
+                        localField: 'orderedItems.product',
                         foreignField: '_id',
-                        as: 'product'
+                        as: 'productInfo'
                     }
                 },
-                { $unwind: '$product' },
+                { $unwind: '$productInfo' },
+                {
+                    $lookup: {
+                        from: 'categories',
+                        localField: 'productInfo.category',
+                        foreignField: '_id',
+                        as: 'categoryInfo'
+                    }
+                },
+                { $unwind: '$categoryInfo' },
                 {
                     $group: {
-                        _id: '$product.brand',
-                        name: { $first: '$product.brand' },
-                        count: { $sum: '$orderedItems.quantity' }
+                        _id: '$productInfo.category',
+                        name: { $first: '$categoryInfo.name' },
+                        count: { $sum: '$orderedItems.quantity' },
+                        revenue: { $sum: { $multiply: ['$orderedItems.finalPrice', '$orderedItems.quantity'] } },
+                        uniqueProducts: { $addToSet: '$orderedItems.product' }
                     }
                 },
-                { $sort: { count: -1 } },
+                {
+                    $addFields: {
+                        uniqueProductCount: { $size: '$uniqueProducts' }
+                    }
+                },
+                { $sort: { revenue: -1 } },
+                { $limit: 10 }
+            ]),
+            Order.aggregate([
+                { $match: { paymentStatus: 'Completed', status: { $nin: ['Cancelled', 'Returned'] } }},
+                { $unwind: '$orderedItems' },
+                {
+                    $lookup: {
+                        from: 'products',
+                        localField: 'orderedItems.product',
+                        foreignField: '_id',
+                        as: 'productInfo'
+                    }
+                },
+                { $unwind: '$productInfo' },
+                {
+                    $lookup: {
+                        from: 'brands',
+                        localField: 'productInfo.brand',
+                        foreignField: '_id',
+                        as: 'brandInfo'
+                    }
+                },
+                { $unwind: '$brandInfo' },
+                {
+                    $group: {
+                        _id: '$productInfo.brand',
+                        name: { $first: '$brandInfo.brandName' },
+                        count: { $sum: '$orderedItems.quantity' },
+                        revenue: { $sum: { $multiply: ['$orderedItems.finalPrice', '$orderedItems.quantity'] } },
+                        uniqueProducts: { $addToSet: '$orderedItems.product' }
+                    }
+                },
+                {
+                    $addFields: {
+                        uniqueProductCount: { $size: '$uniqueProducts' }
+                    }
+                },
+                { $sort: { revenue: -1 } },
                 { $limit: 10 }
             ])
         ]);
@@ -86,6 +129,7 @@ const loadDashboard = async (req, res) => {
             {
                 $match: {
                     paymentStatus: 'Completed',
+                    status: { $nin: ['Cancelled', 'Returned'] },
                     createdOn: {
                         $gte: new Date(currentYear, 0, 1),
                         $lt: new Date(currentYear + 1, 0, 1)
@@ -149,7 +193,8 @@ const getSalesData = async (req, res) => {
                                     $gte: new Date(startYear - i, 0, 1),
                                     $lt: new Date(startYear - i + 1, 0, 1)
                                 },
-                                paymentStatus: 'Completed'
+                                paymentStatus: 'Completed',
+                                status: { $nin: ['Cancelled', 'Returned'] }
                             }
                         },
                         {
@@ -174,7 +219,8 @@ const getSalesData = async (req, res) => {
                                     $gte: new Date(startYear, month, 1),
                                     $lt: new Date(startYear, month + 1, 1)
                                 },
-                                paymentStatus: 'Completed'
+                                paymentStatus: 'Completed',
+                                status: { $nin: ['Cancelled', 'Returned'] }
                             }
                         },
                         {
@@ -205,7 +251,8 @@ const getSalesData = async (req, res) => {
                                     $gte: startDate,
                                     $lt: endDate
                                 },
-                                paymentStatus: 'Completed'
+                                paymentStatus: 'Completed',
+                                status: { $nin: ['Cancelled', 'Returned'] }
                             }
                         },
                         {
@@ -231,7 +278,8 @@ const getSalesData = async (req, res) => {
                                     $gte: new Date(startYear, new Date().getMonth(), day),
                                     $lt: new Date(startYear, new Date().getMonth(), day + 1)
                                 },
-                                paymentStatus: 'Completed'
+                                paymentStatus: 'Completed',
+                                status: { $nin: ['Cancelled', 'Returned'] }
                             }
                         },
                         {
@@ -258,19 +306,33 @@ const getSalesData = async (req, res) => {
 const getTopProducts = async (req, res) => {
     try {
         const topProducts = await Order.aggregate([
-            { $match: { paymentStatus: 'Completed' } },
+            { $match: { 
+                paymentStatus: 'Completed',
+                status: { $nin: ['Cancelled', 'Returned'] }
+            }},
             { $unwind: '$orderedItems' },
             {
-                $group: {
-                    _id: '$orderedItems.productId',
-                    name: { $first: '$orderedItems.name' },
-                    count: { $sum: '$orderedItems.quantity' }
+                $lookup: {
+                    from: 'products',
+                    localField: 'orderedItems.product',
+                    foreignField: '_id',
+                    as: 'productInfo'
                 }
             },
-            { $sort: { count: -1 } },
+            { $unwind: '$productInfo' },
+            {
+                $group: {
+                    _id: '$orderedItems.product',
+                    name: { $first: '$productInfo.productName' },
+                    count: { $sum: '$orderedItems.quantity' },
+                    revenue: { $sum: { $multiply: ['$orderedItems.finalPrice', '$orderedItems.quantity'] } }
+                }
+            },
+            { $sort: { revenue: -1 } },
             { $limit: 10 }
         ]);
 
+        console.log('Top Products:', JSON.stringify(topProducts, null, 2));
         res.json(topProducts);
     } catch (error) {
         console.error('Error getting top products:', error);
@@ -282,28 +344,50 @@ const getTopProducts = async (req, res) => {
 const getTopCategories = async (req, res) => {
     try {
         const topCategories = await Order.aggregate([
-            { $match: { paymentStatus: 'Completed' } },
+            { 
+                $match: { 
+                    paymentStatus: 'Completed',
+                    status: { $nin: ['Cancelled', 'Returned'] }
+                }
+            },
             { $unwind: '$orderedItems' },
             {
                 $lookup: {
                     from: 'products',
-                    localField: 'orderedItems.productId',
+                    localField: 'orderedItems.product',
                     foreignField: '_id',
-                    as: 'product'
+                    as: 'productInfo'
                 }
             },
-            { $unwind: '$product' },
+            { $unwind: '$productInfo' },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'productInfo.category',
+                    foreignField: '_id',
+                    as: 'categoryInfo'
+                }
+            },
+            { $unwind: '$categoryInfo' },
             {
                 $group: {
-                    _id: '$product.category',
-                    name: { $first: '$product.category' },
-                    count: { $sum: '$orderedItems.quantity' }
+                    _id: '$productInfo.category',
+                    name: { $first: '$categoryInfo.name' },
+                    count: { $sum: '$orderedItems.quantity' },
+                    revenue: { $sum: { $multiply: ['$orderedItems.finalPrice', '$orderedItems.quantity'] } },
+                    uniqueProducts: { $addToSet: '$orderedItems.product' }
                 }
             },
-            { $sort: { count: -1 } },
+            {
+                $addFields: {
+                    uniqueProductCount: { $size: '$uniqueProducts' }
+                }
+            },
+            { $sort: { revenue: -1 } },
             { $limit: 10 }
         ]);
 
+        console.log('Top Categories:', JSON.stringify(topCategories, null, 2));
         res.json(topCategories);
     } catch (error) {
         console.error('Error getting top categories:', error);
@@ -315,28 +399,50 @@ const getTopCategories = async (req, res) => {
 const getTopBrands = async (req, res) => {
     try {
         const topBrands = await Order.aggregate([
-            { $match: { paymentStatus: 'Completed' } },
+            { 
+                $match: { 
+                    paymentStatus: 'Completed',
+                    status: { $nin: ['Cancelled', 'Returned'] }
+                }
+            },
             { $unwind: '$orderedItems' },
             {
                 $lookup: {
                     from: 'products',
-                    localField: 'orderedItems.productId',
+                    localField: 'orderedItems.product',
                     foreignField: '_id',
-                    as: 'product'
+                    as: 'productInfo'
                 }
             },
-            { $unwind: '$product' },
+            { $unwind: '$productInfo' },
+            {
+                $lookup: {
+                    from: 'brands',
+                    localField: 'productInfo.brand',
+                    foreignField: '_id',
+                    as: 'brandInfo'
+                }
+            },
+            { $unwind: '$brandInfo' },
             {
                 $group: {
-                    _id: '$product.brand',
-                    name: { $first: '$product.brand' },
-                    count: { $sum: '$orderedItems.quantity' }
+                    _id: '$productInfo.brand',
+                    name: { $first: '$brandInfo.brandName' },
+                    count: { $sum: '$orderedItems.quantity' },
+                    revenue: { $sum: { $multiply: ['$orderedItems.finalPrice', '$orderedItems.quantity'] } },
+                    uniqueProducts: { $addToSet: '$orderedItems.product' }
                 }
             },
-            { $sort: { count: -1 } },
+            {
+                $addFields: {
+                    uniqueProductCount: { $size: '$uniqueProducts' }
+                }
+            },
+            { $sort: { revenue: -1 } },
             { $limit: 10 }
         ]);
 
+        console.log('Top Brands:', JSON.stringify(topBrands, null, 2));
         res.json(topBrands);
     } catch (error) {
         console.error('Error getting top brands:', error);
