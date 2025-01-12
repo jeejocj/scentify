@@ -1,36 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <%- include("../../views/partials/user/header") %>
-    <style>
-        .payment-failed-container {
-            min-height: 60vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Failed - Scentify</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Inter', sans-serif;
+    }
+
+    body {
+        background-color: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    .payment-failed-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .payment-failed-card {
+        background: #fff;
+        border-radius: 15px;
+        padding: 3rem 2rem;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        max-width: 550px;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .payment-failed-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(to right, #ff6b6b, #dc3545);
+    }
+
+    .failed-icon {
+        width: 90px;
+        height: 90px;
+        background: #fff3f3;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        position: relative;
+    }
+
+    .failed-icon i {
+        color: #dc3545;
+        font-size: 45px;
+    }
+
+    .failed-icon::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 2px solid #dc3545;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
         }
+        50% {
+            transform: scale(1.2);
+            opacity: 0.5;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .payment-failed-card h2 {
+        color: #2d3436;
+        font-size: 28px;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .payment-failed-card p {
+        color: #636e72;
+        font-size: 16px;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .order-id {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 1.5rem 0;
+        border: 1px dashed #dee2e6;
+    }
+
+    .order-id p {
+        margin: 0;
+        color: #2d3436;
+        font-weight: 500;
+        font-size: 15px;
+    }
+
+    .error-message {
+        background: #fff3f3;
+        color: #dc3545;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        margin: 1.5rem 0;
+        font-size: 15px;
+        border: 1px solid #ffcdd2;
+        text-align: left;
+    }
+
+    .error-message strong {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .btn-primary {
+        background: #2d3436;
+        color: #fff;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: #2d3436;
+        border: 2px solid #2d3436;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-primary:hover {
+        background: #1e2528;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-outline:hover {
+        background: #f5f6f7;
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 576px) {
         .payment-failed-card {
-            background: #fff;
-            border-radius: 10px;
-            padding: 2rem;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
-            width: 100%;
+            padding: 2rem 1.5rem;
         }
+
         .failed-icon {
-            color: #dc3545;
-            font-size: 4rem;
-            margin-bottom: 1rem;
+            width: 70px;
+            height: 70px;
         }
-        .order-id {
-            background: #f8f9fa;
-            padding: 0.5rem;
-            border-radius: 5px;
-            margin: 1rem 0;
+
+        .failed-icon i {
+            font-size: 35px;
         }
-    </style>
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-primary, .btn-outline {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
 </head>
 <body>
     <div class="payment-failed-container">
@@ -38,18 +207,27 @@
             <div class="failed-icon">
                 <i class="fas fa-times-circle"></i>
             </div>
-            <h2 class="mb-4">Payment Failed</h2>
-            <p>We're sorry, but your payment could not be processed.</p>
+            <h2>Payment Failed</h2>
+            <p>We're sorry, but your payment could not be processed successfully.</p>
+            
             <div class="order-id">
-                <p class="mb-0">Order ID: #<%= orderId %></p>
+                <p>Order ID: #<%= orderId %></p>
             </div>
+            
+            <% if (locals.error) { %>
+                <div class="error-message">
+                    <strong>Error Details:</strong>
+                    <%= error %>
+                </div>
+            <% } %>
+            
             <p>Don't worry! Your order has been saved and you can retry the payment from your profile page.</p>
-            <div class="mt-4">
-                <a href="/profile" class="btn btn-primary me-2">Go to Profile</a>
-                <a href="/" class="btn btn-outline-secondary">Continue Shopping</a>
+            
+            <div class="action-buttons">
+                <a href="/profile" class="btn-primary">Go to Profile</a>
+                <a href="/" class="btn-outline">Continue Shopping</a>
             </div>
         </div>
     </div>
-    <%- include("../../views/partials/user/footer") %>
 </body>
 </html>

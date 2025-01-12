@@ -31,8 +31,6 @@ router.post("/addCategoryOffer",adminAuth,categoryController.addCategoryOffer)
 router.post("/removeCategoryOffer",adminAuth,categoryController.removeCategoryOffer)
 router.get("/listCategory",adminAuth,categoryController.getListCategory)
 router.get("/unlistCategory",adminAuth,categoryController.getUnListCategory)
-router.get("/editCategory",adminAuth,categoryController.getEditCategory)
-router.post("/editCategory/:id",adminAuth,categoryController.editCategory)
 
 // Brand routes
 router.get("/brands",adminAuth,brandController.getBrandPage)
@@ -51,10 +49,7 @@ router.get("/editProduct/:id", adminAuth, productController.getEditProduct);
 router.post('/product/edit/:id', 
     uploads.array('productImage', 4),
     productController.updateProduct
-);
-router.post("/deleteImage", adminAuth, productController.deleteSingleImage);
-router.post("/addProductImage", adminAuth, uploads.single("images"), productController.addProductImage);
-
+)
 // Order Management Routes
 router.get("/orderList", adminAuth, orderController.listOrders);
 router.get("/orders/cancelled", adminAuth, orderController.getCancelledOrders);
@@ -64,9 +59,8 @@ router.post("/orders/update-status", adminAuth, orderController.updateOrderStatu
 // Coupon Routes
 router.get("/coupon", adminAuth, couponController.loadcoupon);
 router.post("/createCoupon", adminAuth, couponController.createCoupon);
-router.get("/editCoupon", adminAuth, couponController.editCoupon);
-router.post("/updateCoupon", adminAuth, couponController.updateCoupon);
-router.delete("/deleteCoupon/:id", adminAuth, couponController.deleteCoupon);
+router.put("/coupon/list/:id", adminAuth, couponController.listCoupon);
+router.put("/coupon/unlist/:id", adminAuth, couponController.unlistCoupon);
 
 // Dashboard routes
 router.get("/", adminAuth, dashboardController.loadDashboard);

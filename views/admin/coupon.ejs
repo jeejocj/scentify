@@ -73,6 +73,9 @@
 .add-coupon-btn i {
     margin-right: 5px;
 }
+
+
+
 </style>
 
 <section class="content-main">
@@ -113,36 +116,39 @@
                                     const startDate = new Date(coupon.createdOn);
                                     const expiryDate = new Date(coupon.expireOn);
                                     
-                                    // Reset time parts to compare only dates
-                                    now.setHours(0, 0, 0, 0);
-                                    startDate.setHours(0, 0, 0, 0);
-                                    expiryDate.setHours(0, 0, 0, 0);
-                                    
-                                    let status, badgeClass;
+                                    let timeStatus, timeBadgeClass;
                                     
                                     if (now < startDate) {
-                                        status = 'Upcoming';
-                                        badgeClass = 'warning';
+                                        timeStatus = 'Upcoming';
+                                        timeBadgeClass = 'warning';
                                     } else if (now > expiryDate) {
-                                        status = 'Expired';
-                                        badgeClass = 'danger';
+                                        timeStatus = 'Expired';
+                                        timeBadgeClass = 'danger';
                                     } else {
-                                        status = 'Active';
-                                        badgeClass = 'success';
+                                        timeStatus = 'Active';
+                                        timeBadgeClass = 'success';
                                     }
                                 %>
-                                <span class="badge bg-<%= badgeClass %>">
-                                    <%= status %>
-                                </span>
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-<%= timeBadgeClass %>">
+                                        <%= timeStatus %>
+                                    </span>
+                                    <span class="badge bg-<%= coupon.isListed ? 'info' : 'secondary' %>">
+                                        <%= coupon.isListed ? 'Listed' : 'Unlisted' %>
+                                    </span>
+                                </div>
                             </td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <button class="btn btn-sm btn-outline-primary" onclick="editCoupon('<%= coupon._id %>')">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteCoupon('<%= coupon._id %>')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <% if(coupon.isListed) { %>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="unlistCoupon('<%= coupon._id %>')">
+                                            Unlist
+                                        </button>
+                                    <% } else { %>
+                                        <button class="btn btn-sm btn-outline-success" onclick="listCoupon('<%= coupon._id %>')">
+                                            List
+                                        </button>
+                                    <% } %>
                                 </div>
                             </td>
                         </tr>
@@ -350,38 +356,76 @@
         startDateInput.value = today.toISOString().split("T")[0];
     }
 
-    function editCoupon(couponId) {
-        window.location.href = `/admin/editcoupon?id=${couponId}`;
-    }
-
-    function deleteCoupon(couponId) {
+    function listCoupon(couponId) {
         Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
+            title: 'List Coupon',
+            text: "Are you sure you want to list this coupon?",
+            icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
+            confirmButtonColor: '#28a745',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
+            confirmButtonText: 'Yes, list it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                fetch(`/admin/deletecoupon/${couponId}`, {
-                    method: 'DELETE'
+                fetch(`/admin/coupon/list/${couponId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         Swal.fire(
-                            'Deleted!',
-                            'Coupon has been deleted.',
+                            'Listed!',
+                            'Coupon has been listed successfully.',
                             'success'
                         ).then(() => {
-                            window.location.reload();
+                            location.reload();
                         });
                     } else {
                         Swal.fire(
                             'Error!',
-                            'Failed to delete coupon.',
+                            data.message || 'Failed to list coupon',
+                            'error'
+                        );
+                    }
+                });
+            }
+        });
+    }
+
+    function unlistCoupon(couponId) {
+        Swal.fire({
+            title: 'Unlist Coupon',
+            text: "Are you sure you want to unlist this coupon?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, unlist it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/admin/coupon/unlist/${couponId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire(
+                            'Unlisted!',
+                            'Coupon has been unlisted successfully.',
+                            'success'
+                        ).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire(
+                            'Error!',
+                            data.message || 'Failed to unlist coupon',
                             'error'
                         );
                     }

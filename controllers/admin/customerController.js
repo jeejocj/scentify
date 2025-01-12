@@ -5,7 +5,7 @@ const customerInfo = async (req, res) => {
         let search = req.query.search || "";
         let page = parseInt(req.query.page) || 1; 
         if (page < 1) page = 1; 
-        const limit = 4; 
+        const limit = 3; 
         const userData = await User.find({
             isAdmin: false,
             $or: [

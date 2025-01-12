@@ -27,7 +27,7 @@ const couponSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
-    isList: {
+    isListed: {
         type: Boolean,
         default: true
     },

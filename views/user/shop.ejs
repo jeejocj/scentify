@@ -195,26 +195,41 @@
                                 </div>
                             <% }); %>
                         <% } else { %>
-                            <div class="col-12">
-                                <div class="no-products-found">
-                                    <i class="fas fa-box-open"></i>
-                                    <h3>No Products Found</h3>
-                                    <p>Try adjusting your search or filter to find what you're looking for.</p>
-                                </div>
+                            <div class="col-12 text-center">
+                                <p>No products found.</p>
                             </div>
                         <% } %>
                     </div>
-                    <!-- <div class="row">
+                    <!-- Pagination Controls -->
+                    <div class="row">
                         <div class="col-lg-12">
-                            <div class="product__pagination">
-                                <a class="active" href="#">1</a>
-                                <a href="#">2</a>
-                                <a href="#">3</a>
-                                <span>...</span>
-                                <a href="#">21</a>
+                            <div class="product__pagination d-flex justify-content-center mt-5">
+                                <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                                    <% const currentPage = parseInt(query.page) || 1 %>
+                                    
+                                    <% if (currentPage > 1) { %>
+                                        <a href="#" class="pagination-link" data-page="<%= currentPage - 1 %>">
+                                            <i class="fa fa-angle-left"></i>
+                                        </a>
+                                    <% } %>
+                                    
+                                    <% for(let i = 1; i <= totalPages; i++) { %>
+                                        <a href="#" 
+                                           class="pagination-link <%= currentPage === i ? 'active' : '' %>"
+                                           data-page="<%= i %>">
+                                            <%= i %>
+                                        </a>
+                                    <% } %>
+                                    
+                                    <% if (currentPage < totalPages) { %>
+                                        <a href="#" class="pagination-link" data-page="<%= currentPage + 1 %>">
+                                            <i class="fa fa-angle-right"></i>
+                                        </a>
+                                    <% } %>
+                                <% } %>
                             </div>
                         </div>
-                    </div> -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -652,9 +667,9 @@
         }
 
         .current-price {
-            color: #ff4757;
-            font-weight: bold;
             font-size: 18px;
+            font-weight: 600;
+            color: #333;
         }
 
         .no-products-found {
@@ -1006,6 +1021,25 @@
                 // Keep other filters if they exist
                 const newUrl = `/shop?${urlParams.toString()}`;
                 window.location.href = newUrl;
+            });
+
+            // Handle pagination clicks
+            document.querySelectorAll('.pagination-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.dataset.page;
+                    
+                    // Get current URL and parameters
+                    const url = new URL(window.location.href);
+                    const params = new URLSearchParams(url.search);
+                    
+                    // Update or add page parameter
+                    params.set('page', page);
+                    
+                    // Update URL and reload
+                    url.search = params.toString();
+                    window.location.href = url.toString();
+                });
             });
         });
 

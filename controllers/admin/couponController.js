@@ -3,8 +3,8 @@ const Coupon = require("../../models/couponModel");
 
 const loadcoupon = async (req, res) => {
     try {
-        const coupons = await Coupon.find(); 
-        res.render('coupon', { coupons }); // Pass coupons to the view
+        const coupons = await Coupon.find();
+        res.render('coupon', { coupons });
     } catch (error) {
         console.error(error);
         res.status(500).send('Server error');
@@ -13,7 +13,6 @@ const loadcoupon = async (req, res) => {
 
 const createCoupon = async (req, res) => {
     try {
-        // 1. Destructure all required fields from req.body
         const {
             couponName,
             startDate,
@@ -22,24 +21,13 @@ const createCoupon = async (req, res) => {
             minimumPrice
         } = req.body;
 
-        // 2. Log the received data
-        console.log('Received Coupon Data:', {
-            couponName,
-            startDate,
-            endDate,
-            offerPrice,
-            minimumPrice
-        });
-
-        // 3. Validate all required fields are present
         if (!couponName || !startDate || !endDate || !offerPrice || !minimumPrice) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid input: All fields are required."
+                message: "All fields are required."
             });
         }
 
-        // 4. Convert and validate dates
         const parsedStartDate = new Date(startDate + "T00:00:00");
         const parsedEndDate = new Date(endDate + "T00:00:00");
 
@@ -57,168 +45,127 @@ const createCoupon = async (req, res) => {
             });
         }
 
-        // 5. Validate price fields
         const parsedOfferPrice = parseInt(offerPrice);
         const parsedMinimumPrice = parseInt(minimumPrice);
 
         if (isNaN(parsedOfferPrice) || isNaN(parsedMinimumPrice)) {
             return res.status(400).json({
                 success: false,
-                message: "Offer price and minimum price must be valid numbers."
+                message: "Invalid price values."
             });
         }
 
-        if (parsedOfferPrice <= 0 || parsedMinimumPrice <= 0) {
-            return res.status(400).json({
-                success: false,
-                message: "Prices must be greater than 0."
-            });
-        }
-
-        if (parsedOfferPrice >= parsedMinimumPrice) {
-            return res.status(400).json({
-                success: false,
-                message: "Offer price must be less than minimum price."
-            });
-        }
-
-        // 6. Check for existing coupon with same name
         const existingCoupon = await Coupon.findOne({
-            name: { $regex: new RegExp(`^${couponName}$`, 'i') } // Case-insensitive name check
+            name: { $regex: new RegExp(`^${couponName}$`, 'i') }
         });
 
         if (existingCoupon) {
             return res.status(400).json({
                 success: false,
-                message: "A coupon with this name already exists."
+                message: "Coupon already exists."
             });
         }
 
-        // 7. Create and save the new coupon
         const newCoupon = new Coupon({
             name: couponName,
             createdOn: parsedStartDate,
             expireOn: parsedEndDate,
             offerPrice: parsedOfferPrice,
             minimumPrice: parsedMinimumPrice,
+            isListed: true
         });
 
         await newCoupon.save();
-        console.log('Coupon created successfully:', newCoupon);
-        
+
         res.status(201).json({
             success: true,
-            message: "Coupon created successfully",
-            coupon: newCoupon
+            message: "Coupon created successfully"
         });
+
     } catch (error) {
-        console.error("Error creating coupon:", error);
+        console.error('Error creating coupon:', error);
         res.status(500).json({
             success: false,
-            message: "Error creating coupon. Please try again.",
-            error: error.message
+            message: "Internal server error"
         });
     }
 };
 
-const editCoupon = async (req, res) => {
+const listCoupon = async (req, res) => {
     try {
-        const id = req.query.id;
-
+        const id = req.params.id;
+        
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).send("Invalid coupon ID.");
+            return res.status(400).json({ 
+                success: false, 
+                message: "Invalid coupon ID." 
+            });
         }
 
         const coupon = await Coupon.findById(id);
+        
         if (!coupon) {
-            return res.status(404).send("Coupon not found.");
+            return res.status(404).json({ 
+                success: false, 
+                message: "Coupon not found." 
+            });
         }
 
-        res.render("edit-coupon", { coupon });
+        coupon.isListed = true;
+        await coupon.save();
+
+        res.status(200).json({ 
+            success: true, 
+            message: "Coupon listed successfully." 
+        });
     } catch (error) {
-        console.error("Error loading coupon for edit:", error);
-        res.status(500).send("Server error.");
+        console.error("Error listing coupon:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Internal server error." 
+        });
     }
 };
 
-const updateCoupon = async (req, res) => {
+const unlistCoupon = async (req, res) => {
     try {
-      const id = req.query.id;
-  
-      // Validate coupon ID
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).send("Invalid coupon ID.");
-      }
-  
-      // Validate required fields
-      const { couponName, startDate, endDate, offerPrice, minimumPrice } = req.body;
-      if (!couponName || !startDate || !endDate || !offerPrice || !minimumPrice) {
-        return res.status(400).send("All fields (couponName, startDate, endDate, offerPrice, minimumPrice) are required.");
-      }
-  
-      // Prepare data for update
-      const updateData = {
-        name: couponName,
-        createdOn: new Date(startDate),
-        expireOn: new Date(endDate),
-        offerPrice: parseInt(offerPrice),
-        minimumPrice: parseInt(minimumPrice),
-      };
-  
-      // Perform update
-      const updatedCoupon = await Coupon.findByIdAndUpdate(
-        id,
-        { $set: updateData },
-        { new: true, runValidators: true } // Ensure schema validation during update
-      );
-  
-      if (!updatedCoupon) {
-        return res.status(404).send("Coupon not found.");
-      }
-  
-      res.status(200).send("Coupon updated successfully.");
+        const id = req.params.id;
+        
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Invalid coupon ID." 
+            });
+        }
+
+        const coupon = await Coupon.findById(id);
+        
+        if (!coupon) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Coupon not found." 
+            });
+        }
+
+        coupon.isListed = false;
+        await coupon.save();
+
+        res.status(200).json({ 
+            success: true, 
+            message: "Coupon unlisted successfully." 
+        });
     } catch (error) {
-      console.error("Error updating coupon:", error);
-      res.status(500).send("Internal server error.");
+        console.error("Error unlisting coupon:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Internal server error." 
+        });
     }
-  };
-  
-
-// Delete Coupon
-const deleteCoupon = async (req, res) => {
-  try {
-      const id = req.params.id;
-      
-      console.log("Attempting to delete coupon with ID:", id);
-      
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-          console.log("Invalid coupon ID:", id);
-          return res.status(400).json({ success: false, message: "Invalid coupon ID." });
-      }
-
-      const deletedCoupon = await Coupon.findByIdAndDelete(id);
-      
-      if (deletedCoupon) {
-          console.log("Coupon deleted successfully:", deletedCoupon);
-          res.status(200).json({ success: true, message: "Coupon deleted successfully." });
-      } else {
-          console.log("Coupon not found with ID:", id);
-          res.status(404).json({ success: false, message: "Coupon not found." });
-      }
-  } catch (error) {
-      console.error("Error deleting coupon:", error);
-      res.status(500).json({ 
-          success: false, 
-          message: "Internal server error.",
-          error: error.message 
-      });
-  }
 };
 
 module.exports = {
     loadcoupon,
     createCoupon,
-    editCoupon,
-    updateCoupon,
-    deleteCoupon,
+    listCoupon,
+    unlistCoupon
 };

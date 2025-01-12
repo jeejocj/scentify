@@ -145,7 +145,7 @@ const applyCoupon = async (req, res) => {
         }
 
         // Check if coupon is active
-        if (!coupon.isList) {
+        if (!coupon.isListed) {
             return res.status(400).json({ success: false, message: "This coupon is not active" });
         }
 
@@ -522,7 +522,7 @@ const createOrder = async (userId, products, address, subtotal, finalAmount, pay
                     coupons: {
                         couponName: coupon.name,
                         usedAt: new Date(),
-                        orderId: savedOrder._id
+                        // orderId: savedOrder._id
                     }
                 }
             });

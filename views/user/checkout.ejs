@@ -68,15 +68,20 @@
 
     .address-card {
         border: 1px solid #ddd;
-        padding: 15px;
+        padding: 20px;
         margin-bottom: 15px;
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.3s;
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
     }
 
     .address-card:hover {
         border-color: #666;
+        background-color: #fafafa;
     }
 
     .address-card.selected {
@@ -85,7 +90,124 @@
     }
 
     .address-card input[type="radio"] {
-        margin-right: 10px;
+        margin-top: 4px;
+        flex-shrink: 0;
+    }
+
+    .address-details {
+        flex-grow: 1;
+        line-height: 1.6;
+    }
+
+    .address-details strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #333;
+        font-size: 16px;
+    }
+
+    .address-details p {
+        margin: 0;
+        color: #666;
+        font-size: 14px;
+        line-height: 1.8;
+    }
+
+    .contact-info {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed #eee;
+        font-size: 13px;
+        color: #666;
+    }
+
+    .contact-info span {
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .contact-info .alt-phone {
+        color: #888;
+    }
+
+    .landmark {
+        color: #666;
+        font-style: italic;
+        margin: 4px 0;
+    }
+
+    .address-type {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 500;
+        text-transform: uppercase;
+        background-color: #e3f2fd;
+        color: #1976d2;
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+    }
+
+    .address-type.home {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .address-type.office {
+        background-color: #fff3e0;
+        color: #ef6c00;
+    }
+
+    .address-type.other {
+        background-color: #f3e5f5;
+        color: #7b1fa2;
+    }
+
+    .shipping-addresses {
+        margin-bottom: 30px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .address-card {
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        height: 100%;
+        background: #fff;
+    }
+
+    .address-card:hover {
+        border-color: #666;
+        background-color: #fafafa;
+        transform: translateY(-2px);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .address-card.selected {
+        border-color: #333;
+        background-color: #f8f9fa;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.15);
+    }
+
+    .shipping-addresses .site-btn {
+        grid-column: 1 / -1;
+        justify-self: start;
+        margin-top: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .shipping-addresses {
+            grid-template-columns: 1fr;
+        }
     }
 
     .payment-method {
@@ -363,14 +485,23 @@
                             <% addressData.address.forEach((addr, index) => { %>
                                 <div class="address-card" onclick="selectAddress(this, '<%= addr._id %>')">
                                     <input type="radio" name="address" value="<%= addr._id %>" <%= index === 0 ? 'checked' : '' %>>
-                                    <strong><%= addr.name %></strong><br>
-                                    <%= addr.street %>, <%= addr.city %><br>
-                                    <%= addr.state %> - <%= addr.pincode %><br>
-                                    Phone: <%= addr.mobile %>
+                                    <div class="address-details">
+                                        <span class="address-type <%= addr.addressType.toLowerCase() %>"><%= addr.addressType %></span>
+                                        <strong><%= addr.name %></strong>
+                                        <p>
+                                            <%= addr.city %><br>
+                                            <span class="landmark">Landmark: <%= addr.landMark %></span><br>
+                                            <%= addr.state %> - <%= addr.pincode %>
+                                        </p>
+                                        <div class="contact-info">
+                                            <span>Phone: <%= addr.phone %></span>
+                                            <span class="alt-phone">Alt. Phone: <%= addr.altPhone %></span>
+                                        </div>
+                                    </div>
                                 </div>
                             <% }); %>
                         <% } else { %>
-                            <p>No addresses found. Please add a shipping address.</p>
+                            <p class="no-address">No addresses found. Please add a shipping address.</p>
                         <% } %>
                         <a href="/addAddress" class="site-btn">Add New Address</a>
                     </div>
@@ -621,8 +752,9 @@
                         }
                     };
                     var rzp = new Razorpay(options);
-                    rzp.on('payment.failed', function(response) {
-                        window.location.href = `/payment-failed?orderId=${response.orderId}`;
+                    rzp.on('payment.failed', function(failureResponse) {
+                        console.log('Payment failed:', failureResponse);
+                        window.location.href = `/payment-failed?orderId=${response.orderId}&error=${encodeURIComponent(failureResponse.error.description)}`;
                     });
                     rzp.open();
                 } else {

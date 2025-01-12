@@ -36,23 +36,32 @@
     :root {
         --primary-font: 'Plus Jakarta Sans', sans-serif;
         --secondary-font: 'Inter', sans-serif;
+        --primary-bg: #111827;
+        --secondary-bg: #1f2937;
+        --hover-bg: #374151;
+        --text-primary: #f3f4f6;
+        --text-secondary: #9ca3af;
+        --accent: #3b82f6;
     }
     
     body {
         font-family: var(--primary-font);
         letter-spacing: 0.3px;
     }
+
     .navbar {
-        background-color: #1e1e1e;
+        background-color: var(--primary-bg);
         position: sticky;
         top: 0;
         z-index: 1000;
     }
+
     .navbar-aside {
-        background-color: #1a1a1a;
+        background-color: var(--primary-bg);
     }
+
     .menu-item a.menu-link {
-        color: #ffffff;
+        color: var(--text-secondary);
         font-family: var(--primary-font);
         font-weight: 500;
         letter-spacing: 0.5px;
@@ -60,23 +69,26 @@
 
     .menu-item a.menu-link:hover,
     .menu-item a.menu-link.active {
-        background-color: #2d2d2d; 
-        color: #ffffff;
+        background-color: var(--hover-bg);
+        color: var(--text-primary);
     }
+
     .dropdown-menu {
-        background-color: #1a1a1a;
+        background-color: var(--secondary-bg);
         font-family: var(--primary-font);
+        border: 1px solid var(--hover-bg);
     }
 
     .dropdown-item:hover {
-        background-color: #2d2d2d;
-        color: #ffffff;
+        background-color: var(--hover-bg);
+        color: var(--accent);
     }
+
     .logo-text {
         font-family: var(--secondary-font);
         font-size: 24px;
         font-weight: 600;
-        color: #ffffff;
+        color: var(--text-primary);
         text-transform: uppercase;
         letter-spacing: 3px;
     }
@@ -86,6 +98,7 @@
         font-family: var(--secondary-font);
         font-weight: 600;
         letter-spacing: -0.5px;
+        color: var(--text-primary);
     }
 
     .btn, .form-control {
@@ -96,8 +109,34 @@
     table {
         font-family: var(--primary-font);
     }
-    a{
+
+    a {
         text-decoration: none;
+    }
+
+    .btn-icon {
+        color: var(--text-secondary);
+    }
+
+    .btn-icon:hover {
+        color: var(--text-primary);
+        background-color: var(--hover-bg);
+    }
+
+    .dropdown-divider {
+        border-color: var(--hover-bg);
+    }
+
+    .dropdown-item {
+        color: var(--text-secondary);
+    }
+
+    .text-danger {
+        color: #ef4444 !important;
+    }
+
+    .text-danger:hover {
+        color: #dc2626 !important;
     }
     </style>
 </head>
@@ -153,10 +192,7 @@
                     <a class="menu-link" href="/admin/coupon"> <i class="icon material-icons md-class"></i>
                         <span class="text">Coupon</span> </a>
                 </li>
-                <li class="menu-item">
-                    <a class="menu-link" href="/admin/banner"> <i class="icon material-icons md-photo_size_select_actual"></i>
-                        <span class="text">Banner</span> </a>
-                </li>
+           
 
                 <li class="menu-item">
                     <a class="menu-link" href="/admin/orderList"> <i class="icon material-icons md-shopping_cart"></i>
