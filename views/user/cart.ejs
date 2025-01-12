@@ -395,10 +395,7 @@
                                             <div class="empty-cart-message">
                                                 <h4>Your Cart is Empty</h4>
                                                 <p>Start shopping to add items to your cart!</p>
-                                                <a href="/shop" class="continue__btn">
-                                                    <i class="fa fa-arrow-left"></i>
-                                                    Continue Shopping
-                                                </a>
+                                
                                             </div>
                                         </td>
                                     </tr>
@@ -533,10 +530,25 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    // Update quantity input
+                    qtyInput.value = newQty;
+                    
+                    // Update quantity buttons state
+                    updateQuantityButtons(productId);
+                    
+                    // Update item total price
+                    const row = qtyInput.closest('tr');
+                    const unitPriceElement = row.querySelector('.final-price');
+                    const unitPrice = parseFloat(unitPriceElement.textContent.replace('₹', '').replace(',', ''));
+                    const totalPriceElement = row.querySelectorAll('.cart__price')[1];
+                    const newTotal = (unitPrice * newQty).toFixed(2);
+                    
+                    totalPriceElement.textContent = `₹${parseFloat(newTotal).toLocaleString('en-IN')}`;
+                    
+                    // Update cart total
+                    updateCartTotal();
+                    
                     toastr.success('Cart updated successfully');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
                 } else {
                     toastr.error(data.message || 'Failed to update quantity');
                 }
