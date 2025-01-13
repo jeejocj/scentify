@@ -1,70 +1,231 @@
 <%- include("../../views/partials/user/header") %>
 <style>
-.error-message {
-    color: #dc3545;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-}
+    .address-form-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 30px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
 
-.form-control.is-invalid {
-    border-color: #dc3545;
-    padding-right: calc(1.5em + 0.75rem);
-    background-repeat: no-repeat;
-    background-position: right calc(0.375em + 0.1875rem) center;
-    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
-}
+    .form-title {
+        color: #2d3436;
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 30px;
+        text-align: center;
+        position: relative;
+    }
+
+    .form-title:after {
+        content: '';
+        display: block;
+        width: 50px;
+        height: 3px;
+        background: #2d3436;
+        margin: 10px auto;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-group label {
+        font-weight: 500;
+        color: #2d3436;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-control {
+        height: 45px;
+        border: 1px solid #dfe6e9;
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #2d3436;
+        box-shadow: 0 0 0 0.2rem rgba(45, 52, 54, 0.1);
+    }
+
+    .error-message {
+        color: #e74c3c;
+        font-size: 12px;
+        margin-top: 5px;
+        display: none;
+    }
+
+    .form-control.is-invalid {
+        border-color: #e74c3c;
+    }
+
+    .form-control.is-invalid + .error-message {
+        display: block;
+    }
+
+    .submit-btn {
+        background: #2d3436;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        width: 100%;
+        max-width: 200px;
+        margin: 20px 10px;
+        display: inline-block;
+    }
+
+    .submit-btn:hover {
+        background: #2d3436;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(45, 52, 54, 0.2);
+    }
+
+    .back-btn {
+        background: #fff;
+        color: #2d3436;
+        border: 2px solid #2d3436;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        width: 100%;
+        max-width: 200px;
+        margin: 20px 10px;
+        display: inline-block;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .back-btn:hover {
+        background: #2d3436;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(45, 52, 54, 0.2);
+    }
+
+    .button-group {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        margin-top: 30px;
+    }
+
+    @media (max-width: 768px) {
+        .button-group {
+            flex-direction: column-reverse;
+        }
+        .submit-btn, .back-btn {
+            margin: 10px 0;
+        }
+    }
+
+    .form-row {
+        margin-left: -15px;
+        margin-right: -15px;
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .form-col {
+        padding: 0 15px;
+        flex: 1;
+        min-width: 250px;
+    }
+
+    @media (max-width: 768px) {
+        .form-col {
+            flex: 100%;
+        }
+        
+        .address-form-container {
+            padding: 20px;
+            margin: 20px;
+        }
+    }
 </style>
-<div class="container mt-4">
-   <h3 class="mt-3" style="color: #046963; margin-bottom:70px">Create User Address</h3>
-   <form id="addressForm" method="POST" action="/addAddress" class="border-0 p-3" novalidate>
-       <div class="row mb-50">
-           <div class="form-group col-md-4">
-               <label for="addressType">Address Type:</label>
-               <input type="text" class="form-control border-3" id="addressType" name="addressType">
-               <div class="error-message" id="addressTypeError"></div>
-           </div>
-           <div class="form-group col-md-4">
-               <label for="name">Name:</label>
-               <input type="text" class="form-control border-3" id="name" name="name">
-               <div class="error-message" id="nameError"></div>
-           </div>
-           <div class="form-group col-md-4">
-               <label for="city">City:</label>
-               <input type="text" class="form-control border-3" id="city" name="city">
-               <div class="error-message" id="cityError"></div>
-           </div>
-       </div>
-       <div class="row mb-3">
-           <div class="form-group col-md-4">
-               <label for="landMark">Landmark:</label>
-               <input type="text" class="form-control border-3" id="landMark" name="landMark">
-               <div class="error-message" id="landMarkError"></div>
-           </div>
-           <div class="form-group col-md-4">
-               <label for="state">State:</label>
-               <input type="text" class="form-control border-3" id="state" name="state">
-               <div class="error-message" id="stateError"></div>
-           </div>
-           <div class="form-group col-md-4">
-               <label for="pincode">Pincode:</label>
-               <input type="text" class="form-control border-3" id="pincode" name="pincode">
-               <div class="error-message" id="pincodeError"></div>
-           </div>
-       </div>
-       <div class="row mb-3">
-           <div class="form-group col-md-4">
-               <label for="phone">Phone:</label>
-               <input type="text" class="form-control border-3" id="phone" name="phone">
-               <div class="error-message" id="phoneError"></div>
-           </div>
-           <div class="form-group col-md-4">
-               <label for="altPhone">Alternate Phone:</label>
-               <input type="text" class="form-control border-3" id="altPhone" name="altPhone">
-               <div class="error-message" id="altPhoneError"></div>
-           </div>
-       </div>
-       <button type="submit" id="submitButton" class="btn btn-primary">Submit</button>
-   </form>
+
+<div class="address-form-container">
+    <h2 class="form-title">Create User Address</h2>
+    <form id="addressForm" method="POST" action="/addAddress" novalidate>
+        <div class="form-row">
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="addressType">Address Type:</label>
+                    <input type="text" class="form-control" id="addressType" name="addressType" placeholder="Home, Office, etc.">
+                    <div class="error-message" id="addressTypeError"></div>
+                </div>
+            </div>
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" class="form-control" id="name" name="name" placeholder="Enter your full name">
+                    <div class="error-message" id="nameError"></div>
+                </div>
+            </div>
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="city">City:</label>
+                    <input type="text" class="form-control" id="city" name="city" placeholder="Enter your city">
+                    <div class="error-message" id="cityError"></div>
+                </div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="landMark">Landmark:</label>
+                    <input type="text" class="form-control" id="landMark" name="landMark" placeholder="Nearby landmark">
+                    <div class="error-message" id="landMarkError"></div>
+                </div>
+            </div>
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="state">State:</label>
+                    <input type="text" class="form-control" id="state" name="state" placeholder="Enter your state">
+                    <div class="error-message" id="stateError"></div>
+                </div>
+            </div>
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="pincode">Pincode:</label>
+                    <input type="text" class="form-control" id="pincode" name="pincode" placeholder="Enter pincode">
+                    <div class="error-message" id="pincodeError"></div>
+                </div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="phone">Phone:</label>
+                    <input type="text" class="form-control" id="phone" name="phone" placeholder="Enter your phone number">
+                    <div class="error-message" id="phoneError"></div>
+                </div>
+            </div>
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="altPhone">Alternate Phone:</label>
+                    <input type="text" class="form-control" id="altPhone" name="altPhone" placeholder="Alternate phone number">
+                    <div class="error-message" id="altPhoneError"></div>
+                </div>
+            </div>
+        </div>
+        <div class="button-group">
+            <a href="javascript:history.back()" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <button type="submit" id="submitButton" class="submit-btn">Add Address</button>
+        </div>
+    </form>
 </div>
 
 <script>
@@ -121,38 +282,56 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Real-time validation
+    function validateInput(input) {
+        const field = input.name;
+        const value = input.value.trim();
+        
+        // Clear previous errors
+        input.classList.remove('is-invalid');
+        const errorElement = document.getElementById(`${field}Error`);
+        errorElement.style.display = 'none';
+        
+        // Skip validation for optional alternate phone if empty
+        if (field === 'altPhone' && value === '') {
+            return true;
+        }
+        
+        // Required field validation
+        if (value === '' && field !== 'altPhone') {
+            input.classList.add('is-invalid');
+            errorElement.textContent = errorMessages[field].required;
+            errorElement.style.display = 'block';
+            return false;
+        }
+        
+        // Pattern validation
+        if (patterns[field] && !patterns[field].test(value) && value !== '') {
+            input.classList.add('is-invalid');
+            errorElement.textContent = errorMessages[field].pattern;
+            errorElement.style.display = 'block';
+            return false;
+        }
+        
+        return true;
+    }
+
+    // Add input event listeners
     inputs.forEach(input => {
-        ['input', 'blur'].forEach(eventType => {
-            input.addEventListener(eventType, function() {
-                validateField(this);
-                
-                // Special check for phone numbers matching
-                if (this.id === 'phone' || this.id === 'altPhone') {
-                    const phone = document.getElementById('phone').value;
-                    const altPhone = document.getElementById('altPhone').value;
-                    const altPhoneError = document.getElementById('altPhoneError');
-                    
-                    if (phone && altPhone && phone === altPhone) {
-                        altPhoneError.textContent = errorMessages.altPhone.match;
-                        document.getElementById('altPhone').classList.add('is-invalid');
-                    }
-                }
-            });
-        });
+        input.addEventListener('input', () => validateInput(input));
+        input.addEventListener('blur', () => validateInput(input));
     });
 
     // Form submission
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        
         let isValid = true;
+        
         inputs.forEach(input => {
-            if (!validateField(input)) {
+            if (!validateInput(input)) {
                 isValid = false;
             }
         });
-
+        
         // Check if phone numbers are different
         const phone = document.getElementById('phone').value;
         const altPhone = document.getElementById('altPhone').value;
@@ -163,35 +342,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (isValid) {
-            form.submit();
+            this.submit();
         }
     });
-
-    function validateField(input) {
-        const field = input.id;
-        const value = input.value.trim();
-        const errorElement = document.getElementById(field + 'Error');
-        
-        // Reset previous validation
-        input.classList.remove('is-invalid');
-        errorElement.textContent = '';
-        
-        // Required field validation
-        if (!value) {
-            errorElement.textContent = errorMessages[field].required;
-            input.classList.add('is-invalid');
-            return false;
-        }
-        
-        // Pattern validation
-        if (patterns[field] && !patterns[field].test(value)) {
-            errorElement.textContent = errorMessages[field].pattern;
-            input.classList.add('is-invalid');
-            return false;
-        }
-        
-        return true;
-    }
 });
 </script>
+
 <%- include("../../views/partials/user/footer") %>

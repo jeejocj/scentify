@@ -942,18 +942,8 @@
                 button.addEventListener('click', async function(e) {
                     e.preventDefault();
                     const productId = this.getAttribute('data-product-id');
-                    if (!productId) {
-                        console.error('Product ID not found');
-                        toastr.error('Error: Product ID not found');
-                        return;
-                    }
-                    console.log('Adding product:', productId); // Debug log
 
                     try {
-                        // Show loading state
-                        this.textContent = 'Adding...';
-                        this.style.opacity = '0.7';
-
                         const response = await fetch('/addToCart', {
                             method: 'POST',
                             headers: {
@@ -962,38 +952,20 @@
                             body: JSON.stringify({
                                 productId: productId,
                                 quantity: 1
-                            }),
-                            credentials: 'include' // Include cookies
+                            })
                         });
-
-                        console.log('Response status:', response.status); // Debug log
-                        const data = await response.json();
-                        console.log('Response data:', data); // Debug log
-
-                        // Reset button state
-                        this.textContent = '+ Add To Cart';
-                        this.style.opacity = '1';
 
                         if (response.status === 401) {
                             toastr.warning('Please login to add items to cart');
-                            setTimeout(() => {
-                                window.location.href = '/login';
-                            }, 1500);
                             return;
                         }
 
+                        const data = await response.json();
                         if (data.success) {
                             toastr.success('Product added to cart successfully!');
-                        } else {
-                            throw new Error(data.message || 'Failed to add product to cart');
                         }
                     } catch (error) {
-                        console.error('Error:', error);
-                        // Reset button state
-                        this.textContent = '+ Add To Cart';
-                        this.style.opacity = '1';
-                        
-                        toastr.error(error.message || 'An error occurred while adding the product to cart');
+                        toastr.error('Please login to add items to cart');
                     }
                 });
             });

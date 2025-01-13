@@ -29,13 +29,13 @@ const addProducts = async (req, res) => {
         const products = req.body;
         
         // Validate required fields
-        if (!products.productName || !products.description || !products.brand || 
-            !products.category || !products.regularPrice || !products.quantity) {
-            return res.status(400).json({ 
-                success: false, 
-                error: "All fields are required" 
-            });
-        }
+        // if (!products.productName || !products.description || !products.brand || 
+        //     !products.category || !products.regularPrice || !products.quantity) {
+        //     return res.status(400).json({ 
+        //         success: false, 
+        //         error: "All fields are required" 
+        //     });
+        // }
 
         const productExists = await Product.findOne({
             productName: products.productName,

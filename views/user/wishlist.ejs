@@ -1,140 +1,262 @@
 <%- include("../../views/partials/user/header") %>
 
 <style>
-    /* Reset table styles */
-    table {
-        width: 100%;
-        border-collapse: collapse;
+    /* Table Styles */
+    .shopping__cart__table {
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        margin-top: 30px;
     }
 
-    td, th {
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    thead {
+        background: #2d3436;
+    }
+
+    thead tr th {
+        color: #ffffff !important;
+        font-weight: 500;
         padding: 15px;
-        vertical-align: middle;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
         text-align: center;
+        border-bottom: none;
+    }
+
+    table thead th {
+        color: #ffffff !important;
+        background-color: #2d3436;
+    }
+
+    .shopping__cart__table table thead tr {
+        background: #2d3436;
+    }
+
+    .shopping__cart__table table thead th {
+        color: #ffffff !important;
+        background: #2d3436;
     }
 
     th {
-        background: #f8f9fa;
         font-weight: 500;
-        color: #333;
+        padding: 15px;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        text-align: center;
     }
 
+    td {
+        padding: 20px 15px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f1f1;
+    }
+
+    tbody tr:hover {
+        background-color: rgba(45, 52, 54, 0.02);
+    }
+
+    /* Product Styles */
     .product__wishlist__item {
-        width: 200px;
-        padding: 15px;
-        margin: 0 auto;
+        width: 120px;
     }
 
     .product__wishlist__item__pic {
-        width: 120px;
-        height: 120px;
+        width: 100px;
+        height: 100px;
+        border-radius: 10px;
         overflow: hidden;
-        border-radius: 8px;
-        margin: 0 auto 8px;
-        border: 1px solid #eee;
+        margin: 0 auto;
         background: #fff;
         padding: 5px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
 
     .product__wishlist__item__pic img {
         width: 100%;
         height: 100%;
         object-fit: contain;
-        display: block;
+        transition: transform 0.3s ease;
     }
 
-    .product__wishlist__item__text {
-        text-align: center;
-        margin-top: 8px;
+    .product__wishlist__item__pic:hover img {
+        transform: scale(1.05);
     }
 
     .product__wishlist__item__text h6 {
-        margin: 0;
-        font-size: 15px;
-        color: #333;
-        line-height: 1.4;
+        font-size: 1rem;
+        color: #2d3436;
+        margin-bottom: 8px;
         font-weight: 500;
     }
 
-    .product__wishlist__item__text .brand {
-        font-size: 13px;
-        color: #666;
-        margin-top: 4px;
-    }
-
-    .product__wishlist__item__text .category {
-        font-size: 12px;
-        color: #888;
-        margin-top: 2px;
+    .brand, .category {
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin: 4px 0;
     }
 
     .price {
-        font-size: 16px;
-        color: #111;
+        font-weight: 600;
+        color: #2d3436;
+    }
+
+    .price .original-price {
+        text-decoration: line-through;
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .price .final-price {
+        color: #2d3436;
+        font-size: 1.1rem;
         font-weight: 600;
     }
 
+    .price .discount-tag {
+        font-size: 0.8rem;
+        color: #27ae60;
+        display: block;
+        margin-top: 4px;
+    }
+
+    .text-success {
+        color: #27ae60 !important;
+    }
+
+    /* Button Styles */
     .action-btn {
-        padding: 8px 15px;
-        border-radius: 4px;
-        font-size: 14px;
+        padding: 8px 16px;
+        border-radius: 25px;
+        font-size: 0.85rem;
         font-weight: 500;
-        cursor: pointer;
         transition: all 0.3s ease;
         border: none;
+        margin: 0 5px;
     }
 
     .btn-remove {
-        background-color: #ffebee;
-        color: #d32f2f;
+        background-color: #2d3436;
+        color: white;
     }
 
     .btn-remove:hover {
-        background-color: #d32f2f;
-        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(45, 52, 54, 0.2);
+        opacity: 0.9;
     }
 
     .btn-cart {
-        background-color: #e3f2fd;
-        color: #1976d2;
+        background-color: #2d3436;
+        color: white;
     }
 
     .btn-cart:hover {
-        background-color: #1976d2;
-        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(45, 52, 54, 0.2);
+        opacity: 0.9;
     }
 
+    /* Empty Wishlist */
     .empty-wishlist {
         text-align: center;
-        padding: 50px 20px;
+        padding: 60px 20px;
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+        margin-top: 30px;
     }
 
     .empty-wishlist h3 {
-        color: #6c757d;
+        color: #2d3436;
         margin-bottom: 20px;
+        font-weight: 500;
     }
 
     .continue__btn {
-        text-align: left;
-        padding: 20px 0;
+        margin-top: 20px;
     }
 
     .continue__btn a {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        color: #111;
-        font-size: 14px;
+        gap: 10px;
+        color: #2d3436;
         font-weight: 500;
         text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 25px;
+        background: rgba(45, 52, 54, 0.1);
+        transition: all 0.3s ease;
     }
 
     .continue__btn a:hover {
-        color: #1976d2;
+        background: rgba(45, 52, 54, 0.15);
+        transform: translateX(-5px);
     }
 
     .continue__btn i {
-        font-size: 16px;
+        font-size: 1.1rem;
+    }
+
+    /* Stock Status */
+    .stock-status {
+        font-size: 0.85rem;
+        padding: 5px 12px;
+        border-radius: 15px;
+        display: inline-block;
+    }
+
+    .in-stock {
+        background-color: rgba(45, 52, 54, 0.1);
+        color: #2d3436;
+    }
+
+    .out-stock {
+        background-color: rgba(231, 76, 60, 0.1);
+        color: #e74c3c;
+    }
+
+    .spad {
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+
+    @media (max-width: 768px) {
+        .shopping__cart__table {
+            margin: 15px -15px;
+            border-radius: 0;
+        }
+
+        table {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .product__wishlist__item {
+            width: 80px;
+        }
+
+        .product__wishlist__item__pic {
+            width: 70px;
+            height: 70px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
     }
 </style>
 
@@ -192,16 +314,18 @@
                                         </td>
                                         <td class="price">
                                             <% if (item.discountPercentage > 0) { %>
-                                                <span class="text-muted text-decoration-line-through">₹<%= item.regularPrice.toLocaleString() %></span><br>
-                                                <span class="text-success">
-                                                    (<%= item.discountPercentage %>% OFF - 
-                                                    <%= item.offerType === 'category' ? 'Category Offer' : 
-                                                       item.offerType === 'product' ? 'Product Offer' : 
-                                                       item.offerType === 'sale' ? 'Sale Price' : '' %>)
-                                                </span><br>
-                                                <span class="text-primary">₹<%= item.finalPrice.toLocaleString() %></span>
+                                                <span class="original-price">₹<%= item.regularPrice.toLocaleString() %></span>
+                                                <span class="final-price">₹<%= item.finalPrice.toLocaleString() %></span>
+                                                <span class="discount-tag">
+                                                    <%= item.discountPercentage %>% OFF
+                                                    <% if (item.offerType) { %>
+                                                        - <%= item.offerType === 'category' ? 'Category Offer' : 
+                                                              item.offerType === 'product' ? 'Product Offer' : 
+                                                              item.offerType === 'sale' ? 'Sale Price' : '' %>
+                                                    <% } %>
+                                                </span>
                                             <% } else { %>
-                                                ₹<%= item.regularPrice.toLocaleString() %>
+                                                <span class="final-price">₹<%= item.regularPrice.toLocaleString() %></span>
                                             <% } %>
                                         </td>
                                         <td>
@@ -315,73 +439,17 @@ async function addToCart(productId) {
             })
         });
 
-        if (!response.ok) {
-            return response.json().then(data => {
-                throw new Error(data.message || 'Failed to add product to cart');
-            });
+        if (response.status === 401) {
+            toastr.warning('Please login to add items to cart');
+            return;
         }
+
         const data = await response.json();
-        
         if (data.success) {
-            Swal.fire({
-                title: 'Success!',
-                text: data.message || 'Product added to cart successfully!',
-                icon: 'success',
-                showConfirmButton: false,
-                timer: 1500
-            }).then(() => {
-                if (data.cartCount !== undefined) {
-                    updateCartCount(data.cartCount);
-                }
-                
-                if (data.redirect) {
-                    window.location.href = data.redirect;
-                }
-            });
-        } else {
-            throw new Error(data.message || 'Failed to add product to cart');
+            toastr.success('Product added to cart successfully!');
         }
     } catch (error) {
-        console.error('Error:', error);
-        
-        if (error.message.includes('Please login')) {
-            Swal.fire({
-                title: 'Login Required',
-                text: 'Please login to add items to your cart',
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonText: 'Login',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = '/login';
-                }
-            });
-        } 
-        else if (error.message.includes('Maximum quantity')) {
-            Swal.fire({
-                title: 'Quantity Limit Reached',
-                text: error.message,
-                icon: 'warning',
-                confirmButtonText: 'OK'
-            });
-        }
-        else if (error.message.includes('out of stock') || error.message.includes('available in stock')) {
-            Swal.fire({
-                title: 'Stock Limited',
-                text: error.message,
-                icon: 'warning',
-                confirmButtonText: 'OK'
-            });
-        }
-        else {
-            Swal.fire({
-                title: 'Error!',
-                text: error.message || 'Something went wrong. Please try again.',
-                icon: 'error',
-                confirmButtonText: 'OK'
-            });
-        }
+        toastr.error('Please login to add items to cart');
     }
 }
 

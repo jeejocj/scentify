@@ -26,6 +26,8 @@ router.get("/unblockCustomer",adminAuth,customerController.customerunBlocked)
 router.get("/category",adminAuth,categoryController.categoryInfo)
 router.post("/addCategory",adminAuth,categoryController.addCategory)
 
+router.get("/editCategory",adminAuth,categoryController.getEditCategory)
+router.post("/editCategory/:id",adminAuth,categoryController.editCategory)
 
 router.post("/addCategoryOffer",adminAuth,categoryController.addCategoryOffer)
 router.post("/removeCategoryOffer",adminAuth,categoryController.removeCategoryOffer)

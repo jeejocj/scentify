@@ -599,13 +599,13 @@
             } else if (parseFloat(salePrice) <= 0) {
                 displayErrorMessage('salePrice-error', 'Sale price must be greater than 0');
                 isValid = false;
-            } else if (parseFloat(salePrice) >= parseFloat(regularPrice)) {
-                displayErrorMessage('salePrice-error', 'Sale price must be less than regular price');
-                isValid = false;
-            } else if (parseFloat(salePrice) <= parseFloat(regularPrice) * 0.1) {
-                displayErrorMessage('salePrice-error', 'Sale price cannot be less than 10% of regular price');
-                isValid = false;
-            }
+            // } else if (parseFloat(salePrice) >= parseFloat(regularPrice)) {
+            //     displayErrorMessage('salePrice-error', 'Sale price must be less than regular price');
+            //     isValid = false;
+            // } else if (parseFloat(salePrice) <= parseFloat(regularPrice) * 0.1) {
+            //     displayErrorMessage('salePrice-error', 'Sale price cannot be less than 10% of regular price');
+            //     isValid = false;
+             }
         }
 
         // Quantity Validation

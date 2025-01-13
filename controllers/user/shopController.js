@@ -11,7 +11,7 @@ const loadShoppingPage = async (req, res) => {
     const brands = await Brand.find({ isBlocked: false });
 
     const page = parseInt(req.query.page) || 1;
-    const limit = 9;
+    const limit = 6;
     const skip = (page - 1) * limit;
 
     // Base query

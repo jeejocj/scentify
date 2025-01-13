@@ -450,7 +450,7 @@ const postEditAddress = async (req, res) => {
         const user= req.session.user;
         const findAddress = await Address.findOne({ "address._id": addressId });
         if (!findAddress) {
-            res.redirect("/pageNotFound");
+            return res.status(404).json({ success: false, message: "Address not found" });
         }
 
         await Address.updateOne(
@@ -471,11 +471,11 @@ const postEditAddress = async (req, res) => {
                 },
             }
         );
-        res.redirect("/userProfile");
+        res.json({ success: true, message: "Address updated successfully" });
 
     } catch (error) {
         console.error("Error in edit address", error);
-        res.redirect("/pageNotFound");
+        res.status(500).json({ success: false, message: "Failed to update address" });
     }
 };
 
