@@ -194,11 +194,7 @@ const userProfile = async (req, res) => {
             };
         });
 
-        console.log("User wallet data:", {
-            balance: wallet?.balance || 0,
-            transactionCount: wallet?.transactions?.length || 0
-        });
-
+   
         // Prepare user data with wallet information
         const userData = {
             ...user.toObject(),

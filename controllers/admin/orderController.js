@@ -69,7 +69,6 @@ const listOrders = async (req, res) => {
         // Sort orders by creation date
         orders.sort((a, b) => new Date(b.createdOn) - new Date(a.createdOn));
 
-        console.log('Processed Orders:', orders); // Debug log
 
         res.render('orders', {
             orders,
@@ -123,7 +122,6 @@ const getCancelledOrders = async (req, res) => {
 const getAdminOrderDetails = async (req, res) => {
     try {
         const orderId = req.params.orderId;
-        console.log('Finding order with ID:', orderId);
 
         const order = await Order.findById(orderId)
             .populate('orderedItems.product', 'productName productImage')
@@ -138,9 +136,7 @@ const getAdminOrderDetails = async (req, res) => {
 
         // Get address details
         if (orderObj.address) {
-            console.log('Looking for address with ID:', orderObj.address);
             const addressDoc = await Address.findOne({ userId: orderObj.userId._id });
-            console.log('Found address document:', addressDoc);
 
             if (addressDoc && addressDoc.address) {
                 const selectedAddress = addressDoc.address.find(addr => 
@@ -168,7 +164,6 @@ const getAdminOrderDetails = async (req, res) => {
         orderObj.discount = orderObj.discount || 0;
         orderObj.finalAmount = Math.max(subtotal - orderObj.discount, 0);
 
-        console.log('Processed order:', orderObj);
 
         res.render('orderDetails', { order: orderObj });
     } catch (error) {
@@ -180,7 +175,6 @@ const getAdminOrderDetails = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
     try {
         const { orderId, status } = req.body;
-        console.log('Received update request:', { orderId, status });
 
         if (!orderId || !status) {
             return res.status(400).json({ 
@@ -194,7 +188,6 @@ const updateOrderStatus = async (req, res) => {
             .populate('orderedItems.product');
         
         if (!order) {
-            console.log('Order not found:', orderId);
             return res.status(404).json({ 
                 success: false, 
                 message: 'Order not found' 
@@ -206,12 +199,7 @@ const updateOrderStatus = async (req, res) => {
         const transitionsForPaymentMethod = paymentMethodTransitions[paymentMethod] || paymentMethodTransitions['COD'];
         const allowedNextStatuses = transitionsForPaymentMethod[order.status] || [];
 
-        console.log('Status transition check:', {
-            currentStatus: order.status,
-            requestedStatus: status,
-            paymentMethod: paymentMethod,
-            allowedStatuses: allowedNextStatuses
-        });
+       
 
         if (!allowedNextStatuses.includes(status)) {
             return res.status(400).json({ 
@@ -260,12 +248,7 @@ const updateOrderStatus = async (req, res) => {
                 // Save user changes
                 await user.save();
                 
-                console.log('Return processed successfully:', {
-                    orderId,
-                    refundAmount,
-                    userId: user._id,
-                    newWalletBalance: user.wallet
-                });
+              
             } catch (error) {
                 console.error('Error processing return:', error);
                 return res.status(500).json({
@@ -280,12 +263,7 @@ const updateOrderStatus = async (req, res) => {
         order.status = status;
         await order.save();
 
-        console.log('Order status updated successfully:', { 
-            orderId, 
-            oldStatus: order.status,
-            newStatus: status,
-            paymentMethod: order.paymentMethod
-        });
+     
 
         res.json({ 
             success: true, 

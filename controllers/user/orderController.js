@@ -64,7 +64,6 @@ const cancelOrder = async (req, res) => {
         const { orderId } = req.body;
         const userId = req.session.user._id;
 
-        console.log('Cancelling order:', orderId, 'for user:', userId);
 
         // Find the order and ensure it's still cancellable
         const order = await Order.findOne({ 
@@ -73,14 +72,12 @@ const cancelOrder = async (req, res) => {
         }).populate('orderedItems.product');
 
         if (!order) {
-            console.log('Order not found or not cancellable');
             return res.status(400).json({ 
                 success: false, 
                 message: 'Order cannot be cancelled' 
             });
         }
 
-        console.log('Found order:', order);
 
         // Revert product quantities
         for (const item of order.orderedItems) {
@@ -90,7 +87,6 @@ const cancelOrder = async (req, res) => {
                     const oldQuantity = product.quantity;
                     product.quantity = oldQuantity + item.quantity;
                     await product.save();
-                    console.log(`Product ${product._id}: Quantity updated from ${oldQuantity} to ${product.quantity}`);
                 }
             } catch (error) {
                 console.error(`Error reverting quantity for product ${item.product._id}:`, error);
@@ -102,7 +98,7 @@ const cancelOrder = async (req, res) => {
             try {
                 // Calculate refund amount
                 const refundAmount = order.finalAmount;
-                console.log('Processing refund of amount:', refundAmount);
+               
 
                 // Add refund to wallet with order reference
                 const refundResult = await addRefundToWallet(
@@ -112,7 +108,7 @@ const cancelOrder = async (req, res) => {
                     `Refund for Order #${order.orderId}`
                 );
 
-                console.log('Refund processed:', refundResult);
+               
 
                 // Update order status
                 order.status = 'Cancelled';
@@ -243,7 +239,7 @@ const updateOrderStatus = async (req, res) => {
         const { orderId, status } = req.body;
         const userId = req.session.user._id;
 
-        console.log('Updating order:', { orderId, status, userId });
+      
 
         const order = await Order.findById(orderId);
 

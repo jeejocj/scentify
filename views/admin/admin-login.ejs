@@ -3,76 +3,181 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Login</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
-    rel="stylesheet"
-  />
+  <title>Admin Login | Scentify</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/bootstrap.min.css" />
   <link rel="stylesheet" href="/css/style.css" />
   <style>
-    body,
-    html {
+    :root {
+      --primary-color: #2d3436;
+      --secondary-color: #636e72;
+      --accent-color: #0984e3;
+      --background-color: #f5f6fa;
+      --error-color: #ff6b6b;
+    }
+
+    body, html {
       height: 100%;
       margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-image: url('/adminlogin.png');
-      background-size: cover;
-      background-position: center;
+      background-color: var(--background-color);
       font-family: 'Nunito Sans', sans-serif;
-       color: white;
     }
+
+    .main-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
     .login-container {
       width: 100%;
-      max-width: 500px;
-      padding: 20px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      background-color: hsl(193, 80%, 17%);
-      border-radius: 8px;
+      max-width: 400px;
+      padding: 2.5rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    .error-message {
-      color: red;
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-header h2 {
+      color: var(--primary-color);
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .login-header p {
+      color: var(--secondary-color);
+      font-size: 0.875rem;
+      margin-bottom: 0;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--primary-color);
+      font-weight: 600;
       font-size: 0.875rem;
     }
-    .text-center{
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(9, 132, 227, 0.1);
+      outline: none;
+    }
+
+    .error-message {
+      color: var(--error-color);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--primary-color);
+      border: none;
+      border-radius: 8px;
       color: white;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      background: #1e272e;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+    }
+
+    .alert-danger {
+      background-color: rgba(255, 107, 107, 0.1);
+      border: 1px solid rgba(255, 107, 107, 0.2);
+      color: var(--error-color);
+    }
+
+    @media (max-width: 576px) {
+      .login-container {
+        padding: 1.5rem;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <h2 class="text-center">Admin Login</h2>
-    <% if (message) { %>
-    <div class="alert alert-danger text-center"><%= message %></div>
-    <% } %>
-    <form id="adminLoginForm" method="post" action="/admin/login" novalidate>
-      <div class="form-group">
-        <label for="adminEmail">Email address</label>
-        <input
-          type="email"
-          class="form-control"
-          id="adminEmail"
-          name="email"
-          
-        />
-        <div id="emailError" class="error-message"></div>
+  <div class="main-container">
+    <div class="login-container">
+      <div class="login-header">
+        <h2>Admin Login</h2>
+        <p>Enter your credentials to access the dashboard</p>
       </div>
-      <div class="form-group">
-        <label for="adminPassword">Password</label>
-        <input
-          type="password"
-          class="form-control"
-          id="adminPassword"
-          name="password"
-          
-        />
-        <div id="passwordError" class="error-message"></div>
-      </div>
-      <button type="submit" class="btn btn-primary btn-block">Log In</button>
-    </form>
+
+      <% if (message) { %>
+      <div class="alert alert-danger text-center"><%= message %></div>
+      <% } %>
+
+      <form id="adminLoginForm" method="post" action="/admin/login" novalidate>
+        <div class="form-group">
+          <label for="adminEmail">Email Address</label>
+          <input
+            type="email"
+            class="form-control"
+            id="adminEmail"
+            name="email"
+            placeholder="Enter your email"
+            required
+          />
+          <div id="emailError" class="error-message"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="adminPassword">Password</label>
+          <input
+            type="password"
+            class="form-control"
+            id="adminPassword"
+            name="password"
+            placeholder="Enter your password"
+            required
+          />
+          <div id="passwordError" class="error-message"></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Log In</button>
+      </form>
+    </div>
   </div>
+
   <script src="/js/jquery.min.js"></script>
   <script src="/js/bootstrap.bundle.min.js"></script>
   <script>
@@ -86,15 +191,22 @@
       adminLoginForm.addEventListener("submit", function (event) {
         let isValid = true;
         const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-        if (!emailPattern.test(emailField.value)) {
-          emailError.textContent = "Invalid email format";
+        
+        if (!emailField.value.trim()) {
+          emailError.textContent = "Email is required";
+          isValid = false;
+        } else if (!emailPattern.test(emailField.value)) {
+          emailError.textContent = "Please enter a valid email address";
           isValid = false;
         } else {
           emailError.textContent = "";
         }
-        if (passwordField.value.length < 8) {
-          passwordError.textContent =
-            "Password should contain at least 8 characters";
+
+        if (!passwordField.value.trim()) {
+          passwordError.textContent = "Password is required";
+          isValid = false;
+        } else if (passwordField.value.length < 8) {
+          passwordError.textContent = "Password must be at least 8 characters long";
           isValid = false;
         } else {
           passwordError.textContent = "";
@@ -108,4 +220,3 @@
   </script>
 </body>
 </html>
-

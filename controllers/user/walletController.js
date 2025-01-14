@@ -147,13 +147,10 @@ const verifyWalletRecharge = async (req, res) => {
 // Add refund to wallet
 const addRefundToWallet = async (userId, amount, orderId, description = 'Order refund') => {
     try {
-        console.log('Starting refund process for user:', userId, 'amount:', amount);
         
         let wallet = await Wallet.findOne({ userId });
-        console.log('Found wallet:', wallet);
 
         if (!wallet) {
-            console.log('Creating new wallet for user:', userId);
             wallet = new Wallet({ userId, balance: 0 });
         }
 
@@ -172,18 +169,15 @@ const addRefundToWallet = async (userId, amount, orderId, description = 'Order r
             date: new Date()
         };
 
-        console.log('Adding transaction:', transaction);
 
         // Update wallet balance and add transaction
         wallet.balance = Number(wallet.balance || 0) + refundAmount;
         wallet.transactions.push(transaction);
         await wallet.save();
-        console.log('Wallet updated. New balance:', wallet.balance);
 
         // Update user reference if needed
         const user = await User.findById(userId);
         if (!user.wallet) {
-            console.log('Updating user wallet reference');
             user.wallet = wallet.balance;
             await user.save();
         }

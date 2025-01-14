@@ -68,7 +68,7 @@ const getcheckoutPage = async (req, res) => {
                 categoryOfferPrice,
                 productOfferPrice
             );
-            
+
             // Calculate total savings and discount percentage
             const savings = product.regularPrice - finalPrice;
             const discountPercentage = Math.round((savings / product.regularPrice) * 100);
@@ -101,19 +101,18 @@ const getcheckoutPage = async (req, res) => {
         const currentDate = new Date();
         const userDoc = await User.findById(userId);
         const usedCouponNames = userDoc.coupons.map(c => c.couponName);
-        
+
         const availableCoupons = await Coupon.find({
             expireOn: { $gt: currentDate },
             name: { $nin: usedCouponNames }
         }).select('name type offerPrice minimumPrice expireOn description');
 
-        return res.render("checkout", { 
+        return res.render("checkout", {
             user: req.session.user,
             products,
             subtotal: cartTotal,
             discountAmount,
             finalAmount,
-            quantity: null,
             addressData,
             activeCoupon,
             availableCoupons,
@@ -128,16 +127,13 @@ const getcheckoutPage = async (req, res) => {
 // Apply Coupon
 const applyCoupon = async (req, res) => {
     try {
-        if (!req.session.user) {
-            return res.status(401).json({ success: false, message: "Please login to continue" });
-        }
+
 
         const { couponCode, totalAmount } = req.body;
-        console.log('Applying coupon:', { couponCode, totalAmount });
-
         if (!couponCode || !totalAmount) {
             return res.status(400).json({ success: false, message: "Invalid request" });
         }
+
 
         const coupon = await Coupon.findOne({ name: couponCode });
         if (!coupon) {
@@ -164,10 +160,7 @@ const applyCoupon = async (req, res) => {
         }
 
         // Calculate discount
-        let discount = coupon.offerPrice;
-        if (discount > totalAmount) {
-            discount = totalAmount;
-        }
+        let discount = Math.min(coupon.offerPrice, totalAmount);
 
         // Store coupon in session
         req.session.activeCoupon = {
@@ -176,11 +169,6 @@ const applyCoupon = async (req, res) => {
             discount: discount
         };
 
-        console.log('Coupon applied successfully:', {
-            code: couponCode,
-            discount,
-            finalAmount: totalAmount - discount
-        });
 
         return res.status(200).json({
             success: true,
@@ -194,7 +182,6 @@ const applyCoupon = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Error applying coupon",
-            error: error.message
         });
     }
 };
@@ -202,9 +189,7 @@ const applyCoupon = async (req, res) => {
 // Remove Coupon
 const removeCoupon = async (req, res) => {
     try {
-        if (!req.session.user) {
-            return res.status(401).json({ success: false, message: "Please login to continue" });
-        }
+      
 
         const { totalAmount } = req.body;
         if (!totalAmount) {
@@ -233,16 +218,12 @@ const removeCoupon = async (req, res) => {
 // Post Checkout
 const postCheckout = async (req, res) => {
     try {
-        if (!req.session.user) {
-            return res.status(401).json({ success: false, message: "Please login to continue" });
-        }
+       
 
         const { address, products, subtotal, total, paymentMethod } = req.body;
-        console.log('Checkout request:', { address, subtotal, total, paymentMethod });
-        
-        const parsedProducts = JSON.parse(products);
-        console.log('Parsed products:', parsedProducts);
 
+         // Parse and validate products
+        const parsedProducts = JSON.parse(products);
         if (!Array.isArray(parsedProducts) || parsedProducts.length === 0) {
             return res.status(400).json({ success: false, message: "No products provided" });
         }
@@ -262,7 +243,7 @@ const postCheckout = async (req, res) => {
         const paymentMethodMap = {
             'cashOnDelivery': 'COD',
             'onlinePayment': 'Online Payment',
-          
+
         };
 
         const mappedPaymentMethod = paymentMethodMap[paymentMethod];
@@ -277,17 +258,15 @@ const postCheckout = async (req, res) => {
 
         // Prevent COD for orders above Rs 1000
         if (paymentMethod === 'cashOnDelivery' && finalAmount > 1000) {
-            return res.status(400).json({ 
-                success: false, 
+            return res.status(400).json({
+                success: false,
                 message: "Cash on Delivery is not available for orders above Rs 1000. Please choose online payment."
             });
         }
 
         // For online payment, create Razorpay order first
         if (paymentMethod === 'onlinePayment') {
-            console.log('Creating Razorpay order for amount:', finalAmount);
             const razorpayOrder = await createRazorpayOrder(finalAmount);
-            console.log('Razorpay order created:', razorpayOrder);
 
             // Create order with pending payment status
             const order = await createOrder(
@@ -299,7 +278,7 @@ const postCheckout = async (req, res) => {
                 mappedPaymentMethod,
                 activeCoupon
             );
-            
+
             const user = await User.findById(req.session.user._id);
 
             // Clear cart for online payment since order is created
@@ -308,7 +287,7 @@ const postCheckout = async (req, res) => {
                 { $set: { items: [] } }
             );
             delete req.session.activeCoupon;
-            
+
             return res.status(200).json({
                 success: true,
                 orderId: order._id.toString(), // Ensure orderId is a string
@@ -327,16 +306,8 @@ const postCheckout = async (req, res) => {
         }
 
         // Create order for COD or wallet payment
-        console.log('Creating order with:', {
-            userId: req.session.user._id,
-            products: parsedProducts,
-            address,
-            subtotal,
-            finalAmount,
-            paymentMethod: mappedPaymentMethod,
-            coupon: activeCoupon
-        });
-        
+     
+
         const order = await createOrder(
             req.session.user._id,
             parsedProducts,
@@ -370,10 +341,10 @@ const postCheckout = async (req, res) => {
 
     } catch (error) {
         console.error("Error in checkout:", error);
-        return res.status(500).json({ 
-            success: false, 
+        return res.status(500).json({
+            success: false,
             message: "Internal server error",
-            error: error.message 
+            error: error.message
         });
     }
 };
@@ -381,15 +352,11 @@ const postCheckout = async (req, res) => {
 // Verify Payment
 const verifyPayment = async (req, res) => {
     try {
-        if (!req.session.user) {
-            return res.status(401).json({ success: false, message: "Please login to continue" });
-        }
+      
 
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
-        console.log('Verifying payment:', { razorpay_order_id, razorpay_payment_id, orderId });
 
         if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
-            console.error("Missing required payment parameters");
             return res.status(400).json({ success: false, message: "Missing payment information" });
         }
 
@@ -418,8 +385,8 @@ const verifyPayment = async (req, res) => {
         // Verify payment status with Razorpay
         try {
             const payment = await razorpay.payments.fetch(razorpay_payment_id);
-            console.log('Razorpay payment status:', payment.status);
-            
+
+
             if (payment.status !== 'captured') {
                 console.error("Payment not captured:", payment.status);
                 return res.status(400).json({ success: false, message: "Payment not captured" });
@@ -433,7 +400,7 @@ const verifyPayment = async (req, res) => {
         order.paymentId = razorpay_payment_id;
         order.paymentStatus = 'Completed';
         await order.save();
-        console.log('Order updated with payment details:', order._id);
+      
 
         // Update product quantities after successful payment
         try {
@@ -444,10 +411,10 @@ const verifyPayment = async (req, res) => {
                     { $inc: { quantity: -product.quantity } }
                 );
             }
-            console.log('Product quantities updated successfully');
+           
         } catch (error) {
             console.error("Error updating product quantities:", error);
-            // Don't return error here, continue with success response
+            
         }
 
         return res.status(200).json({
@@ -458,10 +425,10 @@ const verifyPayment = async (req, res) => {
 
     } catch (error) {
         console.error("Error in payment verification:", error);
-        return res.status(500).json({ 
-            success: false, 
+        return res.status(500).json({
+            success: false,
             message: "Failed to verify payment. Please contact support if amount is deducted.",
-            error: error.message 
+            error: error.message
         });
     }
 };
@@ -482,9 +449,9 @@ const createOrder = async (userId, products, address, subtotal, finalAmount, pay
             regularPrice: product.regularPrice,
             finalPrice: product.finalPrice,
             discountPercentage: product.discountPercentage,
-            offerType: product.discountPercentage > 0 ? 
+            offerType: product.discountPercentage > 0 ?
                 (product.categoryOfferPrice < product.productOfferPrice && product.categoryOfferPrice < (product.salePrice || Infinity) ? 'category' :
-                 product.productOfferPrice < (product.salePrice || Infinity) ? 'product' : 'sale') : 'regular'
+                    product.productOfferPrice < (product.salePrice || Infinity) ? 'product' : 'sale') : 'regular'
         }));
 
         // Calculate coupon discount
@@ -559,7 +526,7 @@ const retryPayment = async (req, res) => {
 
         // Create new Razorpay order
         const razorpayOrder = await createRazorpayOrder(order.finalAmount);
-        
+
         const user = await User.findById(userId);
         return res.status(200).json({
             success: true,
@@ -610,13 +577,13 @@ const orderConfirm = async (req, res) => {
         }
 
         // Get address details
-        const addressDoc = await Address.findOne({ 
+        const addressDoc = await Address.findOne({
             userId: req.session.user._id,
-            'address._id': order.address 
+            'address._id': order.address
         });
 
         if (addressDoc && addressDoc.address) {
-            const selectedAddress = addressDoc.address.find(addr => 
+            const selectedAddress = addressDoc.address.find(addr =>
                 addr._id.toString() === order.address.toString()
             );
             if (selectedAddress) {
@@ -632,13 +599,7 @@ const orderConfirm = async (req, res) => {
         order.subtotal = subtotal;
         order.finalAmount = subtotal - (order.discount || 0);
 
-        console.log('Order details:', {
-            orderId: order._id,
-            subtotal: order.subtotal,
-            discount: order.discount,
-            finalAmount: order.finalAmount,
-            items: order.orderedItems
-        });
+     
 
         return res.render("orderConfirmation", {
             order,

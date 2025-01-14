@@ -43,6 +43,7 @@ router.get("/brands/edit",adminAuth,brandController.getEditBrand)
 router.post("/brands/edit/:id",adminAuth,uploads.single("image"),brandController.editBrand)
 
 router.get("/addProducts",adminAuth,productController.getProductAddPage)
+router.post("/addProductImage",adminAuth,uploads.single("images"),productController.addProductImage)
 router.post("/addProducts",adminAuth,uploads.array("images",4),productController.addProducts);
 router.get("/Products",adminAuth,productController.getAllProducts)
 router.put('/blockProduct/:id', adminAuth, productController.blockProduct);
@@ -52,6 +53,7 @@ router.post('/product/edit/:id',
     uploads.array('productImage', 4),
     productController.updateProduct
 )
+router.delete('/deleteImage', adminAuth, productController.deleteSingleImage);
 // Order Management Routes
 router.get("/orderList", adminAuth, orderController.listOrders);
 router.get("/orders/cancelled", adminAuth, orderController.getCancelledOrders);

@@ -99,6 +99,7 @@
     }
 
     .table {
+        margin-top: 20px;
         background: white;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.04);
@@ -225,6 +226,132 @@
 
     .is-invalid ~ .error-message {
         display: block;
+    }
+
+    /* Status Badge Styles */
+    .badge.rounded-pill {
+        padding: 8px 12px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        letter-spacing: 0.3px;
+        width: 80px;
+        text-align: center;
+    }
+
+    .badge.alert-success {
+        background-color: #10b981 !important;
+        color: #ffffff !important;
+        border: none;
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    }
+
+    .badge.alert-danger {
+        background-color: #ef4444 !important;
+        color: #ffffff !important;
+        border: none;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+    }
+
+    /* Action Button Styles */
+    .btn-success {
+        background-color: #10b981 !important;
+        border-color: #10b981 !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-warning {
+        background-color: #ef4444 !important;
+        border-color: #ef4444 !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-success:hover {
+        background-color: #059669 !important;
+        border-color: #059669 !important;
+    }
+
+    .btn-warning:hover {
+        background-color: #dc2626 !important;
+        border-color: #dc2626 !important;
+    }
+
+    .btn-sm {
+        padding: 6px 14px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+    }
+
+    /* SweetAlert Custom Styles */
+    .swal2-popup {
+        background: #1f2937 !important;
+        color: #ffffff !important;
+        border: 1px solid #374151 !important;
+    }
+
+    .swal2-title {
+        color: #ffffff !important;
+        font-size: 1.5rem !important;
+    }
+
+    .swal2-html-container {
+        color: #e5e7eb !important;
+    }
+
+    .swal2-input, .swal2-textarea {
+        background: #374151 !important;
+        color: #ffffff !important;
+        border: 1px solid #4b5563 !important;
+    }
+
+    .swal2-input:focus, .swal2-textarea:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5) !important;
+    }
+
+    .swal2-confirm {
+        background: #3b82f6 !important;
+        color: #ffffff !important;
+        padding: 8px 20px !important;
+    }
+
+    .swal2-cancel {
+        background: #ef4444 !important;
+        color: #ffffff !important;
+        padding: 8px 20px !important;
+    }
+
+    .swal2-icon.swal2-warning {
+        border-color: #f59e0b !important;
+        color: #f59e0b !important;
+    }
+
+    .swal2-icon.swal2-error {
+        border-color: #ef4444 !important;
+        color: #ef4444 !important;
+    }
+
+    .swal2-icon.swal2-success {
+        border-color: #10b981 !important;
+        color: #10b981 !important;
+    }
+
+    .swal2-icon.swal2-info {
+        border-color: #3b82f6 !important;
+        color: #3b82f6 !important;
+    }
+
+    .swal2-icon.swal2-question {
+        border-color: #8b5cf6 !important;
+        color: #8b5cf6 !important;
+    }
+
+    /* Style for validation error messages */
+    .swal2-validation-message {
+        background: #374151 !important;
+        color: #ef4444 !important;
     }
 </style>
 
@@ -405,15 +532,22 @@
         }
     }
 
-    function confirmBlock(brandId, currentPage, searchTerm = '') {
+    function confirmBlock(brandId, currentPage, searchTerm) {
         Swal.fire({
-            title: 'Are you sure?',
-            text: "You want to block this brand?",
+            title: 'Block Brand?',
+            html: 'Are you sure you want to block this brand?<br>This will make it unavailable to users.',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, block it!'
+            confirmButtonText: 'Yes, Block',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                popup: 'swal2-popup',
+                title: 'swal2-title',
+                htmlContainer: 'swal2-html-container',
+                confirmButton: 'swal2-confirm',
+                cancelButton: 'swal2-cancel',
+                icon: 'swal2-icon swal2-warning'
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 window.location.href = `/admin/brands/block/${brandId}?page=${currentPage}${searchTerm ? '&search=' + searchTerm : ''}`;
@@ -421,15 +555,22 @@
         });
     }
 
-    function confirmUnblock(brandId, currentPage, searchTerm = '') {
+    function confirmUnblock(brandId, currentPage, searchTerm) {
         Swal.fire({
-            title: 'Are you sure?',
-            text: "You want to unblock this brand?",
-            icon: 'warning',
+            title: 'Unblock Brand?',
+            html: 'Are you sure you want to unblock this brand?<br>This will make it available to users again.',
+            icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, unblock it!'
+            confirmButtonText: 'Yes, Unblock',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                popup: 'swal2-popup',
+                title: 'swal2-title',
+                htmlContainer: 'swal2-html-container',
+                confirmButton: 'swal2-confirm',
+                cancelButton: 'swal2-cancel',
+                icon: 'swal2-icon swal2-question'
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 window.location.href = `/admin/brands/unblock/${brandId}?page=${currentPage}${searchTerm ? '&search=' + searchTerm : ''}`;

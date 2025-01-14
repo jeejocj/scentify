@@ -73,7 +73,6 @@ const loadWishlist = async (req, res) => {
             };
         });
 
-        console.log('Processed wishlist products:', JSON.stringify(processedWishlist, null, 2));
 
         res.render('wishlist', {
             user: req.session.user,

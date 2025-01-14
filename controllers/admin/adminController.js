@@ -240,7 +240,94 @@ const downloadSalesReport = async (req, res) => {
       worksheet.getCell('A3').font = { bold: true };
       worksheet.getCell('A3').alignment = { horizontal: 'center' };
 
-      worksheet.addRow([]); // Empty row for spacing
+      // Add summary section
+      const totalOrders = orders.length;
+      const totalRevenue = orders.reduce((sum, order) => sum + order.finalAmount, 0);
+      const totalDiscount = orders.reduce((sum, order) => sum + (order.totalPrice - order.finalAmount), 0);
+      const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+      // Payment method stats
+      const paymentStats = orders.reduce((acc, order) => {
+        acc[order.paymentMethod] = (acc[order.paymentMethod] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Order status stats
+      const statusStats = orders.reduce((acc, order) => {
+        acc[order.status] = (acc[order.status] || 0) + 1;
+        return acc;
+      }, {});
+
+      worksheet.mergeCells('A5:I5');
+      worksheet.getCell('A5').value = 'Summary';
+      worksheet.getCell('A5').font = { bold: true, size: 14 };
+      worksheet.getCell('A5').alignment = { horizontal: 'center' };
+      worksheet.getCell('A5').fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE0E0E0' }
+      };
+
+      // Add summary data
+      worksheet.mergeCells('A6:D6');
+      worksheet.getCell('A6').value = 'Orders Overview';
+      worksheet.getCell('A6').font = { bold: true };
+
+      worksheet.mergeCells('F6:I6');
+      worksheet.getCell('F6').value = 'Payment Methods';
+      worksheet.getCell('F6').font = { bold: true };
+
+      // Orders summary
+      worksheet.mergeCells('A7:B7');
+      worksheet.getCell('A7').value = 'Total Orders:';
+      worksheet.getCell('C7').value = totalOrders;
+
+      worksheet.mergeCells('A8:B8');
+      worksheet.getCell('A8').value = 'Total Revenue:';
+      worksheet.getCell('C8').value = totalRevenue;
+      worksheet.getCell('C8').numFmt = '₹#,##0.00';
+
+      worksheet.mergeCells('A9:B9');
+      worksheet.getCell('A9').value = 'Total Discount:';
+      worksheet.getCell('C9').value = totalDiscount;
+      worksheet.getCell('C9').numFmt = '₹#,##0.00';
+
+      worksheet.mergeCells('A10:B10');
+      worksheet.getCell('A10').value = 'Average Order Value:';
+      worksheet.getCell('C10').value = avgOrderValue;
+      worksheet.getCell('C10').numFmt = '₹#,##0.00';
+
+      // Payment methods summary
+      let row = 7;
+      for (const [method, count] of Object.entries(paymentStats)) {
+        worksheet.mergeCells(`F${row}:G${row}`);
+        worksheet.getCell(`F${row}`).value = `${method}:`;
+        worksheet.getCell(`H${row}`).value = count;
+        worksheet.getCell(`I${row}`).value = `${((count / totalOrders) * 100).toFixed(1)}%`;
+        row++;
+      }
+
+      // Order status summary
+      worksheet.mergeCells('A12:D12');
+      worksheet.getCell('A12').value = 'Order Status';
+      worksheet.getCell('A12').font = { bold: true };
+
+      row = 13;
+      for (const [status, count] of Object.entries(statusStats)) {
+        worksheet.mergeCells(`A${row}:B${row}`);
+        worksheet.getCell(`A${row}`).value = `${status}:`;
+        worksheet.getCell(`C${row}`).value = count;
+        worksheet.getCell(`D${row}`).value = `${((count / totalOrders) * 100).toFixed(1)}%`;
+        row++;
+      }
+
+      // Add space before the detailed orders list
+      worksheet.addRows([Array(9).fill('')]);
+      row = row + 2;
+
+      // Add orders list header
+      worksheet.addRow([]);
+      const headerRow = row + 1;
 
       // Add headers with improved widths
       worksheet.columns = [
@@ -256,8 +343,8 @@ const downloadSalesReport = async (req, res) => {
       ];
 
       // Style the header row (now row 5 due to title and period info)
-      worksheet.getRow(5).font = { bold: true };
-      worksheet.getRow(5).fill = {
+      worksheet.getRow(headerRow).font = { bold: true };
+      worksheet.getRow(headerRow).fill = {
         type: 'pattern',
         pattern: 'solid',
         fgColor: { argb: 'FFE0E0E0' }
@@ -368,22 +455,78 @@ const downloadSalesReport = async (req, res) => {
          .fillColor('white')
          .text('Sales Report', 0, 10, { align: 'center' });
 
-      doc.moveDown();
-
       // Add period and date range info with styling
       const periodInfoY = titleHeight + 20;
       drawColoredRect(40, periodInfoY, doc.page.width - 80, 60, '#F5F6FA');
       
       doc.fontSize(12)
          .fillColor('#2C3E50')
-         .text(`Period: ${period.charAt(0).toUpperCase() + period.slice(1)}`, 60, periodInfoY + 10, { align: 'left' })
-         .text(`Date Range: ${startDateTime.toLocaleDateString()} to ${endDateTime.toLocaleDateString()}`, 60, periodInfoY + 30, { align: 'left' });
+         .text(`Period: ${period.charAt(0).toUpperCase() + period.slice(1)}`, 60, periodInfoY + 10)
+         .text(`Date Range: ${startDateTime.toLocaleDateString()} to ${endDateTime.toLocaleDateString()}`, 60, periodInfoY + 30);
 
+      // Calculate summary statistics
+      const totalOrders = orders.length;
+      const totalRevenue = orders.reduce((sum, order) => sum + order.finalAmount, 0);
+      const totalDiscount = orders.reduce((sum, order) => sum + (order.totalPrice - order.finalAmount), 0);
+      const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+      // Payment method stats
+      const paymentStats = orders.reduce((acc, order) => {
+        acc[order.paymentMethod] = (acc[order.paymentMethod] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Order status stats
+      const statusStats = orders.reduce((acc, order) => {
+        acc[order.status] = (acc[order.status] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Add summary section
+      let summaryY = periodInfoY + 100;
+      drawColoredRect(40, summaryY, doc.page.width - 80, 30, '#4A90E2');
+      doc.fillColor('white')
+         .fontSize(14)
+         .text('Summary', 0, summaryY + 8, { align: 'center' });
+
+      summaryY += 40;
+      doc.fontSize(12)
+         .fillColor('#2C3E50');
+
+      // Orders Overview
+      doc.text('Orders Overview', 60, summaryY, { bold: true });
+      doc.text(`Total Orders: ${totalOrders}`, 60, summaryY + 20);
+      doc.text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`, 60, summaryY + 40);
+      doc.text(`Total Discount: ₹${totalDiscount.toFixed(2)}`, 60, summaryY + 60);
+      doc.text(`Average Order Value: ₹${avgOrderValue.toFixed(2)}`, 60, summaryY + 80);
+
+      // Payment Methods
+      doc.text('Payment Methods', doc.page.width/2 + 30, summaryY, { bold: true });
+      let paymentY = summaryY + 20;
+      for (const [method, count] of Object.entries(paymentStats)) {
+        doc.text(`${method}: ${count} (${((count/totalOrders)*100).toFixed(1)}%)`, 
+                 doc.page.width/2 + 30, paymentY);
+        paymentY += 20;
+      }
+
+      // Order Status
+      let statusY = Math.max(paymentY, summaryY + 100) + 20;
+      doc.text('Order Status', 60, statusY, { bold: true });
+      statusY += 20;
+      for (const [status, count] of Object.entries(statusStats)) {
+        doc.text(`${status}: ${count} (${((count/totalOrders)*100).toFixed(1)}%)`, 
+                 60, statusY);
+        statusY += 20;
+      }
+
+      // Add space before detailed orders
       doc.moveDown(2);
+      
+      // Start table after summary
+      let currentY = statusY + 40;
 
       // Table settings
       const startX = 40;
-      let currentY = doc.y + 20;
       const lineHeight = 30;  
       const columnWidths = {
         orderId: 70,

@@ -323,14 +323,20 @@
                         <td><%=data.phone%></td>
                         <td>
                             <% if (data.isBlocked === false) { %>
-                                <button class="btn btn-danger" style="width: 100px;">
-                                    <a href="/admin/blockCustomer?id=<%= data._id %>&page=<%= currentPage %>&search=<%= searchTerm %>" 
-                                       class="text-white" style="text-decoration: none;">Block</a>
+                                <button class="btn btn-danger block-user-btn" style="width: 100px;" 
+                                    data-user-id="<%= data._id %>" 
+                                    data-user-name="<%= data.name %>"
+                                    data-page="<%= currentPage %>"
+                                    data-search="<%= searchTerm %>">
+                                    Block
                                 </button>
                             <% } else { %>
-                                <button class="btn btn-success" style="width: 100px;">
-                                    <a href="/admin/unblockCustomer?id=<%= data._id %>&page=<%= currentPage %>&search=<%= searchTerm %>" 
-                                       class="text-white" style="text-decoration: none;">Unblock</a>
+                                <button class="btn btn-success unblock-user-btn" style="width: 100px;"
+                                    data-user-id="<%= data._id %>"
+                                    data-user-name="<%= data.name %>"
+                                    data-page="<%= currentPage %>"
+                                    data-search="<%= searchTerm %>">
+                                    Unblock
                                 </button>
                             <% } %>
                         </td>
@@ -373,5 +379,65 @@
     </div>
 
 </section>  
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle Block User
+    document.querySelectorAll('.block-user-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const userName = this.dataset.userName;
+            const page = this.dataset.page;
+            const search = this.dataset.search;
+
+            Swal.fire({
+                title: 'Block User?',
+                html: `Are you sure you want to block <b>${userName}</b>?<br>This will prevent them from logging in.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Block',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    popup: 'swal-custom-popup',
+                    confirmButton: 'swal-custom-confirm',
+                    cancelButton: 'swal-custom-cancel'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/admin/blockCustomer?id=${userId}&page=${page}&search=${search}`;
+                }
+            });
+        });
+    });
+
+    // Handle Unblock User
+    document.querySelectorAll('.unblock-user-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const userName = this.dataset.userName;
+            const page = this.dataset.page;
+            const search = this.dataset.search;
+
+            Swal.fire({
+                title: 'Unblock User?',
+                html: `Are you sure you want to unblock <b>${userName}</b>?<br>This will allow them to log in again.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Unblock',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    popup: 'swal-custom-popup',
+                    confirmButton: 'swal-custom-confirm',
+                    cancelButton: 'swal-custom-cancel'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/admin/unblockCustomer?id=${userId}&page=${page}&search=${search}`;
+                }
+            });
+        });
+    });
+});
+</script>
 
 <%- include("../../views/partials/admin/footer") %>

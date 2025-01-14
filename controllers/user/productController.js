@@ -80,34 +80,7 @@ const productDetails = async(req,res)=>{
         };
 
         // Log the data being sent to view
-        console.log('Product Details Data:', {
-            productBasic: {
-                id: product._id,
-                name: product.productName,
-                regularPrice: product.regularPrice,
-                salePrice: product.salePrice
-            },
-            category: {
-                id: findCategory._id,
-                name: findCategory.name,
-                categoryOffer: findCategory.categoryOffer
-            },
-            calculatedPrices: {
-                categoryOfferPrice,
-                productOfferPrice,
-                finalPrice,
-                totalSavings,
-                discountPercentage
-            },
-            relatedProducts: relatedProductsWithPrices.map(rp => ({
-                id: rp._id,
-                name: rp.productName,
-                regularPrice: rp.regularPrice,
-                finalPrice: rp.finalPrice,
-                savings: rp.savings,
-                discountPercentage: rp.discountPercentage
-            }))
-        });
+      
 
         res.render("product-details", {
             user: userData,

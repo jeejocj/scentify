@@ -219,6 +219,119 @@
       margin-right: 5px;
       margin-bottom: 0;
     }
+
+    /* Status Badge Styles */
+    .badge.rounded-pill {
+      padding: 8px 12px;
+      font-weight: 500;
+      font-size: 0.85rem;
+      letter-spacing: 0.3px;
+    }
+
+    .badge.alert-success {
+      background-color: #10b981 !important;
+      color: #ffffff !important;
+      border: none;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    }
+
+    .badge.alert-danger {
+      background-color: #ef4444 !important;
+      color: #ffffff !important;
+      border: none;
+      box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+    }
+
+    /* List/Unlist button styles */
+    .btn-danger {
+      background-color: #ef4444;
+      border-color: #ef4444;
+      box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-success {
+      background-color: #10b981;
+      border-color: #10b981;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-danger:hover {
+      background-color: #dc2626;
+      border-color: #dc2626;
+    }
+
+    .btn-success:hover {
+      background-color: #059669;
+      border-color: #059669;
+    }
+
+    /* SweetAlert Custom Styles */
+    .swal2-popup {
+      background: #1f2937 !important;
+      color: #ffffff !important;
+      border: 1px solid #374151 !important;
+    }
+
+    .swal2-title {
+      color: #ffffff !important;
+      font-size: 1.5rem !important;
+    }
+
+    .swal2-html-container {
+      color: #e5e7eb !important;
+    }
+
+    .swal2-input, .swal2-textarea {
+      background: #374151 !important;
+      color: #ffffff !important;
+      border: 1px solid #4b5563 !important;
+    }
+
+    .swal2-input:focus, .swal2-textarea:focus {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5) !important;
+    }
+
+    .swal2-confirm {
+      background: #3b82f6 !important;
+      color: #ffffff !important;
+    }
+
+    .swal2-cancel {
+      background: #ef4444 !important;
+      color: #ffffff !important;
+    }
+
+    .swal2-icon.swal2-warning {
+      border-color: #f59e0b !important;
+      color: #f59e0b !important;
+    }
+
+    .swal2-icon.swal2-error {
+      border-color: #ef4444 !important;
+      color: #ef4444 !important;
+    }
+
+    .swal2-icon.swal2-success {
+      border-color: #10b981 !important;
+      color: #10b981 !important;
+    }
+
+    .swal2-icon.swal2-info {
+      border-color: #3b82f6 !important;
+      color: #3b82f6 !important;
+    }
+
+    .swal2-icon.swal2-question {
+      border-color: #8b5cf6 !important;
+      color: #8b5cf6 !important;
+    }
+
+    /* Style for input validation error messages */
+    .swal2-validation-message {
+      background: #374151 !important;
+      color: #ef4444 !important;
+    }
   </style>
 </head>
 <body>
@@ -332,9 +445,9 @@
 
                   <td class="text-start">
                     <% if (category.isListed) { %>
-                    <span class="badge rounded-pill alert-success" style="width: 60px">Listed</span>
+                    <span class="badge rounded-pill alert-success" style="width: 80px">Listed</span>
                     <% } else { %>
-                    <span class="badge rounded-pill alert-danger" style="width: 60px">Unlisted</span>
+                    <span class="badge rounded-pill alert-danger" style="width: 80px">Unlisted</span>
                     <% } %>
                   </td>
                   <td class="text-start">

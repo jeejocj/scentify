@@ -387,7 +387,6 @@ const getTopCategories = async (req, res) => {
             { $limit: 10 }
         ]);
 
-        console.log('Top Categories:', JSON.stringify(topCategories, null, 2));
         res.json(topCategories);
     } catch (error) {
         console.error('Error getting top categories:', error);
@@ -442,7 +441,6 @@ const getTopBrands = async (req, res) => {
             { $limit: 10 }
         ]);
 
-        console.log('Top Brands:', JSON.stringify(topBrands, null, 2));
         res.json(topBrands);
     } catch (error) {
         console.error('Error getting top brands:', error);

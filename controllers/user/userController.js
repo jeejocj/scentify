@@ -17,7 +17,7 @@ const loadHomepage = async (req, res) => {
         category:{$in:categories.map(category=>category._id)}
         // ,quantity:{$gt:0}
       })
-      console.log(productData);
+   
 
 productData.sort((a,b)=>new Date(b.createdOn));
 productData = productData.slice(0,4);
@@ -42,7 +42,6 @@ productData = productData.slice(0,4);
   
       res.render("signup");
     } catch (error) {
-      console.log("signup page not loading:", error);
       res.status(500).send("Sever error")
     }
   };
@@ -86,22 +85,21 @@ async function sendVerificationEmail(email,otp) {
     try {
       const {name,phone,email,password,cPassword} = req.body;
       if(password !== cPassword){
-        console.log("password not match")
-        console.log(password,cPassword  )
+       
         return res.render("signup",{message:"Password do not match"});
       }
       const findUser = await User.findOne({email});
       if(findUser){
-        console.log("User already exists")
+      
         return res.render("signup",{message:"User with this mail already exists"})
       }
       const otp = generateOtp();
-      console.log("OTP",otp);
+      
       const emailSent = await sendVerificationEmail(email,otp);
       if(!emailSent){
         return res.json({ error: "email-error" });
       }
-      console.log("Email Sent",emailSent);
+     
       req.session.userOtp = otp;
       req.session.userData = {name,phone,email,password};
       res.render("verify-otp");
@@ -146,7 +144,7 @@ async function sendVerificationEmail(email,otp) {
   const verifyOtp = async (req, res) => {
     try {
       const {otp} = req.body;
-      console.log(otp);
+     
       if(otp === req.session.userOtp){
         const user = req.session.userData
         const passwordHash = await securePassword(user.password)
@@ -195,7 +193,7 @@ async function sendVerificationEmail(email,otp) {
         const error = req.session.error_message || req.session.loginError;
         req.session.error_message = '';
         req.session.loginError = '';
-        console.log(error)
+        
         return res.render("login", { message: error });
       } else {
         res.redirect("/");
@@ -221,7 +219,7 @@ async function sendVerificationEmail(email,otp) {
       if(!passwordMatch){
         return res.render("login",{message:"Incorrect password"})
       }
-      // console.log(findUser)
+     
       req.session.user = findUser;
       res.redirect("/")
 
@@ -263,12 +261,7 @@ async function sendVerificationEmail(email,otp) {
         const sessionUser = req.session.user;
         const userId = sessionUser._id; // Get the user ID from the session user object
 
-        console.log('Return Request Data:', {
-            orderId,
-            returnReason,
-            sessionUser,
-            userId
-        });
+      
 
         if (!orderId || !returnReason) {
             return res.status(400).json({
@@ -282,19 +275,9 @@ async function sendVerificationEmail(email,otp) {
             orderId: orderId
         }).populate('userId');
 
-        console.log('Found Order:', {
-            orderDetails: {
-                orderId: order?.orderId,
-                status: order?.status,
-                userId: order?.userId?._id || order?.userId
-            },
-            sessionUserId: userId
-        });
-
+    
         if (!order) {
-            console.log('Order not found with criteria:', {
-                orderId: orderId
-            });
+         
             return res.status(404).json({
                 success: false,
                 message: 'Order not found'
@@ -304,10 +287,7 @@ async function sendVerificationEmail(email,otp) {
         // Validate order ownership after finding the order
         const orderUserId = order.userId._id || order.userId;
         if (orderUserId.toString() !== userId.toString()) {
-            console.log('Order ownership validation failed:', {
-                orderUserId: orderUserId.toString(),
-                sessionUserId: userId.toString()
-            });
+          
             return res.status(403).json({
                 success: false,
                 message: 'You are not authorized to return this order'
@@ -327,7 +307,7 @@ async function sendVerificationEmail(email,otp) {
         order.returnRequestDate = new Date();
 
         const savedOrder = await order.save();
-        console.log('Saved order:', savedOrder);
+      
 
         res.status(200).json({
             success: true,
@@ -353,13 +333,7 @@ async function sendVerificationEmail(email,otp) {
             .populate('address')
             .sort({ createdOn: -1 });
 
-        console.log('Loading profile for user:', userId);
-        console.log('Found orders:', orders.map(order => ({
-            id: order._id,
-            orderId: order.orderId,
-            status: order.status,
-            userId: order.userId
-        })));
+      
 
         res.render('user/profile', { 
             user, 
