@@ -507,24 +507,52 @@
                                 <h3 class="product-title"><%= product.productName %></h3>
                                 <div class="product-price">
                                     <% 
-                                        const categoryOffer = product.category?.categoryOffer || 0;
-                                        const productOffer = product.productOffer || 0;
-                                        const maxOffer = Math.max(categoryOffer, productOffer);
-                                        const finalPrice = maxOffer > 0 ? 
-                                            Math.round(product.regularPrice - (product.regularPrice * maxOffer / 100)) : 
-                                            product.regularPrice;
+                                        let finalPrice = product.regularPrice;
+                                        let bestOffer = 0;
+                                        let offerType = '';
+
+                                        // Calculate category offer price
+                                        if (product.category && product.category.categoryOffer > 0) {
+                                            const categoryOfferPrice = product.regularPrice - (product.regularPrice * (product.category.categoryOffer / 100));
+                                            if (categoryOfferPrice < finalPrice) {
+                                                finalPrice = categoryOfferPrice;
+                                                bestOffer = product.category.categoryOffer;
+                                                offerType = 'Category Offer';
+                                            }
+                                        }
+
+                                        // Calculate product offer price
+                                        if (product.productOffer > 0) {
+                                            const productOfferPrice = product.regularPrice - (product.regularPrice * (product.productOffer / 100));
+                                            if (productOfferPrice < finalPrice) {
+                                                finalPrice = productOfferPrice;
+                                                bestOffer = product.productOffer;
+                                                offerType = 'Product Offer';
+                                            }
+                                        }
+
+                                        // Check sale price
+                                        if (product.salePrice && product.salePrice < finalPrice) {
+                                            const discount = ((product.regularPrice - product.salePrice) / product.regularPrice) * 100;
+                                            finalPrice = product.salePrice;
+                                            bestOffer = Math.round(discount);
+                                            offerType = 'Sale';
+                                        }
+
+                                        finalPrice = Math.round(finalPrice);
                                     %>
-                                    <% if (maxOffer > 0) { %>
-                                        <div class="price-container">
+                                    
+                                    <div class="price-container">
+                                        <% if (bestOffer > 0) { %>
                                             <span class="old-price">₹<%= product.regularPrice.toLocaleString('en-IN') %></span>
                                             <span class="current-price">₹<%= finalPrice.toLocaleString('en-IN') %></span>
-                                        </div>
-                                        <span class="discount-badge">-<%= maxOffer %>% OFF</span>
-                                    <% } else { %>
-                                        <div class="price-container">
-                                            <span class="current-price">₹<%= product.regularPrice.toLocaleString('en-IN') %></span>
-                                        </div>
-                                    <% } %>
+                                            <div class="discount-badge" title="<%= offerType %>">
+                                                -<%= bestOffer %>% OFF
+                                            </div>
+                                        <% } else { %>
+                                            <span class="current-price">₹<%= finalPrice.toLocaleString('en-IN') %></span>
+                                        <% } %>
+                                    </div>
                                 </div>
                                 <% if (product.quantity > 0) { %>
                                     <a href="#" class="add-cart" data-product-id="<%= product._id %>">+ Add To Cart</a>

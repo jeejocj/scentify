@@ -613,14 +613,13 @@ const downloadInvoice = async (req, res) => {
 
 module.exports = {
     getOrderHistory,
-    // getOrderDetails,
+   
     cancelOrder,
     getOrderStatus,
     viewOrderDetails,
     changeOrderStatus,
     updateOrderStatus,
-    // showReturnReasonPage,
-    // submitReturnReason,
+   
     getOrderDetailsJson,
     downloadInvoice
 };

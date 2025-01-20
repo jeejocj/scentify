@@ -5,9 +5,9 @@ const error2log=document.getElementById('error2log')
 const logform=document.getElementById('logForm')
 
 function emailvalidate(e){
-  // console.log("okokokoookoko");
+
   const emailval=emailidlog.value
-  // console.log(emailval,"emialvalie");
+  
   const emailpattern=/^([a-zA-Z0-9._-]+)@([a-zA-Z.-]+).([a-zA-z]{2,4})$/ 
 if(!emailpattern.test(emailval)){
   error1log.style.display = "block"
@@ -20,7 +20,7 @@ if(!emailpattern.test(emailval)){
 }
 
 function passvalidate(e){
-  // console.log("double ookokokookoko");
+ 
   const passval = passidlog.value
   const alpha = /[a-zA-Z]/
   const digit = /\d/
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // e.preventDefault();
       emailvalidate();
       passvalidate();
-      // console.log("caleddddddddddddd aishutte ");
+    
       if (error2log.innerHTML || error1log.innerHTML) {
           e.preventDefault();
       }

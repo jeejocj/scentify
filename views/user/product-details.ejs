@@ -952,8 +952,8 @@
             padding: 2px 8px;
             border-radius: 12px;
             font-size: 12px;
-            display: inline-block;
-            margin-bottom: 10px;
+            font-weight: 600;
+            white-space: nowrap;
         }
 
         .product-card {
@@ -1087,6 +1087,8 @@
         .add-cart:hover {
             background: #333333;
             transform: translateY(-2px);
+            color: #fff;
+            text-decoration: none;
         }
 
         .no-image {
@@ -1288,9 +1290,7 @@
         }
 
         .current-price {
-            color: #ff4757;
-            font-weight: bold;
-            font-size: 18px;
+            color: #000000;
         }
 
         .discount-badge {
@@ -1598,7 +1598,7 @@
             button.addEventListener('click', async function(e) {
                 e.preventDefault();
                 const productId = this.getAttribute('data-product-id');
-                // console.log('Adding product:', productId);
+             
 
                 try {
                     // Show loading state
@@ -1617,9 +1617,9 @@
                         credentials: 'include'
                     });
 
-                    // console.log('Response status:', response.status);
+                
                     const data = await response.json();
-                    // console.log('Response data:', data);
+                  
 
                     // Reset button state
                     this.textContent = '+ Add To Cart';
@@ -1648,6 +1648,36 @@
                 }
             });
         });
+    </script>
+
+    <script>
+        async function addToCart(productId) {
+            try {
+                const quantity = parseInt(document.getElementById('quantity').value);
+                const response = await fetch('/addToCart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId, quantity })
+                });
+
+                if (response.status === 401) {
+                    toastr.warning('Please login to add items to cart');
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    toastr.success('Product added to cart successfully!');
+                } else {
+                    toastr.error(data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                toastr.error('Please login to add items to cart');
+            }
+        }
     </script>
 
     <script>
@@ -1726,52 +1756,66 @@
             const quantity = document.getElementById('quantity').value;
 
             try {
-                const response = await fetch('/addToCart', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        productId,
-                        quantity: parseInt(quantity)
-                    }),
-                    credentials: 'include'
-                });
-
-                const data = await response.json();
-
-                if (response.status === 401) {
+                // Check if user is logged in
+                if (!<%= user ? 'true' : 'false' %>) {
                     toastr.warning('Please login to add items to cart');
-                    setTimeout(() => {
-                        window.location.href = '/login';
-                    }, 1500);
                     return;
                 }
 
+                const response = await fetch('/addToCart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId, quantity })
+                });
+
+                const data = await response.json();
                 if (data.success) {
-                    toastr.success('Product added to cart successfully!');
+                    toastr.success(data.message);
                 } else {
-                    throw new Error(data.message || 'Failed to add product to cart');
+                    toastr.error(data.message);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                toastr.error(error.message || 'An error occurred while adding the product to cart');
+                toastr.error('Failed to add product to cart');
             }
         }
-
-        // Initialize background images for related products
-        document.addEventListener('DOMContentLoaded', function () {
-            const bgElements = document.querySelectorAll('.set-bg');
-            bgElements.forEach(element => {
-                const bg = element.getAttribute('data-setbg');
-                element.style.backgroundImage = `url('${bg}')`;
-            });
-        });
     </script>
 
     <script>
         function addToWishlist(productId) {
             // Add product to wishlist logic here
+        }
+    </script>
+
+    <script>
+        async function addToCart(productId) {
+            try {
+                const quantity = parseInt(document.getElementById('quantity').value);
+                const response = await fetch('/addToCart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId, quantity })
+                });
+
+                if (response.status === 401) {
+                    toastr.warning('Please login to add items to cart');
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    toastr.success('Product added to cart successfully!');
+                } else {
+                    toastr.error(data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                toastr.error('Please login to add items to cart');
+            }
         }
     </script>
 

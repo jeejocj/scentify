@@ -39,7 +39,7 @@
                             <tbody>
                                 <% orders.forEach(order => { %>
                                     <tr>
-                                        <td><%= order._id %></td>
+                                        <td>#<%= order.orderId %></td>
                                         <td><%= order.userName %></td>
                                         <td><%= new Date(order.createdOn).toLocaleDateString() %></td>
                                         <td>
@@ -95,7 +95,6 @@ const validStatusTransitions = {
 document.addEventListener('DOMContentLoaded', function() {
     // Check if DataTable is available
     if ($.fn.DataTable) {
-        console.log('DataTable plugin is loaded');
         try {
             let table = $('#ordersTable').DataTable({
                 order: [[2, "desc"]], 
@@ -115,7 +114,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             });
-            console.log('DataTable initialized successfully');
         } catch (error) {
             console.error('Error initializing DataTable:', error);
         }
@@ -172,16 +170,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add event listeners to all status select dropdowns
     $('.status-select').on('change', function() {
-        console.log('Status changed');
         const $select = $(this);
         const orderId = $select.data('orderId');
         const newStatus = $select.val();
         const oldStatus = $select.find('option[selected]').val() || 
                          $select.find('option[selected]').val();
 
-        console.log('Order ID:', orderId);
-        console.log('New Status:', newStatus);
-        console.log('Old Status:', oldStatus);
 
         // Check if the status transition is valid
         const allowedNextStatuses = validStatusTransitions[oldStatus] || [];
@@ -245,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         status: newStatus
                     }),
                     success: function(response) {
-                        console.log('Response:', response);
+                     
                         if (response.success) {
                             Swal.fire({
                                 icon: 'success',

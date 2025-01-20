@@ -401,7 +401,7 @@
         margin: 0;
         border-bottom: 1px solid #eee;
         font-weight: 600;
-        color: white;
+        color: #2d3436;
     }
 
     .transactions-list {
@@ -672,7 +672,7 @@
                                                                 <div class="order-header">
                                                                     <div class="order-info">
                                                                         <div class="order-id">
-                                                                            Order #<%= order.orderId %>
+                                                                            <%= order.orderId %>
                                                                         </div>
                                                                         <div class="order-date">
                                                                             <%= new Date(order.createdOn).toLocaleDateString('en-IN', {
@@ -795,12 +795,15 @@
                                                                     </div>
                                                                     <div class="transaction-details">
                                                                         <div class="transaction-info">
-                                                                            <span class="transaction-desc"><%= transaction.description %></span>
-                                                                            <% if (transaction.orderId) { %>
-                                                                                <small class="transaction-id">Order: #<%= transaction.orderId %></small>
-                                                                            <% } %>
-                                                                            <% if (transaction.paymentId) { %>
-                                                                                <small class="transaction-id">Payment: <%= transaction.paymentId %></small>
+                                                                            <span class="transaction-desc">
+                                                                                <% if (transaction.description.toLowerCase().includes('refund')) { %>
+                                                                                    Refund for Order #<%= transaction.orderId %>
+                                                                                <% } else { %>
+                                                                                    <%= transaction.description %>
+                                                                                <% } %>
+                                                                            </span>
+                                                                            <% if (transaction.description.toLowerCase().includes('recharge')) { %>
+                                                                                <small class="transaction-id">Payment #<%= transaction.paymentId %></small>
                                                                             <% } %>
                                                                         </div>
                                                                         <div class="transaction-meta">
@@ -839,6 +842,78 @@
     </section>
 </main>
 
+<!-- Order Details Modal
+<div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="order-info mb-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Order ID:</strong> <span id="modalOrderId"></span></p>
+                            <p><strong>Order Date:</strong> <span id="modalOrderDate"></span></p>
+                            <p><strong>Status:</strong> <span id="modalOrderStatus" class="badge"></span></p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <a href="#" id="downloadInvoiceBtn" class="btn btn-primary" target="_blank">
+                                <i class="fas fa-download"></i> Download Invoice
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                  <div class="col-md-6">
+                    <p>
+                      <strong>Payment Method:</strong> 
+                      <span id="modalPaymentMethodIcon"></span>
+                      <span id="modalPaymentMethod"></span>
+                    </p>
+                    <p><strong>Total Amount:</strong> ₹<span id="modalOrderTotal"></span></p>
+                    <p id="modalOrderDiscount" style="display: none;">
+                      <strong>Discount Applied:</strong> ₹<span id="modalDiscountAmount"></span>
+                    </p>
+                  </div>
+                  <div class="col-md-6">
+                    <h6>Shipping Address</h6>
+                    <div id="modalShippingAddress"></div>
+                  </div>
+                </div>
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody id="modalOrderItems">
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                        <td>₹<span id="modalSubtotal"></span></td>
+                      </tr>
+                      <tr id="modalDiscountRow" style="display: none;">
+                        <td colspan="3" class="text-end"><strong>Discount:</strong></td>
+                        <td class="text-success">-₹<span id="modalDiscountTotal"></span></td>
+                      </tr>
+                      <tr>
+                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                        <td><strong>₹<span id="modalFinalTotal"></span></strong></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> -->
 <!-- Order Details Modal
 <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -1544,7 +1619,6 @@
     }
 
     function verifyRetryPayment(payment, orderId) {
-        console.log('Verifying payment:', { payment, orderId });
         
         const verificationData = {
             razorpay_payment_id: payment.razorpay_payment_id,
@@ -1561,7 +1635,6 @@
             },
             data: JSON.stringify(verificationData),
             success: function(response) {
-                console.log('Verification response:', response);
                 if (response.success) {
                     Swal.fire({
                         icon: 'success',
@@ -1666,7 +1739,6 @@
     }
 
     function showReturnModal(orderId) {
-        console.log('Opening return modal for order:', orderId);
         document.getElementById('returnOrderId').value = orderId;
         document.getElementById('returnReason').value = ''; // Clear previous input
         new bootstrap.Modal(document.getElementById('returnModal')).show();
@@ -1676,11 +1748,6 @@
         event.preventDefault();
         const orderId = document.getElementById('returnOrderId').value;
         const returnReason = document.getElementById('returnReason').value.trim();
-
-        console.log('Submitting return request:', {
-            orderId,
-            returnReason
-        });
 
         if (!returnReason) {
             Swal.fire({
@@ -2045,7 +2112,7 @@
     margin: 0;
     border-bottom: 1px solid #eee;
     font-weight: 600;
-    color: white;
+    color: #2d3436;
 }
 
 .transactions-list {
@@ -2160,6 +2227,14 @@
         flex-direction: column;
         gap: 10px;
     }
+
+    .transaction-meta {
+        text-align: left;
+    }
+}
+</style>
+
+<%- include("../../views/partials/user/footer") %>
 
     .transaction-meta {
         text-align: left;

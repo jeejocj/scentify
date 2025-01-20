@@ -1,64 +1,166 @@
 <%- include("../../views/partials/admin/header") %>
 
 <style>
-    h3{
-        color: black;
+    :root {
+        --primary-color: #0C977F;
+        --primary-light: #e6f4f1;
+        --secondary-color: #2c3e50;
+        --success-color: #2ecc71;
+        --warning-color: #f1c40f;
+        --info-color: #3498db;
+        --danger-color: #e74c3c;
+        --background-color: #f8f9fa;
+        --card-shadow: 0 2px 20px rgba(0,0,0,0.08);
+        --hover-shadow: 0 10px 30px rgba(0,0,0,0.15);
     }
+
+    .container-fluid {
+        background-color: var(--background-color);
+        min-height: calc(100vh - 60px);
+    }
+
     .dashboard-card {
-        border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        transition: transform 0.2s;
+        border: none;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+        background: white;
+        overflow: hidden;
     }
+
     .dashboard-card:hover {
         transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
     }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
     .stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 15px;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
     }
+
+    .bg-primary-light { background-color: #e6f4f1; }
+    .bg-success-light { background-color: #e8f8f0; }
+    .bg-warning-light { background-color: #fef7e6; }
+    .bg-info-light { background-color: #e7f3fb; }
+
+    .text-primary { color: var(--primary-color) !important; }
+    .text-success { color: var(--success-color) !important; }
+    .text-warning { color: var(--warning-color) !important; }
+    .text-info { color: var(--info-color) !important; }
+
+    .card-title {
+        color: #64748b;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    h3 {
+        color: var(--secondary-color);
+        font-weight: 600;
+        font-size: 1.75rem;
+    }
+
+    .content-header {
+        background: transparent;
+        padding: 1.5rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .content-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--secondary-color);
+        margin: 0;
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #0a7d6a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(12, 151, 127, 0.2);
+    }
+
+    .filter-container {
+        background: white;
+        padding: 1rem;
+        border-radius: 12px;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 1.5rem;
+    }
+
+    .form-select {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(12, 151, 127, 0.1);
+    }
+
     .chart-container {
         position: relative;
         height: 300px;
+        padding: 1rem;
     }
-    .filter-container {
-        background: #f8f9fa;
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 20px;
+
+    .list-group-item {
+        border: none;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+        background: #f8fafc;
+        transition: all 0.2s ease;
     }
-    .content-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        padding: 0.5rem 1rem;
-        background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+
+    .list-group-item:hover {
+        background: #f1f5f9;
+        transform: translateX(5px);
     }
-    .content-title {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: #2c3e50;
-        margin: 0;
+
+    #salesChart, #topProductsChart, #topCategoriesChart, #topBrandsChart {
+        border-radius: 12px;
     }
-    .btn-primary {
-        background-color: #0C977F;
-        border-color: #0C977F;
-        padding: 0.5rem 1.5rem;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-    .btn-primary:hover {
-        background-color: #0a7d6a;
-        border-color: #0a7d6a;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(12, 151, 127, 0.2);
+
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding: 1rem;
+        }
+        
+        .dashboard-card {
+            margin-bottom: 1rem;
+        }
+        
+        .content-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
     }
 </style>
 
@@ -196,10 +298,39 @@
 <script>
 let salesChart, topProductsChart, topCategoriesChart, topBrandsChart;
 
+// Chart.js defaults for consistent styling
+Chart.defaults.font.family = "'Inter', 'Segoe UI', system-ui, sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.tooltip.padding = 12;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+Chart.defaults.plugins.tooltip.titleFont.size = 14;
+Chart.defaults.plugins.tooltip.titleFont.weight = '600';
+Chart.defaults.plugins.tooltip.bodyFont.size = 13;
+Chart.defaults.elements.point.radius = 4;
+Chart.defaults.elements.point.hoverRadius = 6;
+
+// Modern color palette
+const chartColors = {
+    primary: '#0C977F',
+    secondary: '#2c3e50',
+    success: '#2ecc71',
+    warning: '#f1c40f',
+    info: '#3498db',
+    danger: '#e74c3c',
+    background: '#f8f9fa',
+    gridLines: '#e2e8f0',
+    text: '#64748b'
+};
+
 // Initialize all charts
 function initializeCharts() {
-    // Sales Chart
+    // Sales Chart Configuration
     const salesCtx = document.getElementById('salesChart').getContext('2d');
+    const gradientFill = salesCtx.createLinearGradient(0, 0, 0, 300);
+    gradientFill.addColorStop(0, 'rgba(12, 151, 127, 0.2)');
+    gradientFill.addColorStop(1, 'rgba(12, 151, 127, 0)');
+
     salesChart = new Chart(salesCtx, {
         type: 'line',
         data: {
@@ -207,74 +338,166 @@ function initializeCharts() {
             datasets: [{
                 label: 'Sales',
                 data: [],
-                borderColor: '#0C977F',
-                backgroundColor: 'rgba(12, 151, 127, 0.1)',
+                borderColor: chartColors.primary,
+                backgroundColor: gradientFill,
+                borderWidth: 3,
                 tension: 0.4,
-                fill: true
+                fill: true,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: chartColors.primary,
+                pointBorderWidth: 2,
+                pointHoverBackgroundColor: chartColors.primary,
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 2
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: value => '₹' + value.toLocaleString('en-IN')
-                    }
-                }
-            },
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'white',
+                    titleColor: chartColors.secondary,
+                    bodyColor: chartColors.text,
+                    borderColor: chartColors.gridLines,
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return '₹' + context.parsed.y.toLocaleString('en-IN');
+                        }
+                    }
                 }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: chartColors.text,
+                        padding: 10
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: chartColors.gridLines,
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: chartColors.text,
+                        padding: 10,
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString('en-IN');
+                        }
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
             }
         }
     });
 
-    // Initialize doughnut charts
-    const chartConfigs = [
-        { id: 'topProductsChart', title: 'Products' },
-        { id: 'topCategoriesChart', title: 'Categories' },
-        { id: 'topBrandsChart', title: 'Brands' }
-    ];
-
-    chartConfigs.forEach(config => {
-        const ctx = document.getElementById(config.id).getContext('2d');
-        const chart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: [],
-                datasets: [{
-                    data: [],
-                    backgroundColor: [
-                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                        '#FF9F40', '#FF6B81', '#45AAF2', '#2ED573', '#FFA502'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const value = context.raw;
-                                return `₹${value.toLocaleString('en-IN')}`;
-                            }
+    // Pie Chart Configuration (for Products, Categories, and Brands)
+    const pieChartConfig = {
+        type: 'doughnut',
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        color: chartColors.text,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'white',
+                    titleColor: chartColors.secondary,
+                    bodyColor: chartColors.text,
+                    borderColor: chartColors.gridLines,
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${percentage}%`;
                         }
                     }
                 }
+            },
+            elements: {
+                arc: {
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }
             }
-        });
+        }
+    };
 
-        if (config.id === 'topProductsChart') topProductsChart = chart;
-        else if (config.id === 'topCategoriesChart') topCategoriesChart = chart;
-        else if (config.id === 'topBrandsChart') topBrandsChart = chart;
+    // Initialize pie charts with modern colors
+    const pieChartColors = [
+        '#0C977F', '#2ecc71', '#3498db', '#f1c40f', '#e74c3c',
+        '#9b59b6', '#1abc9c', '#34495e', '#16a085', '#27ae60'
+    ];
+
+    // Top Products Chart
+    topProductsChart = new Chart(document.getElementById('topProductsChart').getContext('2d'), {
+        ...pieChartConfig,
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                backgroundColor: pieChartColors,
+                hoverOffset: 4
+            }]
+        }
+    });
+
+    // Top Categories Chart
+    topCategoriesChart = new Chart(document.getElementById('topCategoriesChart').getContext('2d'), {
+        ...pieChartConfig,
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                backgroundColor: pieChartColors,
+                hoverOffset: 4
+            }]
+        }
+    });
+
+    // Top Brands Chart
+    topBrandsChart = new Chart(document.getElementById('topBrandsChart').getContext('2d'), {
+        ...pieChartConfig,
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                backgroundColor: pieChartColors,
+                hoverOffset: 4
+            }]
+        }
     });
 }
 
@@ -315,7 +538,7 @@ async function updateCharts() {
 // Helper function to update top charts and lists
 function updateTopChart(chart, data, listId) {
     if (!data || data.length === 0) {
-        console.log('No data available for', listId);
+      
         return;
     }
 

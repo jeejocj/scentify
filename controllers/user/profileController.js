@@ -64,7 +64,7 @@ const forgotEmailValid = async(req,res)=>{
             req.session.userOtp=otp;
             req.session.email = email;
             res.render("forgotPass-otp");
-            console.log("OTP",otp);
+          
             
         }else{
             res.json({success:false,message:"Failed to send OTP .Please try again"})
@@ -107,10 +107,10 @@ const resendOtp = async (req, res) => {
         const otp = generateOtp();
         req.session.userOtp = otp;
         const email = req.session.email;
-        console.log("Resending OTP to email:", email);
+    
         const emailSent = await sendVerificationEmail(email, otp);
         if (emailSent) {
-            console.log("Resend OTP", otp);
+        
             res.status(200).json({ success: true, message: "Resend OTP Successful" });
         } else {
             throw new Error("Failed to send email");
@@ -157,7 +157,7 @@ const postNewPassword = async (req, res) => {
         );
         res.redirect("/login");
     } catch (error) {
-        console.log(error)
+        console.error(error)
         res.redirect("/pageNotFound");
     }
 };
@@ -262,7 +262,7 @@ const changePasswordValid = async (req, res) => {
             req.session.userOtp = otp;
             req.session.email = email;
             res.render("change-password-otp");
-            console.log("OTP", otp);
+         
         } else {
             res.render("change-password", {
                 message: "Failed to send verification email. Please try again."
@@ -305,7 +305,7 @@ const resendChangePasswordOtp = async (req, res) => {
         
         if (emailSent) {
             req.session.userOtp = otp;
-            console.log("New OTP", otp);
+          
             res.json({
                 success: true,
                 message: "OTP sent successfully"

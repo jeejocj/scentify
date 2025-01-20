@@ -32,7 +32,7 @@ productData = productData.slice(0,4);
       }
   
     } catch (error) {
-      console.log(error);
+      console.error(error);
       res.status(500).send("Sever error")
     }
   };
@@ -103,7 +103,7 @@ async function sendVerificationEmail(email,otp) {
       req.session.userOtp = otp;
       req.session.userData = {name,phone,email,password};
       res.render("verify-otp");
-      console.log("OTP Sent",otp);
+      
     } catch (error) {
       console.error("signup error:", error);
       res.redirect("/pageNotFound")
@@ -176,7 +176,7 @@ async function sendVerificationEmail(email,otp) {
      req.session.userOtp = otp;
      const emailSent = await sendVerificationEmail(email,otp);
      if(emailSent){
-      console.log("Resend OTP:",otp);
+     
       return res.status(200).json({success:true,message:"OTP Resend Successfully"})
      }else{
       return res.status(500).json({success:false,message:"Failed to Resend OTP. Please try again"});
@@ -234,13 +234,13 @@ async function sendVerificationEmail(email,otp) {
     try{
     req.session.destroy((err)=>{
       if(err){
-        console.log("Seesion destructure error",err.message)
+        console.error("Session destructure error",err.message)
         return res.redirect("/pageNotFound")
       }
       return res.redirect("/login")
     })
     }catch(error){
-      console.log("logout error",error);
+      console.error("logout error",error);
       res.redirect("/PageNotFound")
 
     }

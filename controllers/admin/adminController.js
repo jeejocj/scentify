@@ -65,7 +65,9 @@ const logout = async (req, res) => {
 
 const loadSalesReport = async (req, res) => {
   try {
-    const { period = 'daily', startDate: customStartDate, endDate: customEndDate, status = 'all' } = req.query;
+    const { period = 'daily', startDate: customStartDate, endDate: customEndDate, status = 'all', page = 1 } = req.query;
+    const limit = 10; // Number of items per page
+    const skip = (page - 1) * limit;
     
     // Calculate date range based on period
     let endDate = new Date();
@@ -105,7 +107,11 @@ const loadSalesReport = async (req, res) => {
       query.status = status;
     }
 
-    // Get orders within date range
+    // Get total count for pagination
+    const totalOrders = await Order.countDocuments(query);
+    const totalPages = Math.ceil(totalOrders / limit);
+
+    // Get orders within date range with pagination
     const orders = await Order.find(query)
       .populate({
         path: 'userId',
@@ -115,7 +121,9 @@ const loadSalesReport = async (req, res) => {
         path: 'orderedItems.product',
         select: 'productName price regularPrice salesPrice'
       })
-      .sort({ createdOn: -1 });
+      .sort({ createdOn: -1 })
+      .skip(skip)
+      .limit(limit);
 
     // Calculate totals
     const totals = {
@@ -157,7 +165,11 @@ const loadSalesReport = async (req, res) => {
       startDate: startDate.toISOString().split('T')[0],
       endDate: endDate.toISOString().split('T')[0],
       paymentStats,
-      uniqueStatuses
+      uniqueStatuses,
+      currentPage: parseInt(page),
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1
     });
   } catch (error) {
     console.error('Error loading sales report:', error);
