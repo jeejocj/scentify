@@ -550,26 +550,61 @@ const downloadSalesReport = async (req, res) => {
       const startX = 40;
       const lineHeight = 30;  
       const columnWidths = {
-        orderId: 70,
-        date: 60,
-        customer: 70,
-        products: 120,  
-        amount: 60,
-        status: 60,
-        payment: 80  // Increased width for payment method
+        orderId: 80,    // Increased width for order ID
+        date: 70,       // Increased width for date
+        customer: 90,   // Increased width for customer name
+        products: 140,  // Increased width for products
+        amount: 70,     // Increased width for amount
+        status: 70,     // Increased width for status
+        payment: 70     // Width for payment method
       };
+
+      // Calculate total width and adjust if needed
+      const totalWidth = Object.values(columnWidths).reduce((sum, width) => sum + width, 0);
+      const scale = Math.min(1, (doc.page.width - 80) / totalWidth);
+      
+      Object.keys(columnWidths).forEach(key => {
+        columnWidths[key] = Math.floor(columnWidths[key] * scale);
+      });
 
       // Draw table header
       drawColoredRect(startX, currentY, doc.page.width - 80, lineHeight, '#4A90E2');
+      
+      // Helper function for truncating text
+      const truncateText = (text, width, fontSize) => {
+        if (!text) return '';
+        const averageCharWidth = fontSize * 0.5;
+        const maxChars = Math.floor(width / averageCharWidth);
+        return text.length > maxChars ? text.substring(0, maxChars - 3) + '...' : text;
+      };
+
+      // Header text
       doc.fontSize(10)
-         .fillColor('white')
-         .text('Order ID', startX + 5, currentY + 7, { width: columnWidths.orderId - 10, align: 'left' })
-         .text('Date', startX + columnWidths.orderId + 5, currentY + 7, { width: columnWidths.date - 10, align: 'left' })
-         .text('Customer', startX + columnWidths.orderId + columnWidths.date + 5, currentY + 7, { width: columnWidths.customer - 10, align: 'left' })
-         .text('Products', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + 5, currentY + 7, { width: columnWidths.products - 10, align: 'left' })
-         .text('Amount', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + columnWidths.products + 5, currentY + 7, { width: columnWidths.amount - 10, align: 'right' })
-         .text('Status', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + columnWidths.products + columnWidths.amount + 5, currentY + 7, { width: columnWidths.status - 10, align: 'left' })
-         .text('Payment', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + columnWidths.products + columnWidths.amount + columnWidths.status + 5, currentY + 7, { width: columnWidths.payment - 10, align: 'left' });
+         .fillColor('white');
+
+      let headerX = startX + 5;
+      const headers = [
+        { text: 'Order ID', width: columnWidths.orderId },
+        { text: 'Date', width: columnWidths.date },
+        { text: 'Customer', width: columnWidths.customer },
+        { text: 'Products', width: columnWidths.products },
+        { text: 'Amount', width: columnWidths.amount },
+        { text: 'Status', width: columnWidths.status },
+        { text: 'Payment', width: columnWidths.payment }
+      ];
+
+      headers.forEach(header => {
+        doc.text(
+          header.text,
+          headerX,
+          currentY + 7,
+          {
+            width: header.width - 10,
+            align: header.text === 'Amount' ? 'right' : 'left'
+          }
+        );
+        headerX += header.width;
+      });
 
       currentY += lineHeight;
 
@@ -582,15 +617,23 @@ const downloadSalesReport = async (req, res) => {
           
           // Redraw header on new page
           drawColoredRect(startX, currentY, doc.page.width - 80, lineHeight, '#4A90E2');
+          
+          headerX = startX + 5;
           doc.fontSize(10)
-             .fillColor('white')
-             .text('Order ID', startX + 5, currentY + 7, { width: columnWidths.orderId - 10, align: 'left' })
-             .text('Date', startX + columnWidths.orderId + 5, currentY + 7, { width: columnWidths.date - 10, align: 'left' })
-             .text('Customer', startX + columnWidths.orderId + columnWidths.date + 5, currentY + 7, { width: columnWidths.customer - 10, align: 'left' })
-             .text('Products', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + 5, currentY + 7, { width: columnWidths.products - 10, align: 'left' })
-             .text('Amount', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + columnWidths.products + 5, currentY + 7, { width: columnWidths.amount - 10, align: 'right' })
-             .text('Status', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + columnWidths.products + columnWidths.amount + 5, currentY + 7, { width: columnWidths.status - 10, align: 'left' })
-             .text('Payment', startX + columnWidths.orderId + columnWidths.date + columnWidths.customer + columnWidths.products + columnWidths.amount + columnWidths.status + 5, currentY + 7, { width: columnWidths.payment - 10, align: 'left' });
+             .fillColor('white');
+          
+          headers.forEach(header => {
+            doc.text(
+              header.text,
+              headerX,
+              currentY + 7,
+              {
+                width: header.width - 10,
+                align: header.text === 'Amount' ? 'right' : 'left'
+              }
+            );
+            headerX += header.width;
+          });
           
           currentY += lineHeight;
         }
@@ -605,76 +648,95 @@ const downloadSalesReport = async (req, res) => {
 
         let xOffset = startX + 5;
         
-        // Order ID
-        doc.text(order.orderId.toString(), xOffset, currentY + 7, { 
-            width: columnWidths.orderId - 10, 
-            align: 'left' 
-        });
+        // Order ID (truncated if too long)
+        doc.text(
+          truncateText(order.orderId.toString(), columnWidths.orderId - 15, 9),
+          xOffset,
+          currentY + 7,
+          { width: columnWidths.orderId - 10, align: 'left' }
+        );
         xOffset += columnWidths.orderId;
         
         // Date
-        doc.text(new Date(order.createdOn).toLocaleDateString(), xOffset, currentY + 7, { 
-            width: columnWidths.date - 10, 
-            align: 'left' 
-        });
+        doc.text(
+          new Date(order.createdOn).toLocaleDateString(),
+          xOffset,
+          currentY + 7,
+          { width: columnWidths.date - 10, align: 'left' }
+        );
         xOffset += columnWidths.date;
         
-        // Customer
-        doc.text(order.userId?.name || 'N/A', xOffset, currentY + 7, { 
-            width: columnWidths.customer - 10, 
-            align: 'left' 
-        });
+        // Customer (truncated if too long)
+        doc.text(
+          truncateText(order.userId?.name || 'N/A', columnWidths.customer - 15, 9),
+          xOffset,
+          currentY + 7,
+          { width: columnWidths.customer - 10, align: 'left' }
+        );
         xOffset += columnWidths.customer;
         
-        // Products with proper wrapping
+        // Products with proper wrapping and truncation
         const productsText = order.orderedItems.map(item => {
-            const productName = item.product?.productName || 'N/A';
-            return `${productName} (${item.quantity})`;
-        }).join('\n');  
+          const productName = item.product?.productName || 'N/A';
+          return truncateText(`${productName} (${item.quantity})`, columnWidths.products - 15, 9);
+        }).join('\n');
         
         const productLines = doc.heightOfString(productsText, {
-            width: columnWidths.products - 10,
-            align: 'left'
+          width: columnWidths.products - 10,
+          align: 'left'
         });
         
         const rowHeight = Math.max(lineHeight, productLines + 14);
         
-        doc.text(productsText, xOffset, currentY + 7, {
-            width: columnWidths.products - 10,
-            align: 'left'
-        });
+        doc.text(
+          productsText,
+          xOffset,
+          currentY + 7,
+          { width: columnWidths.products - 10, align: 'left' }
+        );
         xOffset += columnWidths.products;
         
-        // Amount
-        doc.text(`₹${order.finalAmount.toFixed(2)}`, xOffset, currentY + 7, { 
-            width: columnWidths.amount - 10, 
-            align: 'right' 
-        });
+        // Amount (right-aligned)
+        doc.text(
+          `₹${order.finalAmount.toFixed(2)}`,
+          xOffset,
+          currentY + 7,
+          { width: columnWidths.amount - 10, align: 'right' }
+        );
         xOffset += columnWidths.amount;
         
         // Status with color coding
         const statusColors = {
-            'Pending': '#FFA500',
-            'Processing': '#3498DB',
-            'Shipped': '#2980B9',
-            'Delivered': '#27AE60',
-            'Cancelled': '#E74C3C',
-            'Return Request': '#F39C12',
-            'Returned': '#95A5A6'
+          'Pending': '#FFA500',
+          'Processing': '#3498DB',
+          'Shipped': '#2980B9',
+          'Delivered': '#27AE60',
+          'Cancelled': '#E74C3C',
+          'Return Request': '#F39C12',
+          'Returned': '#95A5A6'
         };
+        
         doc.fillColor(statusColors[order.status] || '#2C3E50')
-           .text(order.status, xOffset, currentY + 7, { 
-               width: columnWidths.status - 10, 
-               align: 'left' 
-           });
+           .text(
+             truncateText(order.status, columnWidths.status - 15, 9),
+             xOffset,
+             currentY + 7,
+             { width: columnWidths.status - 10, align: 'left' }
+           );
         xOffset += columnWidths.status;
         
-        // Payment Method
+        // Payment Method (truncated if too long)
         doc.fillColor('#2C3E50')
-           .text(order.paymentMethod === 'Online Payment' ? 'Online' : order.paymentMethod, xOffset, currentY + 7, { 
-               width: columnWidths.payment - 10, 
-               align: 'left' 
-           });
+           .text(
+             truncateText(
+               order.paymentMethod === 'Online Payment' ? 'Online' : order.paymentMethod,
+               columnWidths.payment - 15,
+               9
+             ),
+             xOffset,
+             currentY + 7,
+             { width: columnWidths.payment - 10, align: 'left' }
+           );
 
         currentY += rowHeight;
       });
