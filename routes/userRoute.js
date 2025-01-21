@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../models/userModel");
-const Product = require("../models/productModel"); 
+ 
 const userController = require("../controllers/user/userController");
 const productController = require("../controllers/user/productController");
 const profileController = require("../controllers/user/profileController");
@@ -100,8 +99,7 @@ router.get('/orders', userAuth, orderController.getOrderHistory);
 router.get('/orders/download-invoice/:orderId', userAuth, orderController.downloadInvoice);
 router.get('/orders/get-details/:orderId', userAuth, orderController.getOrderDetailsJson);
 router.post('/orders/update-status', userAuth, orderController.updateOrderStatus);
-// router.get('/return-reason', userAuth, orderController.showReturnReasonPage);
-// router.post('/submit-return-reason', userAuth, orderController.submitReturnReason);
+
 
 // Wallet Routes
 router.get('/wallet/details', userAuth, walletController.getWalletDetails);
@@ -109,6 +107,6 @@ router.post('/wallet/recharge', userAuth, walletController.createWalletRechargeO
 router.post('/wallet/verify', userAuth, walletController.verifyWalletRecharge);
 
 // Return request route
-router.post('/submit-return-request', userAuth, userController.submitReturnRequest);
+router.post('/request-return', userAuth, orderController.requestReturn);
 
 module.exports = router

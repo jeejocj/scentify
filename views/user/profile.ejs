@@ -683,9 +683,27 @@
                                                                         </div>
                                                                     </div>
                                                                     <div class="order-status">
-                                                                        <span class="status-badge status-<%= order.status.toLowerCase() %>">
+                                                                        <span class="badge <%= 
+                                                                            order.status === 'Delivered' ? 'bg-success' : 
+                                                                            order.status === 'Cancelled' ? 'bg-danger' : 
+                                                                            order.status === 'Returned' ? 'bg-secondary' :
+                                                                            'bg-warning' %>">
                                                                             <%= order.status %>
                                                                         </span>
+
+                                                                        <% if (order.returnRequest && order.returnRequest.status !== 'None') { %>
+                                                                            <span class="badge <%= 
+                                                                                order.returnRequest.status === 'Approved' ? 'bg-success' : 
+                                                                                order.returnRequest.status === 'Rejected' ? 'bg-danger' : 
+                                                                                'bg-warning' %>">
+                                                                                Return <%= order.returnRequest.status %>
+                                                                            </span>
+                                                                            <% if (order.returnRequest.status === 'Approved') { %>
+                                                                                <div class="mt-2 small text-success">
+                                                                                    Refund of ₹<%= order.finalAmount %> has been credited to your wallet
+                                                                                </div>
+                                                                            <% } %>
+                                                                        <% } %>
                                                                     </div>
                                                                 </div>
                                                                 <div class="order-details">
@@ -720,12 +738,12 @@
                                                                             </button>
                                                                         <% } %>
                                                                         
-                                                                        <% if(order.status === 'Delivered') { %>
+                                                                        <% if(order.status === 'Delivered' && (!order.returnRequest || order.returnRequest.status === 'None')) { %>
                                                                             <button 
                                                                                 type="button" 
                                                                                 class="btn btn-outline-warning btn-sm return-order-btn" 
-                                                                                onclick="showReturnModal('<%= order.orderId %>')">
-                                                                                Return Order
+                                                                                onclick="requestReturn('<%= order._id %>')">
+                                                                                Request Return
                                                                             </button>
                                                                         <% } %>
                                                                         
@@ -796,23 +814,20 @@
                                                                     <div class="transaction-details">
                                                                         <div class="transaction-info">
                                                                             <span class="transaction-desc"><%= transaction.description %></span>
-                                                                            <% if (transaction.orderId) { %>
-                                                                                <small class="transaction-id">Order: #<%= transaction.orderId %></small>
+                                                                            <% if (transaction.description.toLowerCase().includes('refund') && transaction.orderId && transaction.orderId.length > 0) { %>
+                                                                                <span class="order-id">(Order #<%= transaction.orderId[0] %>)</span>
+                                                                            <% } else if (transaction.description.toLowerCase().includes('recharge') && transaction.paymentId) { %>
+                                                                                <span class="payment-id">(Payment #<%= transaction.paymentId %>)</span>
                                                                             <% } %>
-                                                                            <% if (transaction.paymentId) { %>
-                                                                                <small class="transaction-id">Payment: <%= transaction.paymentId %></small>
-                                                                            <% } %>
+                                                                            <span class="transaction-date"><%= new Date(transaction.date).toLocaleDateString('en-IN', { 
+                                                                                year: 'numeric', 
+                                                                                month: 'short', 
+                                                                                day: 'numeric'
+                                                                            }) %></span>
                                                                         </div>
                                                                         <div class="transaction-meta">
                                                                             <span class="transaction-amount <%= transaction.type === 'credit' ? 'credit' : 'debit' %>">
                                                                                 <%= transaction.type === 'credit' ? '+' : '-' %>₹<%= transaction.amount.toLocaleString('en-IN') %>
-                                                                            </span>
-                                                                            <span class="transaction-date">
-                                                                                <%= new Date(transaction.date).toLocaleDateString('en-IN', { 
-                                                                                    year: 'numeric', 
-                                                                                    month: 'short', 
-                                                                                    day: 'numeric'
-                                                                                }) %>
                                                                             </span>
                                                                         </div>
                                                                     </div>
@@ -1169,21 +1184,23 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="returnModalLabel">Return Order</h5>
+                <h5 class="modal-title" id="returnModalLabel">Request Return</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="returnForm" onsubmit="submitReturn(event)">
-                    <input type="hidden" id="returnOrderId" name="orderId">
-                    <div class="mb-3">
-                        <label for="returnReason" class="form-label">Please explain the reason for return</label>
-                        <textarea class="form-control" id="returnReason" name="returnReason" rows="3" required placeholder="Enter your reason for returning the order"></textarea>
+                <div class="mb-3">
+                    <label for="returnReason" class="form-label">Reason for Return</label>
+                    <textarea class="form-control" id="returnReason" rows="3" required 
+                        placeholder="Please explain why you want to return this order"></textarea>
+                    <div class="invalid-feedback">
+                        Please provide a reason for return
                     </div>
-                </form>
+                </div>
+                <input type="hidden" id="returnOrderId">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" form="returnForm" class="btn btn-primary">Submit Return Request</button>
+                <button type="button" class="btn btn-primary" onclick="submitReturnRequest()">Submit Request</button>
             </div>
         </div>
     </div>
@@ -1544,7 +1561,6 @@
     }
 
     function verifyRetryPayment(payment, orderId) {
-        console.log('Verifying payment:', { payment, orderId });
         
         const verificationData = {
             razorpay_payment_id: payment.razorpay_payment_id,
@@ -1561,7 +1577,6 @@
             },
             data: JSON.stringify(verificationData),
             success: function(response) {
-                console.log('Verification response:', response);
                 if (response.success) {
                     Swal.fire({
                         icon: 'success',
@@ -1665,90 +1680,67 @@
         });
     }
 
-    function showReturnModal(orderId) {
-        console.log('Opening return modal for order:', orderId);
+    function requestReturn(orderId) {
         document.getElementById('returnOrderId').value = orderId;
-        document.getElementById('returnReason').value = ''; // Clear previous input
-        new bootstrap.Modal(document.getElementById('returnModal')).show();
+        document.getElementById('returnReason').value = '';
+        const returnModal = new bootstrap.Modal(document.getElementById('returnModal'));
+        returnModal.show();
     }
 
-    function submitReturn(event) {
-        event.preventDefault();
+    async function submitReturnRequest() {
         const orderId = document.getElementById('returnOrderId').value;
-        const returnReason = document.getElementById('returnReason').value.trim();
+        const reason = document.getElementById('returnReason').value.trim();
+        const returnReason = document.getElementById('returnReason');
 
-        console.log('Submitting return request:', {
-            orderId,
-            returnReason
-        });
+        // Reset validation
+        returnReason.classList.remove('is-invalid');
 
-        if (!returnReason) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Please provide a reason for return'
-            });
+        if (!reason) {
+            returnReason.classList.add('is-invalid');
             return;
         }
 
-        // Show loading state
-        Swal.fire({
-            title: 'Submitting Return Request...',
-            text: 'Please wait while we process your request',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
+        try {
+            const response = await fetch('/request-return', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    orderId,
+                    reason
+                })
+            });
 
-        fetch('/submit-return-request', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                orderId,
-                returnReason
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(data => {
-                    throw new Error(data.message || 'Failed to submit return request');
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
+            const data = await response.json();
+
             if (data.success) {
-                // Close the modal first
-                const modal = bootstrap.Modal.getInstance(document.getElementById('returnModal'));
-                if (modal) {
-                    modal.hide();
-                }
-
-                // Show success message and reload
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
                     text: 'Return request submitted successfully',
-                    confirmButtonText: 'OK'
-                }).then((result) => {
-                    location.reload();
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('returnModal'));
+                    modal.hide();
+                    window.location.reload();
                 });
             } else {
-                throw new Error(data.message || 'Failed to submit return request');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to submit return request'
+                });
             }
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Error:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: error.message || 'Failed to submit return request'
+                text: 'Something went wrong. Please try again.'
             });
-        });
+        }
     }
 
     function confirmLogout() {

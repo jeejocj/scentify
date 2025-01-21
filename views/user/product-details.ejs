@@ -1413,12 +1413,12 @@
                 <!-- Product Gallery -->
                 <div class="col-lg-6">
                     <div class="product-gallery">
-                        <img src="/uploads/re-image/<%= product.productImage[0] %>" alt="<%= product.productName %>"
+                        <img src="/uploads/product-images/<%= product.productImage[0] %>" alt="<%= product.productName %>"
                             class="main-image" id="mainImage" onmousemove="zoomImage(event)"
                             onmouseleave="resetZoom(event)" onclick="toggleZoom(event)">
                         <div class="thumbnail-container">
                             <% product.productImage.forEach((image, index)=> { %>
-                                <img src="/uploads/re-image/<%= image %>"
+                                <img src="/uploads/product-images/<%= image %>"
                                     alt="<%= product.productName %> - <%= index + 1 %>" class="thumbnail"
                                     onclick="changeImage(this)">
                                 <% }); %>
@@ -1528,7 +1528,7 @@
                                     <div class="product-card">
                                         <div class="product-card-img">
                                             <% if (product.productImage && product.productImage.length > 0) { %>
-                                                <img src="/uploads/re-image/<%= product.productImage[0] %>" alt="<%= product.productName %>">
+                                                <img src="/uploads/product-images/<%= product.productImage[0] %>" alt="<%= product.productName %>">
                                             <% } else { %>
                                                 <div class="no-image">No Image Available</div>
                                             <% } %>
@@ -1598,7 +1598,7 @@
             button.addEventListener('click', async function(e) {
                 e.preventDefault();
                 const productId = this.getAttribute('data-product-id');
-                // console.log('Adding product:', productId);
+             
 
                 try {
                     // Show loading state
@@ -1617,9 +1617,9 @@
                         credentials: 'include'
                     });
 
-                    // console.log('Response status:', response.status);
+                
                     const data = await response.json();
-                    // console.log('Response data:', data);
+                  
 
                     // Reset button state
                     this.textContent = '+ Add To Cart';

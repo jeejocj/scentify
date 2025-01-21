@@ -39,19 +39,24 @@
                             <tbody>
                                 <% orders.forEach(order => { %>
                                     <tr>
-                                        <td><%= order._id %></td>
+                                        <td>#<%= order.orderId %></td>
                                         <td><%= order.userName %></td>
                                         <td><%= new Date(order.createdOn).toLocaleDateString() %></td>
                                         <td>
                                             <select class="form-select status-select" 
-                                                    data-order-id="<%= order._id.toString() %>"
-                                                    <%= order.status === 'Cancelled' || order.status === 'Returned' ? 'disabled' : '' %>>
+                                                    data-order-id="<%= order._id %>" 
+                                                    data-payment-status="<%= order.paymentStatus %>"
+                                                    data-amount="<%= order.finalAmount %>"
+                                                    <%= order.status === 'Delivered' || 
+                                                        order.status === 'Cancelled' || 
+                                                        order.status === 'Returned' || 
+                                                        order.returnRequest?.status !== 'None' ? 'disabled' : '' %>>
                                                 <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
                                                 <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
                                                 <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
                                                 <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                                                 <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-                                                <option value="Return Request" <%= order.status === 'Return Request' ? 'selected' : '' %>>Return Request</option>
+                                                <option value="Return Pending" <%= order.status === 'Return Pending' ? 'selected' : '' %>>Return Pending</option>
                                                 <option value="Returned" <%= order.status === 'Returned' ? 'selected' : '' %>>Returned</option>
                                             </select>
                                         </td>
@@ -64,6 +69,26 @@
                                                class="btn btn-info btn-sm">
                                                 View
                                             </a>
+                                            <% if (order.returnRequest && order.returnRequest.status === 'Pending') { %>
+                                                <div class="return-actions mt-2">
+                                                    <button class="btn btn-success btn-sm" onclick="handleReturnRequest('<%= order._id %>', 'approve')">
+                                                        <i class="fas fa-check"></i> Approve Return
+                                                    </button>
+                                                    <button class="btn btn-danger btn-sm" onclick="handleReturnRequest('<%= order._id %>', 'reject')">
+                                                        <i class="fas fa-times"></i> Reject Return
+                                                    </button>
+                                                </div>
+                                            <% } %>
+                                            
+                                            <% if (order.returnRequest && order.returnRequest.status !== 'None') { %>
+                                                <div class="return-status mt-2">
+                                                    <span class="badge bg-<%= order.returnRequest.status === 'Approved' ? 'success' : 
+                                                                              order.returnRequest.status === 'Rejected' ? 'danger' : 
+                                                                              'warning' %>">
+                                                        Return <%= order.returnRequest.status %>
+                                                    </span>
+                                                </div>
+                                            <% } %>
                                         </td>
                                     </tr>
                                 <% }); %>
@@ -95,7 +120,6 @@ const validStatusTransitions = {
 document.addEventListener('DOMContentLoaded', function() {
     // Check if DataTable is available
     if ($.fn.DataTable) {
-        console.log('DataTable plugin is loaded');
         try {
             let table = $('#ordersTable').DataTable({
                 order: [[2, "desc"]], 
@@ -115,7 +139,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             });
-            console.log('DataTable initialized successfully');
         } catch (error) {
             console.error('Error initializing DataTable:', error);
         }
@@ -172,16 +195,80 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add event listeners to all status select dropdowns
     $('.status-select').on('change', function() {
-        console.log('Status changed');
         const $select = $(this);
         const orderId = $select.data('orderId');
         const newStatus = $select.val();
         const oldStatus = $select.find('option[selected]').val() || 
                          $select.find('option[selected]').val();
 
-        console.log('Order ID:', orderId);
-        console.log('New Status:', newStatus);
-        console.log('Old Status:', oldStatus);
+        async function updateOrderStatus(orderId, newStatus) {
+            let confirmMessage = `Are you sure you want to change the order status to ${newStatus}?`;
+            let confirmTitle = 'Update Status';
+            
+            if (newStatus === 'Cancelled') {
+                const orderDetails = document.querySelector(`[data-order-id="${orderId}"]`);
+                const paymentStatus = orderDetails?.dataset.paymentStatus;
+                const orderAmount = orderDetails?.dataset.amount;
+                
+                if (paymentStatus === 'Completed') {
+                    confirmTitle = 'Cancel Order & Process Refund';
+                    confirmMessage = `This will cancel the order and refund ₹${orderAmount} to the customer's wallet. Continue?`;
+                }
+            }
+
+            const result = await Swal.fire({
+                title: confirmTitle,
+                text: confirmMessage,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: newStatus === 'Cancelled' ? '#dc3545' : '#3085d6',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: newStatus === 'Cancelled' ? 'Yes, cancel it!' : 'Yes, update it!',
+                cancelButtonText: 'No, keep it'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch('/admin/orders/update-status', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            orderId,
+                            status: newStatus
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: data.message,
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Something went wrong. Please try again.',
+                        icon: 'error'
+                    });
+                }
+            }
+        }
 
         // Check if the status transition is valid
         const allowedNextStatuses = validStatusTransitions[oldStatus] || [];
@@ -202,101 +289,106 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        Swal.fire({
-            title: 'Change Order Status?',
-            html: `Are you sure you want to change the order status from <b>${oldStatus}</b> to <b>${newStatus}</b>?`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Change',
-            cancelButtonText: 'Cancel',
-            customClass: {
-                popup: 'swal2-popup',
-                title: 'swal2-title',
-                htmlContainer: 'swal2-html-container',
-                confirmButton: 'swal2-confirm',
-                cancelButton: 'swal2-cancel',
-                icon: 'swal2-icon swal2-warning'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({
-                    title: 'Updating Status...',
-                    html: 'Please wait while we update the order status.',
-                    allowOutsideClick: false,
-                    customClass: {
-                        popup: 'swal2-popup',
-                        title: 'swal2-title',
-                        htmlContainer: 'swal2-html-container'
-                    },
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
-                // Make API call
-                $.ajax({
-                    url: '/admin/orders/update-status',
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    data: JSON.stringify({
-                        orderId: orderId,
-                        status: newStatus
-                    }),
-                    success: function(response) {
-                        console.log('Response:', response);
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Status Updated!',
-                                html: response.message || `Order status has been successfully updated to <b>${newStatus}</b>`,
-                                customClass: {
-                                    popup: 'swal2-popup',
-                                    title: 'swal2-title',
-                                    htmlContainer: 'swal2-html-container',
-                                    confirmButton: 'swal2-confirm',
-                                    icon: 'swal2-icon swal2-success'
-                                }
-                            }).then(() => {
-                                // Update the select options before reloading
-                                updateStatusOptions($select);
-                                window.location.reload();
-                            });
-                        } else {
-                            throw new Error(response.message || 'Failed to update status');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error:', error);
-                        console.error('Response:', xhr.responseText);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Update Failed',
-                            html: xhr.responseJSON?.message || 'Failed to update the order status.<br>Please try again.',
-                            customClass: {
-                                popup: 'swal2-popup',
-                                title: 'swal2-title',
-                                htmlContainer: 'swal2-html-container',
-                                confirmButton: 'swal2-confirm',
-                                icon: 'swal2-icon swal2-error'
-                            }
-                        });
-                        // Revert to old status
-                        $select.val(oldStatus);
-                        updateStatusOptions($select);
-                    }
-                });
-            } else {
-                // If user cancels, revert to old status
-                $select.val(oldStatus);
-            }
-        });
+        updateOrderStatus(orderId, newStatus);
     });
 });
+
+async function handleReturnRequest(orderId, action) {
+    const actionText = action === 'approve' ? 'approve' : 'reject';
+    const result = await Swal.fire({
+        title: `Confirm ${actionText}?`,
+        text: `Are you sure you want to ${actionText} this return request?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: action === 'approve' ? '#28a745' : '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: `Yes, ${actionText} it!`,
+        cancelButtonText: 'Cancel'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch(`/admin/return-request/${orderId}/${action}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                Swal.fire({
+                    title: 'Success!',
+                    text: data.message,
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.reload();
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error!',
+                    text: data.message,
+                    icon: 'error'
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: 'Something went wrong. Please try again.',
+                icon: 'error'
+            });
+        }
+    }
+}
 </script>
 
 <style>
+.status-select {
+    padding: 0.375rem 0.75rem;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    width: 100%;
+}
+
+.status-select:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.status-select option {
+    padding: 8px;
+}
+
+/* Status-specific styles */
+.status-select[data-status="Cancelled"] {
+    border-color: #dc3545;
+    color: #dc3545;
+    background-color: #f8d7da;
+}
+
+.status-select[data-status="Delivered"] {
+    border-color: #198754;
+    color: #198754;
+    background-color: #d1e7dd;
+}
+
+.status-select[data-status="Returned"] {
+    border-color: #6c757d;
+    color: #6c757d;
+    background-color: #e2e3e5;
+}
+
+.status-select[data-status="Return Pending"] {
+    border-color: #ffc107;
+    color: #997404;
+    background-color: #fff3cd;
+}
+
 .status-select {
     min-width: 140px;
 }
@@ -375,6 +467,39 @@ document.addEventListener('DOMContentLoaded', function() {
 .swal2-loader {
     border-color: #3b82f6 transparent #3b82f6 transparent !important;
 }
+
+.return-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.return-actions button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.return-actions i {
+    font-size: 0.875rem;
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set data-status attribute for all selects
+    const statusSelects = document.querySelectorAll('.status-select');
+    statusSelects.forEach(select => {
+        const currentStatus = select.value;
+        select.setAttribute('data-status', currentStatus);
+    });
+
+    // Update data-status when selection changes
+    statusSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.setAttribute('data-status', this.value);
+        });
+    });
+});
+</script>
 
 <%- include("../../views/partials/admin/footer") %>

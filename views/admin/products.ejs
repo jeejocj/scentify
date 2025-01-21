@@ -370,11 +370,11 @@
                 const response = await fetch(`/admin/blockProduct/${productId}`, {
                     method: 'PUT'
                 });
-
+                const data = await response.json();
                 if (response.ok) {
                     Swal.fire({
                         title: 'Blocked!',
-                        text: 'Product has been blocked.',
+                        text: data.message || 'Product has been blocked.',
                         icon: 'success',
                         showConfirmButton: false,
                         timer: 1500

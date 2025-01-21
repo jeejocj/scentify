@@ -611,16 +611,129 @@ const downloadInvoice = async (req, res) => {
     }
 };
 
+const requestReturn = async (req, res) => {
+    try {
+        const { orderId, reason } = req.body;
+        // Get user ID from session
+        const userId = req.session.user?._id;
+
+        console.log('Request data:', {
+            orderId,
+            reason,
+            sessionUser: req.session.user,
+            userId: userId
+        });
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User not authenticated'
+            });
+        }
+
+        if (!orderId || !reason) {
+            return res.status(400).json({
+                success: false,
+                message: 'Order ID and reason are required'
+            });
+        }
+
+        // Convert string IDs to ObjectId if needed
+        const mongoose = require('mongoose');
+        const orderObjectId = mongoose.Types.ObjectId.isValid(orderId) ? 
+            new mongoose.Types.ObjectId(orderId) : null;
+        const userObjectId = mongoose.Types.ObjectId.isValid(userId) ? 
+            new mongoose.Types.ObjectId(userId) : null;
+
+        if (!orderObjectId || !userObjectId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid order ID or user ID format'
+            });
+        }
+
+        // Find the order and populate necessary fields
+        const order = await Order.findOne({ 
+            _id: orderObjectId,
+            userId: userObjectId
+        });
+
+        console.log('Order lookup:', { 
+            orderId: orderObjectId, 
+            userId: userObjectId, 
+            orderFound: !!order,
+            orderDetails: order ? {
+                status: order.status,
+                userId: order.userId.toString(),
+                returnRequest: order.returnRequest
+            } : null
+        });
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
+        }
+
+        // Validate order status
+        if (order.status !== 'Delivered') {
+            return res.status(400).json({
+                success: false,
+                message: 'Only delivered orders can be returned'
+            });
+        }
+
+        // Check if return request already exists
+        if (order.returnRequest && order.returnRequest.status !== 'None') {
+            return res.status(400).json({
+                success: false,
+                message: 'Return request already exists for this order'
+            });
+        }
+
+        // Initialize returnRequest if it doesn't exist
+        if (!order.returnRequest) {
+            order.returnRequest = {
+                status: 'None',
+                reason: '',
+                requestDate: null,
+                actionDate: null
+            };
+        }
+
+        // Update order with return request
+        order.status = 'Return Pending';
+        order.returnRequest.status = 'Pending';
+        order.returnRequest.reason = reason;
+        order.returnRequest.requestDate = new Date();
+
+        await order.save();
+
+        res.json({
+            success: true,
+            message: 'Return request submitted successfully'
+        });
+
+    } catch (error) {
+        console.error('Error requesting return:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error submitting return request'
+        });
+    }
+};
+
 module.exports = {
     getOrderHistory,
-    // getOrderDetails,
+   
     cancelOrder,
     getOrderStatus,
     viewOrderDetails,
     changeOrderStatus,
     updateOrderStatus,
-    // showReturnReasonPage,
-    // submitReturnReason,
+   
     getOrderDetailsJson,
-    downloadInvoice
+    downloadInvoice,
+    requestReturn
 };

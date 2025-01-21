@@ -332,7 +332,6 @@ const getTopProducts = async (req, res) => {
             { $limit: 10 }
         ]);
 
-        console.log('Top Products:', JSON.stringify(topProducts, null, 2));
         res.json(topProducts);
     } catch (error) {
         console.error('Error getting top products:', error);

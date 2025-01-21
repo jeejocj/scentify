@@ -487,7 +487,7 @@
                         <div class="product-card">
                             <div class="product-card-img">
                                 <% if (product.productImage && product.productImage.length > 0) { %>
-                                    <img src="/uploads/re-image/<%= product.productImage[0] %>" alt="<%= product.productName %>">
+                                    <img src="/uploads/product-images/<%= product.productImage[0] %>" alt="<%= product.productName %>">
                                 <% } else { %>
                                     <div class="no-image">No Image Available</div>
                                 <% } %>
@@ -506,20 +506,12 @@
                             <div class="product-card-content">
                                 <h3 class="product-title"><%= product.productName %></h3>
                                 <div class="product-price">
-                                    <% 
-                                        const categoryOffer = product.category?.categoryOffer || 0;
-                                        const productOffer = product.productOffer || 0;
-                                        const maxOffer = Math.max(categoryOffer, productOffer);
-                                        const finalPrice = maxOffer > 0 ? 
-                                            Math.round(product.regularPrice - (product.regularPrice * maxOffer / 100)) : 
-                                            product.regularPrice;
-                                    %>
-                                    <% if (maxOffer > 0) { %>
+                                    <% if (product.finalPrice < product.regularPrice) { %>
                                         <div class="price-container">
                                             <span class="old-price">₹<%= product.regularPrice.toLocaleString('en-IN') %></span>
-                                            <span class="current-price">₹<%= finalPrice.toLocaleString('en-IN') %></span>
+                                            <span class="current-price">₹<%= product.finalPrice.toLocaleString('en-IN') %></span>
                                         </div>
-                                        <span class="discount-badge">-<%= maxOffer %>% OFF</span>
+                                        <span class="discount-badge">-<%= product.discountPercentage %>% OFF</span>
                                     <% } else { %>
                                         <div class="price-container">
                                             <span class="current-price">₹<%= product.regularPrice.toLocaleString('en-IN') %></span>
@@ -527,7 +519,7 @@
                                     <% } %>
                                 </div>
                                 <% if (product.quantity > 0) { %>
-                                    <a href="#" class="add-cart" data-product-id="<%= product._id %>">+ Add To Cart</a>
+                                <a href="#" class="add-cart" data-product-id="<%= product._id %>">+ Add To Cart</a>
                                 <% } else { %>
                                     <button class="out-of-stock-btn" disabled>Out of Stock</button>
                                 <% } %>
@@ -772,7 +764,7 @@
                 body: JSON.stringify({ productId }),
                 credentials: 'include'
             });
-
+            
             const data = await response.json();
 
             if (response.status === 401) {
@@ -786,7 +778,7 @@
             if (data.success) {
                 toastr.success('Product added to wishlist!');
             } else if (data.exists) {
-                toastr.info('Product is already in your wishlist');
+                toastr.info(data.message || 'Product is already in your wishlist');
             } else {
                 throw new Error(data.message || 'Failed to add product to wishlist');
             }

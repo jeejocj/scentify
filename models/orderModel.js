@@ -74,7 +74,8 @@ const orderSchema = new Schema({
     status:{
         type:String,
         required:true,
-        enum:['Pending','Processing','Shipped','Delivered','Cancelled','Return Request','Returned']
+        enum:['Pending','Processing','Shipped','Delivered','Cancelled','Return Pending','Returned'],
+        default: 'Pending'
     },
     createdOn :{
         type:Date,
@@ -102,6 +103,25 @@ const orderSchema = new Schema({
     returnRequestDate: {
         type: Date,
         default: null
+    },
+    returnRequest: {
+        status: {
+            type: String,
+            enum: ['None', 'Pending', 'Approved', 'Rejected'],
+            default: 'None'
+        },
+        reason: {
+            type: String,
+            default: ''
+        },
+        requestDate: {
+            type: Date,
+            default: null
+        },
+        actionDate: {
+            type: Date,
+            default: null
+        }
     }
 });
 

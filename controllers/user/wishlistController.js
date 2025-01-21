@@ -120,6 +120,7 @@ const addToWishlist = async (req, res) => {
         if (existingProduct) {
             return res.status(400).json({ 
                 success: false, 
+                exists: true,
                 message: 'Product already in wishlist' 
             });
         }

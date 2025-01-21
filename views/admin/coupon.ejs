@@ -74,8 +74,55 @@
     margin-right: 5px;
 }
 
+.pagination {
+    margin-top: 30px;
+}
 
+.page-link {
+    color: #3498db;
+    border: 1px solid #e0e0e0;
+    margin: 0 3px;
+    border-radius: 5px;
+    padding: 8px 16px;
+}
 
+.page-item.active .page-link {
+    background-color: #3498db;
+    border-color: #3498db;
+}
+
+.page-link:hover {
+    background-color: #f8f9fa;
+    color: #2980b9;
+    border-color: #e0e0e0;
+}
+
+.swal2-popup {
+    background: #ffffff !important;
+    color: #000000 !important;
+}
+
+.swal2-title {
+    color: #000000 !important;
+}
+
+.swal2-content {
+    color: #000000 !important;
+}
+
+.swal2-html-container {
+    color: #000000 !important;
+}
+
+.swal2-confirm {
+    background-color: #3085d6 !important;
+    color: #ffffff !important;
+}
+
+.swal2-cancel {
+    background-color: #d33 !important;
+    color: #ffffff !important;
+}
 </style>
 
 <section class="content-main">
@@ -156,6 +203,25 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination -->
+            <% if (totalPages > 1) { %>
+            <div class="container mt-3">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center mb-20">
+                        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                            <a class="page-link" href="?page=<%= currentPage - 1 %>" <%= currentPage === 1 ? 'tabindex="-1" aria-disabled="true"' : '' %>>&lt;</a>
+                        </li>
+                        <li class="page-item active">
+                            <span class="page-link"><%= currentPage %> out of <%= totalPages %></span>
+                        </li>
+                        <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                            <a class="page-link" href="?page=<%= currentPage + 1 %>" <%= currentPage === totalPages ? 'tabindex="-1" aria-disabled="true"' : '' %>>&gt;</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            <% } %>
         </div>
     </div>
 </section>

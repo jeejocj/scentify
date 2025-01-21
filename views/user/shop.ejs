@@ -132,17 +132,14 @@
                             </div>
                             <div class="col-lg-6 col-md-6 col-sm-6">
                                 <div class="shop__product__option__right">
-                                    <form action="/shop" method="GET" class="d-inline">
-                                        <select name="sort" onchange="this.form.submit()" class="form-select">
-                                            <option value="newest" <%= query.sort === 'newest' ? 'selected' : '' %>>Newest</option>
-                                            <option value="price_asc" <%= query.sort === 'price_asc' ? 'selected' : '' %>>Price: Low to High</option>
-                                            <option value="price_desc" <%= query.sort === 'price_desc' ? 'selected' : '' %>>Price: High to Low</option>
-                                            <option value="name_asc" <%= query.sort === 'name_asc' ? 'selected' : '' %>>Name: A-Z</option>
-                                            <option value="name_desc" <%= query.sort === 'name_desc' ? 'selected' : '' %>>Name: Z-A</option>
-                                            <option value="popularity" <%= query.sort === 'popularity' ? 'selected' : '' %>>Popularity</option>
-                                            <!-- <option value="rating" <%= query.sort === 'rating' ? 'selected' : '' %>>Rating</option> --> -->
-                                        </select>
-                                    </form>
+                                    <select id="sortSelect" onchange="updateSort(this.value)" class="form-select">
+                                        <option value="newest" <%= query.sort === 'newest' ? 'selected' : '' %>>Newest</option>
+                                        <option value="price_asc" <%= query.sort === 'price_asc' ? 'selected' : '' %>>Price: Low to High</option>
+                                        <option value="price_desc" <%= query.sort === 'price_desc' ? 'selected' : '' %>>Price: High to Low</option>
+                                        <option value="name_asc" <%= query.sort === 'name_asc' ? 'selected' : '' %>>Name: A-Z</option>
+                                        <option value="name_desc" <%= query.sort === 'name_desc' ? 'selected' : '' %>>Name: Z-A</option>
+                                        <option value="popularity" <%= query.sort === 'popularity' ? 'selected' : '' %>>Popularity</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -154,7 +151,7 @@
                                     <div class="product-card">
                                         <div class="product-card-img">
                                             <% if (product.productImage && product.productImage.length > 0) { %>
-                                                <img src="/uploads/re-image/<%= product.productImage[0] %>" alt="<%= product.productName %>">
+                                                <img src="/uploads/product-images/<%= product.productImage[0] %>" alt="<%= product.productName %>">
                                             <% } else { %>
                                                 <div class="no-image">No Image Available</div>
                                             <% } %>
@@ -915,84 +912,114 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
     <script>
+        function updateSort(sortValue) {
+            // Get current URL and parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Update or add sort parameter
+            urlParams.set('sort', sortValue);
+            
+            // Keep the page at 1 when sorting changes
+            urlParams.set('page', '1');
+            
+            // Redirect with updated parameters
+            window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // Configure Toastr
             toastr.options = {
                 "closeButton": true,
+                "debug": false,
+                "newestOnTop": false,
                 "progressBar": true,
                 "positionClass": "toast-top-right",
-                "timeOut": "2000"
+                "preventDuplicates": false,
+                "onclick": null,
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "5000",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut"
             };
 
-            // Set background images for products
-            const bgElements = document.querySelectorAll('.set-bg');
-            bgElements.forEach(element => {
-                const bg = element.getAttribute('data-setbg');
-                if (bg) {
-                    element.style.backgroundImage = `url('${bg}')`;
-                } else {
-                    // Set default image if no background is specified
-                    element.style.backgroundImage = "url('/user-assets/img/product/default.jpg')";
-                }
-            });
-
-            // Handle add to cart buttons
-            const addToCartButtons = document.querySelectorAll('.add-cart');
-            addToCartButtons.forEach(button => {
+            // Add to Cart functionality
+            document.querySelectorAll('.add-cart').forEach(button => {
                 button.addEventListener('click', async function(e) {
                     e.preventDefault();
-                    const productId = this.getAttribute('data-product-id');
-
+                    const productId = this.dataset.productId;
                     try {
                         const response = await fetch('/addToCart', {
                             method: 'POST',
                             headers: {
-                                'Content-Type': 'application/json',
+                                'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify({
-                                productId: productId,
-                                quantity: 1
-                            })
+                            body: JSON.stringify({ productId })
                         });
 
-                        if (response.status === 401) {
-                            toastr.warning('Please login to add items to cart');
-                            return;
-                        }
-
                         const data = await response.json();
-                        if (data.success) {
-                            toastr.success('Product added to cart successfully!');
+                        
+                        if (response.ok) {
+                            toastr.success(data.message || 'Product added to cart successfully');
+                            // Update cart count if needed
+                            if (data.cartCount !== undefined) {
+                                document.querySelector('.cart-count').textContent = data.cartCount;
+                            }
+                        } else {
+                            toastr.error(data.message || 'Failed to add product to cart');
                         }
                     } catch (error) {
-                        toastr.error('Please login to add items to cart');
+                        console.error('Error:', error);
+                        toastr.error('An error occurred while adding to cart');
                     }
                 });
             });
 
-            const searchForm = document.getElementById('searchForm');
-            const searchInput = document.getElementById('searchInput');
-
-            searchForm.addEventListener('submit', function(e) {
+            // Add this to handle search functionality
+            document.getElementById('searchForm').addEventListener('submit', function(e) {
                 e.preventDefault();
-                const searchQuery = searchInput.value.trim();
-                
-                // Get current URL parameters
+                const searchQuery = document.getElementById('searchInput').value;
                 const urlParams = new URLSearchParams(window.location.search);
                 
-                // Update search parameter
                 if (searchQuery) {
                     urlParams.set('query', searchQuery);
                 } else {
                     urlParams.delete('query');
                 }
                 
-                // Reset page number when searching
-                urlParams.delete('page');
+                // Keep other parameters but reset page to 1
+                urlParams.set('page', '1');
                 
-                // Keep other filters if they exist
-                const newUrl = `/shop?${urlParams.toString()}`;
-                window.location.href = newUrl;
+                window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
+            });
+
+            // Add this to handle filter form submission
+            document.getElementById('filterForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                // Preserve sort parameter if exists
+                const currentSort = urlParams.get('sort');
+                if (currentSort) {
+                    formData.append('sort', currentSort);
+                }
+                
+                // Convert FormData to URLSearchParams
+                const params = new URLSearchParams();
+                for (let [key, value] of formData) {
+                    if (value) {  // Only add parameters with values
+                        params.append(key, value);
+                    }
+                }
+                
+                // Reset page to 1 when applying filters
+                params.set('page', '1');
+                
+                window.location.href = `${window.location.pathname}?${params.toString()}`;
             });
 
             // Handle pagination clicks
@@ -1015,10 +1042,6 @@
             });
         });
 
-        function viewProductDetails(productId) {
-            window.location.href = `/product-details/${productId}`;
-        }
-
         async function addToWishlist(productId) {
             try {
                 const response = await fetch('/addToWishlist', {
@@ -1030,14 +1053,20 @@
                 });
 
                 const data = await response.json();
+
                 if (data.success) {
-                    toastr.success('Product added to wishlist');
+                    toastr.success(data.message);
+                    // Update wishlist icon if needed
+                    const wishlistIcon = document.querySelector(`[data-product-id="${productId}"] .fa-heart`);
+                    if (wishlistIcon) {
+                        wishlistIcon.classList.toggle('text-danger');
+                    }
                 } else {
-                    toastr.error(data.message || 'Error adding to wishlist');
+                    toastr.error(data.message);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                toastr.error('Failed to add to wishlist');
+                toastr.error('Something went wrong. Please try again.');
             }
         }
     </script>

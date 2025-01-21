@@ -35,9 +35,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/',userRoute);
 app.use("/admin",adminRoute);
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, ()=>{
-    console.log("server running")
+    console.log(`server running at port ${PORT}`);
 })
 
 module.exports = app;

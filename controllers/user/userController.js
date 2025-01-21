@@ -12,28 +12,61 @@ const loadHomepage = async (req, res) => {
   try {
       const user = req.session?.user;
       const categories = await Category.find({isListed:true});
+      
+      // Get products with populated category for offer calculation
       let productData = await Product.find({
-        isBlocked:false,
-        category:{$in:categories.map(category=>category._id)}
-        // ,quantity:{$gt:0}
-      })
-   
+        isBlocked: false,
+        category: { $in: categories.map(category => category._id) }
+      }).populate('category').lean();
 
-productData.sort((a,b)=>new Date(b.createdOn));
-productData = productData.slice(0,4);
+      // Calculate final prices with offers
+      productData = productData.map(product => {
+        // Calculate category offer price
+        let categoryOfferPrice = product.regularPrice;
+        if (product.category?.categoryOffer > 0) {
+          categoryOfferPrice = product.regularPrice - (product.regularPrice * (product.category.categoryOffer / 100));
+        }
 
+        // Calculate product offer price
+        let productOfferPrice = product.regularPrice;
+        if (product.productOffer > 0) {
+          productOfferPrice = product.regularPrice - (product.regularPrice * (product.productOffer / 100));
+        }
 
+        // Get the best price (lowest among regular, category offer, and product offer)
+        const finalPrice = Math.min(
+          product.regularPrice,
+          product.salePrice || product.regularPrice,
+          categoryOfferPrice,
+          productOfferPrice
+        );
 
-      if(user){
-        const userData = await User.findOne({_id:user._id});
-        res.render("home",{user:userData,products:productData})
-      }else{
-        return res.render("home",{products:productData});
+        // Calculate savings and discount percentage
+        const totalSavings = product.regularPrice - finalPrice;
+        const discountPercentage = Math.round((totalSavings / product.regularPrice) * 100);
+
+        return {
+          ...product,
+          finalPrice: Math.round(finalPrice),
+          savings: Math.round(totalSavings),
+          discountPercentage
+        };
+      });
+
+      // Sort by creation date and get latest 4 products
+      productData.sort((a, b) => new Date(b.createdOn) - new Date(a.createdOn));
+      productData = productData.slice(0, 4);
+
+      if(user) {
+        const userData = await User.findOne({_id: user._id});
+        res.render("home", {user: userData, products: productData});
+      } else {
+        return res.render("home", {products: productData});
       }
   
     } catch (error) {
-      console.log(error);
-      res.status(500).send("Sever error")
+      console.error(error);
+      res.status(500).send("Server error");
     }
   };
 
@@ -103,7 +136,7 @@ async function sendVerificationEmail(email,otp) {
       req.session.userOtp = otp;
       req.session.userData = {name,phone,email,password};
       res.render("verify-otp");
-      console.log("OTP Sent",otp);
+      
     } catch (error) {
       console.error("signup error:", error);
       res.redirect("/pageNotFound")
@@ -176,7 +209,7 @@ async function sendVerificationEmail(email,otp) {
      req.session.userOtp = otp;
      const emailSent = await sendVerificationEmail(email,otp);
      if(emailSent){
-      console.log("Resend OTP:",otp);
+     
       return res.status(200).json({success:true,message:"OTP Resend Successfully"})
      }else{
       return res.status(500).json({success:false,message:"Failed to Resend OTP. Please try again"});
@@ -234,13 +267,13 @@ async function sendVerificationEmail(email,otp) {
     try{
     req.session.destroy((err)=>{
       if(err){
-        console.log("Seesion destructure error",err.message)
+        console.error("Session destructure error",err.message)
         return res.redirect("/pageNotFound")
       }
       return res.redirect("/login")
     })
     }catch(error){
-      console.log("logout error",error);
+      console.error("logout error",error);
       res.redirect("/PageNotFound")
 
     }

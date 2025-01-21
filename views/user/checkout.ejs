@@ -753,7 +753,7 @@
                     };
                     var rzp = new Razorpay(options);
                     rzp.on('payment.failed', function(failureResponse) {
-                        console.log('Payment failed:', failureResponse);
+                     
                         window.location.href = `/payment-failed?orderId=${response.orderId}&error=${encodeURIComponent(failureResponse.error.description)}`;
                     });
                     rzp.open();

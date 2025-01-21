@@ -3,6 +3,30 @@
    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css">
    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.css">
+   <style>
+       /* SweetAlert Custom Styles */
+       .swal2-popup {
+           background: #ffffff !important;
+           color: #000000 !important;
+       }
+       .swal2-title {
+           color: #000000 !important;
+       }
+       .swal2-content {
+           color: #000000 !important;
+       }
+       .swal2-html-container {
+           color: #000000 !important;
+       }
+       .swal2-confirm {
+           background-color: #3085d6 !important;
+           color: #ffffff !important;
+       }
+       .swal2-cancel {
+           background-color: #d33 !important;
+           color: #ffffff !important;
+       }
+   </style>
 </head>
 <style>
    .error-message {
@@ -696,7 +720,7 @@
             });
 
             const data = await response.json();
-            console.log('Response:', data); // Debug log
+         
 
             if (data.success) {
                 await Swal.fire({

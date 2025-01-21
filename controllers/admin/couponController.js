@@ -3,8 +3,25 @@ const Coupon = require("../../models/couponModel");
 
 const loadcoupon = async (req, res) => {
     try {
-        const coupons = await Coupon.find();
-        res.render('coupon', { coupons });
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const skip = (page - 1) * limit;
+
+        const totalCoupons = await Coupon.countDocuments();
+        const totalPages = Math.ceil(totalCoupons / limit);
+
+        const coupons = await Coupon.find()
+            .sort({ createdOn: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        res.render('coupon', { 
+            coupons,
+            currentPage: page,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1
+        });
     } catch (error) {
         console.error(error);
         res.status(500).send('Server error');
