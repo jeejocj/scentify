@@ -406,7 +406,6 @@ const verifyPayment = async (req, res) => {
         try {
             // Check if order.products exists and is a string
             if (!order.products) {
-                console.log("No products found in order");
                 return res.status(200).json({
                     success: true,
                     message: "Payment verified successfully",

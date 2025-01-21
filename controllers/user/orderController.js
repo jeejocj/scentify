@@ -23,40 +23,6 @@ const getOrderHistory = async (req, res) => {
     }
 };
 
-// const getOrderDetails = async (req, res) => {
-//     try {
-//         const orderId = req.params.orderId;
-//         const userId = req.session.user._id;
-
-//         const order = await Order.findById(orderId)
-//             .populate({
-//                 path: 'orderedItems.product',
-//                 model: 'Product',
-//                 select: 'productName productImage salesPrice'
-//             });
-
-//         if (!order) {
-//             return res.status(404).render('error', { 
-//                 message: 'Order not found',
-//                 user: req.session.user
-//             });
-//         }
-
-//         // Calculate totals
-//         order.totalPrice = order.orderedItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-//         order.finalAmount = order.totalPrice - (order.discount || 0);
-//         res.render('orderDetails', { 
-//             order,
-//             user: req.session.user
-//         });
-//     } catch (error) {
-//         console.error('Error fetching order details:', error);
-//         res.status(500).render('error', { 
-//             message: 'Internal Server Error',
-//             user: req.session.user
-//         });
-//     }
-// };
 
 // Cancel an Order
 const cancelOrder = async (req, res) => {
@@ -281,50 +247,7 @@ const updateOrderStatus = async (req, res) => {
     }
 };
 
-// const showReturnReasonPage = async (req, res) => {
-//     try {
-//         const orderId = req.query.orderId;
-//         res.render('return-reason', { 
-//             orderId,
-//             user: req.session.user
-//         });
-//     } catch (error) {
-//         console.error('Error showing return reason page:', error);
-//         res.status(500).render('error', { message: 'Internal Server Error' });
-//     }
-// };
 
-// const submitReturnReason = async (req, res) => {
-//     try {
-//         const { orderId, reason } = req.body;
-//         const userId = req.session.user._id;
-
-//         const order = await Order.findById(orderId);
-
-//         if (!order) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "Order not found"
-//             });
-//         }
-
-//         order.status = 'Return Requested';
-//         order.returnReason = reason;
-//         await order.save();
-
-//         return res.status(200).json({
-//             success: true,
-//             message: "Return request submitted successfully"
-//         });
-
-//     } catch (error) {
-//         console.error('Error submitting return reason:', error);
-//         return res.status(500).json({
-//             success: false,
-//             message: "Internal server error"
-//         });
-//     }
-// };
 
 const getOrderDetailsJson = async (req, res) => {
     try {
@@ -617,12 +540,7 @@ const requestReturn = async (req, res) => {
         // Get user ID from session
         const userId = req.session.user?._id;
 
-        console.log('Request data:', {
-            orderId,
-            reason,
-            sessionUser: req.session.user,
-            userId: userId
-        });
+    
 
         if (!userId) {
             return res.status(401).json({
@@ -658,16 +576,7 @@ const requestReturn = async (req, res) => {
             userId: userObjectId
         });
 
-        console.log('Order lookup:', { 
-            orderId: orderObjectId, 
-            userId: userObjectId, 
-            orderFound: !!order,
-            orderDetails: order ? {
-                status: order.status,
-                userId: order.userId.toString(),
-                returnRequest: order.returnRequest
-            } : null
-        });
+      
 
         if (!order) {
             return res.status(404).json({
@@ -726,13 +635,11 @@ const requestReturn = async (req, res) => {
 
 module.exports = {
     getOrderHistory,
-   
     cancelOrder,
     getOrderStatus,
     viewOrderDetails,
     changeOrderStatus,
     updateOrderStatus,
-   
     getOrderDetailsJson,
     downloadInvoice,
     requestReturn

@@ -960,6 +960,14 @@
                             body: JSON.stringify({ productId })
                         });
 
+                        if (response.status === 401) {
+                            toastr.warning('Please login to add items to cart');
+                            setTimeout(() => {
+                                window.location.href = '/login';
+                            }, 2000);
+                            return;
+                        }
+
                         const data = await response.json();
                         
                         if (response.ok) {
@@ -973,7 +981,7 @@
                         }
                     } catch (error) {
                         console.error('Error:', error);
-                        toastr.error('An error occurred while adding to cart');
+                        toastr.error('Please login to add items to cart');
                     }
                 });
             });
@@ -1055,14 +1063,16 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    toastr.success(data.message);
+                    toastr.success(data.message,"",{
+                        timeOut:1000
+                    });
                     // Update wishlist icon if needed
                     const wishlistIcon = document.querySelector(`[data-product-id="${productId}"] .fa-heart`);
                     if (wishlistIcon) {
                         wishlistIcon.classList.toggle('text-danger');
                     }
                 } else {
-                    toastr.error(data.message);
+                    toastr.info(data.message,"", {timeOut:1000});
                 }
             } catch (error) {
                 console.error('Error:', error);

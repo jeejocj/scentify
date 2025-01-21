@@ -683,13 +683,13 @@
                                                                         </div>
                                                                     </div>
                                                                     <div class="order-status">
-                                                                        <span class="badge <%= 
+                                                                        <!-- <span class="badge <%= 
                                                                             order.status === 'Delivered' ? 'bg-success' : 
                                                                             order.status === 'Cancelled' ? 'bg-danger' : 
                                                                             order.status === 'Returned' ? 'bg-secondary' :
                                                                             'bg-warning' %>">
                                                                             <%= order.status %>
-                                                                        </span>
+                                                                        </span> -->
 
                                                                         <% if (order.returnRequest && order.returnRequest.status !== 'None') { %>
                                                                             <span class="badge <%= 
@@ -1525,7 +1525,7 @@
                     <td>
                         <div class="product-cell">
                             <div class="product-image">
-                                <img src="/uploads/re-image/${item.product.productImage[0]}" 
+                                <img src="/uploads/product-images/${item.product.productImage[0]}" 
                                      alt="${item.product.productName}" 
                                      class="img-fluid" 
                                      style="max-width: 60px;">

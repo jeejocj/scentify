@@ -124,20 +124,29 @@ const loadSalesReport = async (req, res) => {
       .sort({ createdOn: -1 })
       .skip(skip)
       .limit(limit);
-
+      const fullOrders = await Order.find(query)
+      .populate({
+        path: 'userId',
+        select: 'name email'
+      })
+      .populate({
+        path: 'orderedItems.product',
+        select: 'productName price regularPrice salesPrice'
+      })
+      .sort({ createdOn: -1 })
     // Calculate totals
     const totals = {
-      count: orders.length,
-      finalAmount: orders.reduce((sum, order) => sum + (order.finalAmount || 0), 0),
-      totalPrice: orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0),
-      discount: orders.reduce((sum, order) => sum + ((order.totalPrice - order.finalAmount) || 0), 0),
-      cancelledCount: orders.filter(order => order.status === 'Cancelled').length,
-      returnedCount: orders.filter(order => order.status === 'Returned').length,
-      deliveredCount: orders.filter(order => order.status === 'Delivered').length,
-      processingCount: orders.filter(order => order.status === 'Processing').length,
-      shippedCount: orders.filter(order => order.status === 'Shipped').length,
-      pendingCount: orders.filter(order => order.status === 'Pending').length,
-      returnRequestCount: orders.filter(order => order.status === 'Return Request').length
+      count: fullOrders.length,
+      finalAmount: fullOrders.reduce((sum, order) => sum + (order.finalAmount || 0), 0),
+      totalPrice: fullOrders.reduce((sum, order) => sum + (order.totalPrice || 0), 0),
+      discount: fullOrders.reduce((sum, order) => sum + ((order.totalPrice - order.finalAmount) || 0), 0),
+      cancelledCount: fullOrders.filter(order => order.status === 'Cancelled').length,
+      returnedCount: fullOrders.filter(order => order.status === 'Returned').length,
+      deliveredCount: fullOrders.filter(order => order.status === 'Delivered').length,
+      processingCount: fullOrders.filter(order => order.status === 'Processing').length,
+      shippedCount: fullOrders.filter(order => order.status === 'Shipped').length,
+      pendingCount: fullOrders.filter(order => order.status === 'Pending').length,
+      returnRequestCount: fullOrders.filter(order => order.status === 'Return Request').length
     };
 
     // Calculate daily average
@@ -149,7 +158,7 @@ const loadSalesReport = async (req, res) => {
     };
 
     // Calculate payment method statistics
-    const paymentStats = orders.reduce((acc, order) => {
+    const paymentStats = fullOrders.reduce((acc, order) => {
       acc[order.paymentMethod] = (acc[order.paymentMethod] || 0) + 1;
       return acc;
     }, {});

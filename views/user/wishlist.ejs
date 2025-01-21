@@ -301,9 +301,9 @@
                                         <td class="product__wishlist__item">
                                             <div class="product__wishlist__item__pic">
                                                 <% if (item.productId.productImage && item.productId.productImage.length > 0) { %>
-                                                    <img src="/uploads/re-image/<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>">
+                                                    <img src="/uploads/product-images/<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>">
                                                 <% } else { %>
-                                                    <img src="/uploads/re-image/default.png" alt="No Image Available">
+                                                    <img src="/uploads/product-images/default.png" alt="No Image Available">
                                                 <% } %>
                                             </div>
                                         </td>

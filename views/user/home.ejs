@@ -824,6 +824,9 @@
                 if (data.success) {
                     toastr.success('Product added to cart successfully!');
                 }
+                else{
+                    toastr.error(data.message)
+                }
             } catch (error) {
                 toastr.error('Please login to add items to cart');
             }

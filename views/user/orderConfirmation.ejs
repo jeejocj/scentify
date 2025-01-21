@@ -126,7 +126,7 @@
         <div class="confirmation-section">
             <div class="confirmation-header">
                 <h1 class="confirmation-title">Thank You for Your Order!</h1>
-                <p class="confirmation-subtitle">Order #<%= order._id %></p>
+                <p class="confirmation-subtitle">Order #<%= order.orderId  %></p>
             </div>
             
             <div class="confirmation-content">
@@ -172,10 +172,10 @@
                             <div class="product-card">
                                 <div class="product-image">
                                     <% if (item.product && item.product.productImage && item.product.productImage.length > 0) { %>
-                                        <img src="/uploads/re-image/<%= item.product.productImage[0] %>" 
+                                        <img src="/uploads/product-images/<%= item.product.productImage[0] %>" 
                                              alt="<%= item.product.productName %>">
                                     <% } else { %>
-                                        <img src="/uploads/re-image/default.png" alt="Product Image">
+                                        <img src="/uploads/product-images/default.png" alt="Product Image">
                                     <% } %>
                                 </div>
                                 <div class="product-info">

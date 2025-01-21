@@ -346,7 +346,7 @@
                                             <td>
                                                 <div class="product__cart__item">
                                                     <div class="product__cart__item__pic">
-                                                        <img src="/uploads/re-image/<%= item.productId.productImage?.[0] || 'default.png' %>" 
+                                                        <img src="/uploads/product-images/<%= item.productId.productImage?.[0] || 'default.png' %>" 
                                                              alt="<%= item.productId.productName %>"
                                                              loading="lazy">
                                                     </div>
@@ -357,7 +357,11 @@
                                             </td>
                                             <td class="cart__price">
                                                 <div class="price-details">
-                                                    <span class="regular-price text-muted text-decoration-line-through">₹<%= item.regularPrice.toLocaleString('en-IN') %></span>
+                                                    <% if (item.finalPrice && item.finalPrice < item.regularPrice) { %>
+                                                        <strike><span class="regular-price text-muted text-decoration-line-through">₹<%= item.regularPrice.toLocaleString('en-IN') %></span></strike>
+                                                    <% } else { %>
+                                                        <span class="regular-price text-muted">₹<%= item.regularPrice.toLocaleString('en-IN') %></span>
+                                                    <% } %>
                                                     <div class="final-price text-primary">₹<%= item.finalPrice.toLocaleString('en-IN') %></div>
                                                     <% if (item.discountPercentage > 0) { %>
                                                         <small class="text-success"><%= item.discountPercentage %>% OFF</small>
