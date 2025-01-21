@@ -150,7 +150,13 @@
             <div class="form-col">
                 <div class="form-group">
                     <label for="addressType">Address Type</label>
-                    <input type="text" class="form-control" id="addressType" name="addressType" value="<%= address.addressType %>" placeholder="Home, Office, etc.">
+                    <select class="form-control" id="addressType" name="addressType">
+                        <option value="">Select Address Type</option>
+                        <option value="Home" <%= address.addressType === 'Home' ? 'selected' : '' %>>Home</option>
+                        <option value="Office" <%= address.addressType === 'Office' ? 'selected' : '' %>>Office</option>
+                        <option value="Other" <%= address.addressType === 'Other' ? 'selected' : '' %>>Other</option>
+                    </select>
+                    <div class="error-message" id="addressTypeError"></div>
                 </div>
             </div>
             <div class="form-col">

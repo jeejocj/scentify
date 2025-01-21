@@ -104,7 +104,8 @@ const getcheckoutPage = async (req, res) => {
 
         const availableCoupons = await Coupon.find({
             expireOn: { $gt: currentDate },
-            name: { $nin: usedCouponNames }
+            name: { $nin: usedCouponNames },
+            isListed: true
         }).select('name type offerPrice minimumPrice expireOn description');
 
         return res.render("checkout", {

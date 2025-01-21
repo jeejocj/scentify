@@ -161,7 +161,12 @@
             <div class="form-col">
                 <div class="form-group">
                     <label for="addressType">Address Type:</label>
-                    <input type="text" class="form-control" id="addressType" name="addressType" placeholder="Home, Office, etc.">
+                    <select class="form-control" id="addressType" name="addressType">
+                        <option value="">Select Address Type</option>
+                        <option value="Home">Home</option>
+                        <option value="Office">Office</option>
+                        <option value="Other">Other</option>
+                    </select>
                     <div class="error-message" id="addressTypeError"></div>
                 </div>
             </div>
@@ -213,8 +218,8 @@
             </div>
             <div class="form-col">
                 <div class="form-group">
-                    <label for="altPhone">Alternate Phone:</label>
-                    <input type="text" class="form-control" id="altPhone" name="altPhone" placeholder="Alternate phone number">
+                    <label for="altPhone">Alternate Phone: <span class="text-danger">*</span></label>
+                    <input type="tel" class="form-control" id="altPhone" name="altPhone" maxlength="10" placeholder="Alternate phone number">
                     <div class="error-message" id="altPhoneError"></div>
                 </div>
             </div>
@@ -231,7 +236,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('addressForm');
-    const inputs = form.querySelectorAll('input');
+    const inputs = form.querySelectorAll('input, select');
     
     // Validation patterns
     const patterns = {
@@ -291,13 +296,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const errorElement = document.getElementById(`${field}Error`);
         errorElement.style.display = 'none';
         
-        // Skip validation for optional alternate phone if empty
-        if (field === 'altPhone' && value === '') {
-            return true;
-        }
-        
         // Required field validation
-        if (value === '' && field !== 'altPhone') {
+        if (value === '') {
             input.classList.add('is-invalid');
             errorElement.textContent = errorMessages[field].required;
             errorElement.style.display = 'block';
@@ -305,11 +305,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Pattern validation
-        if (patterns[field] && !patterns[field].test(value) && value !== '') {
+        if (patterns[field] && !patterns[field].test(value)) {
             input.classList.add('is-invalid');
             errorElement.textContent = errorMessages[field].pattern;
             errorElement.style.display = 'block';
             return false;
+        }
+        
+        // Check if phone numbers are different
+        if (field === 'altPhone') {
+            const phoneValue = document.getElementById('phone').value;
+            if (value === phoneValue) {
+                input.classList.add('is-invalid');
+                errorElement.textContent = errorMessages.altPhone.match;
+                errorElement.style.display = 'block';
+                return false;
+            }
         }
         
         return true;
@@ -331,15 +342,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 isValid = false;
             }
         });
-        
-        // Check if phone numbers are different
-        const phone = document.getElementById('phone').value;
-        const altPhone = document.getElementById('altPhone').value;
-        if (phone === altPhone && phone !== '' && altPhone !== '') {
-            document.getElementById('altPhoneError').textContent = errorMessages.altPhone.match;
-            document.getElementById('altPhone').classList.add('is-invalid');
-            isValid = false;
-        }
 
         if (isValid) {
             this.submit();
