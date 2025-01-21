@@ -85,6 +85,7 @@ const verifyForgotPassOtp = async (req,res)=>{
     try {
         const enteredOtp = req.body.otp;
         if(enteredOtp===req.session.userOtp){
+            // res.redirect("/reset-password")
             res.json({success:true,redirectUrl:"/reset-password"});
         }else{
             res.json({success:false,message:"OTP not matching"})

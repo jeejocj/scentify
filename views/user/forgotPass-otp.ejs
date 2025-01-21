@@ -111,7 +111,7 @@
       <h3 class="text-center mb-3">Email Verification</h3>
       <p class="form-text">Please enter the verification code sent to your email.</p>
       
-      <form onsubmit="return validateOtpForm()">
+      <form  onsubmit="return false" id="otpForm">
         <div class="mb-3">
           <label for="otp" class="form-label">Enter OTP</label>
           <input 
@@ -184,8 +184,9 @@
           }
         }, 1000);
       }
-
-      function validateOtpForm() {
+      document.getElementById('otpForm').addEventListener('submit', validateOtpForm)
+      async function validateOtpForm(e) {
+        e.preventDefault();
         const otpInput = document.getElementById('otp');
         const otpError = document.getElementById('otp-error');
         const otpValue = otpInput.value.trim();
@@ -199,8 +200,31 @@
           otpInput.classList.add('is-invalid');
           return false;
         }
-
-        return true;
+        const response = await fetch('/verify-passForgot-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ otp: otpValue })
+        });
+        const data = await response.json();
+        if(data.success){
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: data.message || 'OTP verification successful.',
+            showConfirmButton: true
+          }).then(() => {
+            window.location.href = data.redirectUrl;
+          });
+        } else {
+          otpError.textContent = data.message || 'Invalid OTP. Please try again.';
+          otpInput.classList.add('is-invalid');
+          otpInput.focus();
+          return false;
+        }
+   
+        return false;
       }
 
       function resendOtp() {
