@@ -404,17 +404,49 @@ const verifyPayment = async (req, res) => {
 
         // Update product quantities after successful payment
         try {
-            const orderProducts = JSON.parse(order.products);
-            for (const product of orderProducts) {
-                await Product.findByIdAndUpdate(
-                    product._id,
-                    { $inc: { quantity: -product.quantity } }
-                );
+            // Check if order.products exists and is a string
+            if (!order.products) {
+                console.log("No products found in order");
+                return res.status(200).json({
+                    success: true,
+                    message: "Payment verified successfully",
+                    orderId: order._id
+                });
             }
-           
+
+            let orderProducts;
+            try {
+                // Try to parse if it's a string, or use as is if it's already an object
+                orderProducts = typeof order.products === 'string' ? 
+                    JSON.parse(order.products) : order.products;
+            } catch (parseError) {
+                console.error("Error parsing order products:", parseError);
+                return res.status(200).json({
+                    success: true,
+                    message: "Payment verified successfully",
+                    orderId: order._id
+                });
+            }
+
+            // Update product quantities
+            if (Array.isArray(orderProducts)) {
+                for (const product of orderProducts) {
+                    if (product && product._id) {
+                        await Product.findByIdAndUpdate(
+                            product._id,
+                            { $inc: { quantity: -product.quantity } }
+                        );
+                    }
+                }
+            }
         } catch (error) {
             console.error("Error updating product quantities:", error);
-            
+            // Continue with success response as payment is already verified
+            return res.status(200).json({
+                success: true,
+                message: "Payment verified successfully",
+                orderId: order._id
+            });
         }
 
         return res.status(200).json({
@@ -422,7 +454,6 @@ const verifyPayment = async (req, res) => {
             message: "Payment verified successfully",
             orderId: order._id
         });
-
     } catch (error) {
         console.error("Error in payment verification:", error);
         return res.status(500).json({

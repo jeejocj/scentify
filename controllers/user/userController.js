@@ -137,6 +137,7 @@ async function sendVerificationEmail(email,otp) {
       req.session.userData = {name,phone,email,password};
       res.render("verify-otp");
       
+      
     } catch (error) {
       console.error("signup error:", error);
       res.redirect("/pageNotFound")
@@ -210,6 +211,7 @@ async function sendVerificationEmail(email,otp) {
      const emailSent = await sendVerificationEmail(email,otp);
      if(emailSent){
      
+     
       return res.status(200).json({success:true,message:"OTP Resend Successfully"})
      }else{
       return res.status(500).json({success:false,message:"Failed to Resend OTP. Please try again"});
@@ -268,11 +270,13 @@ async function sendVerificationEmail(email,otp) {
     req.session.destroy((err)=>{
       if(err){
         console.error("Session destructure error",err.message)
+        console.error("Session destructure error",err.message)
         return res.redirect("/pageNotFound")
       }
       return res.redirect("/login")
     })
     }catch(error){
+      console.error("logout error",error);
       console.error("logout error",error);
       res.redirect("/PageNotFound")
 
