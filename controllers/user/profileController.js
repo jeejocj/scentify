@@ -198,6 +198,7 @@ const userProfile = async (req, res) => {
    
         // Prepare user data with wallet information
         const userData = {
+            googleId:req.session.user.googleId,
             ...user.toObject(),
             wallet: wallet?.balance || 0,
             walletHistory: wallet?.transactions || []
