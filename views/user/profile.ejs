@@ -590,7 +590,11 @@
                                                 <p><%=user.phone%></p>
                                                 <p><%=user.email%></p>
                                                 <div class="mt-4">
-                                                    <a href="/change-password" class="btn btn-custom">Change Password</a>
+                                                    <% if (!user.googleId) { %>
+                                                     <a href="/change-password" class="btn btn-custom">Change Password</a>
+                                                    <% } else { %>
+                                                     <button class="btn btn-custom" disabled title="Password change not available for Google sign-in">Change Password</button>
+                                                    <% } %>
                                                 </div>
                                             </div>
                                         </div>
